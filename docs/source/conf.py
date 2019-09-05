@@ -87,6 +87,7 @@ autodoc_mock_imports = [
     'pyvoro',
     'pyvtk',
     'scipy',
+    'sphinx-gallery',
     'xmltodict']
 autodoc_member_order = 'groupwise'
 
