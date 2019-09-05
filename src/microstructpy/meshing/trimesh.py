@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Triangle/Tetrahedron Meshing
 
 This module contains the class definition for the TriMesh class.
