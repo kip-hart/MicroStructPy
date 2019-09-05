@@ -4,3 +4,4 @@ pyquaternion
 xmltodict
 aabbtree
 pyvoro-mmalahe
+meshpy
