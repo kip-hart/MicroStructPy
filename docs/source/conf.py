@@ -113,7 +113,6 @@ html_theme_options = {
     'sidebar_width': '230px',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
     'show_relbars': False,
-    'prev_next_buttons_location': None,
     'show_related': False,
     'anchor': '#949494'
 }
