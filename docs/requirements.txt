@@ -1,3 +1,10 @@
 sphinx-gallery
 pybind11
+aabbtree
+matplotlib>=2.2.0
+meshpy
+numpy>=1.13.0
+pyquaternion
+pyvoro-mmalahe
+scipy
 xmltodict
