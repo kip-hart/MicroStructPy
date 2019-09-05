@@ -163,7 +163,7 @@ advised by Prof. Julian Rimoli.
     :target: https://travis-ci.org/kip-hart/MicroStructPy
     :alt: Travis CI
 
-.. |s-license| image:: https://img.shields.io/pypi/l/microstructpy.svg
+.. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
 
