@@ -2,3 +2,4 @@ sphinx-gallery
 pybind11
 pyquaternion
 xmltodict
+aabbtree
