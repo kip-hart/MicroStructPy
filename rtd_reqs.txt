@@ -1,4 +1,4 @@
-sphinx_gallery
+sphinx-gallery
 aabbtree
 matplotlib>=2.2.0
 pybind11
