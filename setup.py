@@ -12,6 +12,8 @@ from os.path import splitext
 from setuptools import find_packages
 from setuptools import setup
 
+desc = 'Microstructure modeling, mesh generation, analysis, and visualization.'
+
 
 def read(fname):
     return open(join(dirname(__file__), fname)).read()
@@ -21,7 +23,7 @@ setup(
     name='MicroStructPy',
     version='1.0',
     license='MIT License',
-    description='Statistical microstructure generation.',
+    description=desc,
     long_description=read('README.rst'),
     long_description_content_type=' text/x-rst',
     author='Kenneth (Kip) Hart',
