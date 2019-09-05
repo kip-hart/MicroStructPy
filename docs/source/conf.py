@@ -17,6 +17,8 @@ import sys
 sys.path.insert(0, os.path.abspath('../../src/'))
 sys.path.insert(0, os.path.abspath('../../src/MicroStructPy/'))
 
+import sphinx_gallery
+
 
 # -- Project information -----------------------------------------------------
 
@@ -25,9 +27,9 @@ copyright = '2019, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
-version = '3.0'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '3.0'
+release = '1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -43,7 +45,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.viewcode',
+    'sphinx_gallery.gen_gallery',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -86,6 +89,11 @@ autodoc_mock_imports = [
     'scipy',
     'xmltodict']
 autodoc_member_order = 'groupwise'
+
+sphinx_gallery_conf = {
+    'examples_dirs': '../../sphinx_gallery',
+    'gallery_dirs': 'auto_examples',
+}
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -229,6 +237,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'MicroStructPy', 'MicroStructPy Documentation',
-     author, 'MicroStructPy', 'One line description of project.',
+     author, 'MicroStructPy',
+     'Microstructure modeling, mesh generation, analysis, and visualization.',
      'Miscellaneous'),
 ]

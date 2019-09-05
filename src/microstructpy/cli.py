@@ -525,7 +525,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     # Perform Verification                                                    #
     # ----------------------------------------------------------------------- #
     if not verify:
-        print('Finished running MicroStructPy.')
+        if verbose:
+            print('Finished running MicroStructPy.')
         return
 
     if verbose:

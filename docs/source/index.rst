@@ -68,6 +68,7 @@ and the Python package.
 
    getting_started
    examples
+   auto_examples/index
    cli
    package_guide
    troubleshooting
