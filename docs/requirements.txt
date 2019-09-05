@@ -3,3 +3,4 @@ pybind11
 pyquaternion
 xmltodict
 aabbtree
+pyvoro-mmalahe
