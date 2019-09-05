@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <material_type> matrix </material_type>
+        <fraction> 2 </fraction>
+
+        <shape> circle </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0 </loc>
+            <scale> 1.5 </scale>
+        </size>
+        <color> pink </color>
+    </material>
+
+    <material>
+        <fraction> 1 </fraction>
+        <shape> ellipse </shape>
+        <size>
+            <dist_type> triang </dist_type>
+            <loc> 0 </loc>
+            <scale> 2 </scale>
+            <c> 1 </c>
+        </size>
+        <aspect_ratio>
+            <dist_type> uniform </dist_type>
+            <loc> 1 </loc>
+            <scale> 2 </scale>
+        </aspect_ratio>
+        <angle_deg>
+            <dist_type> uniform </dist_type>
+            <loc> -10 </loc>
+            <scale> 20 </scale>
+        </angle_deg>
+        <color> lime </color>
+    </material>
+
+    <domain>
+        <shape> square </shape>
+        <side_length> 20 </side_length>
+        <corner> (0, 0) </corner>
+    </domain>
+
+    <settings>
+        <filetypes>
+            <seeds_plot> png </seeds_plot>
+            <poly_plot> png, pdf </poly_plot>
+            <tri_plot> png </tri_plot>
+            <tri_plot> eps </tri_plot>
+            <tri_plot> pdf </tri_plot>
+        </filetypes>
+
+        <directory> intro_6_culmination </directory>
+        <verbose> True </verbose>
+
+        <mesh_min_angle> 25 </mesh_min_angle>
+        <mesh_max_volume> 1 </mesh_max_volume>
+        <mesh_max_edge_length> 0.1 </mesh_max_edge_length>
+
+        <seeds_kwargs>
+            <alpha> 0.5 </alpha>
+            <edgecolors> none </edgecolors>
+        </seeds_kwargs>
+
+        <poly_kwargs>
+            <linewidth> 3 </linewidth>
+            <edgecolors> #A4058F </edgecolors>
+        </poly_kwargs>
+
+        <tri_kwargs>
+            <linewidth> 0.2 </linewidth>
+            <edgecolor> navy </edgecolor>
+        </tri_kwargs>
+
+        <plot_axes> False </plot_axes>
+    </settings>
+</input>

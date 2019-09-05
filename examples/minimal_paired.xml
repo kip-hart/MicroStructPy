@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <shape> circle </shape>
+        <size> 0.09 </size>
+    </material>
+
+    <domain>
+        <shape> square </shape>
+    </domain>
+
+    <settings>
+        <directory> minimal </directory>
+        <filetypes>
+            <seeds_plot> png </seeds_plot>
+            <poly_plot> png </poly_plot>
+            <tri_plot> png </tri_plot>
+        </filetypes>
+
+        <plot_axes> False </plot_axes>
+        <color_by> seed number </color_by>
+        <colormap> Paired </colormap>
+    </settings>
+</input>

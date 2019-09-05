@@ -1,0 +1,20 @@
+graft docs
+graft examples
+graft src
+graft tests
+
+include .bumpversion.cfg
+include .coveragerc
+include .editorconfig
+
+include LICENSE.rst
+include README.rst
+
+include tox.ini
+
+prune docs/source/_static
+prune docs/build
+prune tests/tmp_out
+prune examples/*
+
+global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.log Icon*

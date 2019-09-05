@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <fraction> 1 </fraction>
+        <shape> ellipse </shape>
+        <a>
+            <dist_type> uniform </dist_type>
+            <loc> 0.05 </loc>
+            <scale> 0.35 </scale>
+        </a>
+        <b> 0.05 </b>
+        <orientation> random </orientation>
+        <color> #eaaa00 </color>
+    </material>
+
+    <material>
+        <fraction> 2 </fraction>
+        <shape> circle </shape>
+        <diameter>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.06 </scale>
+            <s> 0.6 </s>
+        </diameter>
+        <color> #00263A </color>
+    </material>
+
+    <domain>
+        <shape> rectangle </shape>
+        <side_lengths> (2, 3) </side_lengths>
+    </domain>
+
+    <settings>
+        <mesh_min_angle> 20 </mesh_min_angle>
+
+        <filetypes>
+            <seeds_plot> png </seeds_plot>
+            <poly_plot> png </poly_plot>
+            <tri_plot> png </tri_plot>
+        </filetypes>
+
+        <directory> elliptical_grains </directory>
+        <plot_axes> False </plot_axes>
+
+        <seeds_kwargs>
+            <edgecolor> w </edgecolor>
+            <linewidth> 0.5 </linewidth>
+        </seeds_kwargs>
+
+        <poly_kwargs>
+            <edgecolors> w </edgecolors>
+            <linewidth> 0.5 </linewidth>
+        </poly_kwargs>
+
+        <tri_kwargs>
+            <edgecolor> w </edgecolor>
+            <linewidth> 0.1 </linewidth>
+        </tri_kwargs>
+    </settings>
+</input>

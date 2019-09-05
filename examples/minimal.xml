@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <shape> circle </shape>
+        <size> 0.15 </size>
+    </material>
+
+    <domain>
+        <shape> square </shape>
+    </domain>
+</input>

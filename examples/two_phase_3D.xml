@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <fraction> 1 </fraction>
+        <volume>
+            <dist_type> lognorm </dist_type>
+            <scale> 1 </scale>
+            <s> 0.95 </s>
+        </volume>
+        <shape> sphere </shape>
+        <name> Phase 1 </name>
+    </material>
+
+    <material>
+        <fraction> 3 </fraction>
+        <volume>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.5 </scale>
+            <s> 1.01 </s>
+        </volume>
+        <name> Phase 2 </name>
+    </material>
+
+    <domain>
+        <shape> cube </shape>
+        <side_length> 7 </side_length>
+        <corner> (0, 0, 0) </corner>
+    </domain>
+
+    <settings>
+        <directory> two_phase_3D </directory>
+        <filetypes>
+            <seeds_plot> png </seeds_plot>
+            <poly_plot> png </poly_plot>
+            <tri_plot> png </tri_plot>
+            <verify_plot> png </verify_plot>
+        </filetypes>
+        <verbose> True </verbose>
+
+        <seeds_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </seeds_kwargs>
+        <poly_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </poly_kwargs>
+        <tri_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </tri_kwargs>
+    </settings>
+</input>

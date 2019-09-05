@@ -1,0 +1,5 @@
+[run]
+omit =
+    src/microstructpy/cli.py
+    src/microstructpy/__init__.py
+    src/microstructpy/*/__init__.py
