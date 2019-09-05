@@ -1,2 +1,3 @@
 sphinx-gallery
 pybind11
+xmltodict
