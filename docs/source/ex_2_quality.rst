@@ -1,8 +1,8 @@
 .. _ex_2_quality:
 
-==========================
-Intro 2 - Quality Controls
-==========================
+================
+Quality Controls
+================
 
 XML Input File
 ==============

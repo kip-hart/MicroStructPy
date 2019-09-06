@@ -1,8 +1,8 @@
 .. _ex_5_plotting:
 
-=======================
-Intro 5 - Plot Controls
-=======================
+=============
+Plot Controls
+=============
 
 XML Input File
 ==============

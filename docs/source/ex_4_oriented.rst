@@ -1,8 +1,8 @@
 .. _ex_4_oriented:
 
-=============================
-Intro 4 - Oriented Inclusions
-=============================
+====================================
+Oriented Grains and Amorphous Phases
+====================================
 
 XML Input File
 ==============

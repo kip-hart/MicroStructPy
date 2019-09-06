@@ -7,14 +7,14 @@ This page contains all of the examples for MicroStructPy.
 Below each image is a link to a page that describes each example in greater
 detail.
 
-.. _cli_examples:
+.. _intro_examples:
 
-Examples Using the CLI
-----------------------
+Input File Introduction
+-----------------------
 
 .. toctree::
     :maxdepth: 1
-    :hidden:
+    :numbered:
 
     ex_1_basic
     ex_2_quality
@@ -22,10 +22,6 @@ Examples Using the CLI
     ex_4_oriented
     ex_5_plotting
     ex_6_culmination
-    ex_elliptical_grains
-    ex_minimal
-    ex_basalt
-    ex_2phase_3d
 
 .. figure:: ../../examples/intro_1_basic/trimesh.png
   :alt: Triangular mesh from first intro example.
@@ -72,6 +68,20 @@ Examples Using the CLI
 
   :ref:`ex_6_culmin`
 
+
+.. _cli_examples:
+
+Examples Using the CLI
+----------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    ex_elliptical_grains
+    ex_minimal
+    ex_basalt
+    ex_2phase_3d
+
 .. figure:: ../../examples/elliptical_grains/seeds.png
   :alt: Seed particles for the elliptical grains.
   :align: center
@@ -109,7 +119,6 @@ Examples Using the Python Package
 
 .. toctree::
     :maxdepth: 1
-    :hidden:
 
     ex_standard_voronoi
     ex_uniform_seeding

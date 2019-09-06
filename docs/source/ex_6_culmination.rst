@@ -1,8 +1,8 @@
 .. _ex_6_culmin:
 
-=====================
-Intro 6 - Culmination
-=====================
+===========
+Culmination
+===========
 
 XML Input File
 ==============
