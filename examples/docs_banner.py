@@ -18,7 +18,7 @@ def main():
     off = 1
 
     # Create Directory
-    dirname = 'docs_banner'
+    dirname = os.path.join(os.path.dirname(__file__), 'docs_banner')
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
