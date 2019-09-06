@@ -102,7 +102,7 @@ def main():
     tmesh.plot(color=tri_colors, alpha=0.8, edgecolor='k', linewidth=0.3)
 
     # Set Up Axes
-    plt.axis('scaled')
+    plt.axis('image')
 
     xlim, ylim = domain.limits
     xlim[0] -= off
