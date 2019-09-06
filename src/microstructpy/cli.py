@@ -663,7 +663,6 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     # Set limits
     lims = domain.limits
-    plt.axis('equal')
     if n_dim == 2:
         plt.axis('square')
         plt.xlim(lims[0])
@@ -674,11 +673,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
         ds_max = np.max(ubs - lbs)
         cen = 0.5 * (lbs + ubs)
         plt_lims = [(x - 0.5 * ds_max, x + 0.5 * ds_max) for x in cen]
-
-        for x in plt_lims[0]:
-            for y in plt_lims[1]:
-                for z in plt_lims[2]:
-                    plt.gca().plot([x], [y], [z], 'w,', markersize=0)
+        plt.gca().auto_scale_xyz(*plt_lims)
 
     # Save plot
     for fname in plot_files:
@@ -778,7 +773,6 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
 
     # format axes
     lims = np.array([np.min(pmesh.points, 0), np.max(pmesh.points, 0)]).T
-    plt.axis('equal')
     if n_dim == 2:
         plt.axis('square')
         plt.xlim(lims[0])
@@ -789,10 +783,7 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
         ds_max = np.max(ubs - lbs)
         cen = 0.5 * (lbs + ubs)
         plt_lims = [(x - 0.5 * ds_max, x + 0.5 * ds_max) for x in cen]
-        for x in plt_lims[0]:
-            for y in plt_lims[1]:
-                for z in plt_lims[2]:
-                    plt.gca().plot([x], [y], [z], 'w,', markersize=0)
+        plt.gca().auto_scale_xyz(*plt_lims)
 
     # save plot
     for fname in plot_files:
@@ -896,7 +887,6 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
     # format axes
     lims = np.array([np.min(tmesh.points, 0), np.max(tmesh.points, 0)]).T
-    plt.axis('equal')
     if n_dim == 2:
         plt.axis('square')
         plt.xlim(lims[0])
@@ -907,12 +897,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         ds_max = np.max(ubs - lbs)
         cen = 0.5 * (lbs + ubs)
         plt_lims = [(x - 0.5 * ds_max, x + 0.5 * ds_max) for x in cen]
-
-        ax = plt.gca()
-        for x in plt_lims[0]:
-            for y in plt_lims[1]:
-                for z in plt_lims[2]:
-                    ax.plot([x], [y], [z], 'w,', markersize=0)
+        plt.gca().auto_scale_xyz(*plt_lims)
 
     # save plot
     for fname in plot_files:
