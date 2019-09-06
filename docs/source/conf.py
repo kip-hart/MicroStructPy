@@ -19,6 +19,8 @@ sys.path.insert(0, os.path.abspath('../../src/MicroStructPy/'))
 
 import sphinx_gallery
 
+import microstructpy
+
 
 # -- Project information -----------------------------------------------------
 
@@ -27,9 +29,9 @@ copyright = '2019, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
-version = '1.0'
+version = microstructpy.__version__
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = version
 
 
 # -- General configuration ---------------------------------------------------

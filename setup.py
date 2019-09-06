@@ -15,13 +15,19 @@ from setuptools import setup
 desc = 'Microstructure modeling, mesh generation, analysis, and visualization.'
 
 
-def read(fname):
-    return open(join(dirname(__file__), fname)).read()
+def read(*fname):
+    return open(join(dirname(__file__), *fname)).read()
+
+def find_version(*fname):
+    for line in read(*fname).split('\n'):
+        if line.startswith('__version__') and '=' in line:
+            return line.split('=')[-1].strip().strip('\"').strip('\'')
+    return ''
 
 
 setup(
     name='MicroStructPy',
-    version='1.0',
+    version=find_version('src/microstructpy', '__init__.py'),
     license='MIT License',
     description=desc,
     long_description=read('README.rst'),
