@@ -18,6 +18,7 @@ desc = 'Microstructure modeling, mesh generation, analysis, and visualization.'
 def read(*fname):
     return open(join(dirname(__file__), *fname)).read()
 
+
 def find_version(*fname):
     for line in read(*fname).split('\n'):
         if line.startswith('__version__') and '=' in line:
