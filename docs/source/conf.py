@@ -94,8 +94,6 @@ autodoc_member_order = 'groupwise'
 sphinx_gallery_conf = {
     'examples_dirs': '../../sphinx_gallery',
     'gallery_dirs': 'auto_examples',
-    'first_notebook_cell': ("import locale\n"
-                            "locale.setlocale(locale.LC_NUMERIC, \"C\")\n")
 }
 
 
