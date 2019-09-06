@@ -108,6 +108,7 @@ def main():
     # Set Up Axes
     plt.gca().set_position([0, 0, 1, 1])
     plt.axis('image')
+    plt.axis('off')
     
     xlim, ylim = domain.limits
     xlim[0] -= off
