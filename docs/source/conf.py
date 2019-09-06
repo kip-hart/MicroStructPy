@@ -92,7 +92,7 @@ autodoc_mock_imports = [
 autodoc_member_order = 'groupwise'
 
 sphinx_gallery_conf = {
-    'examples_dirs': '../../sphinx_gallery',
+    'examples_dirs': 'sphinx_gallery',
     'gallery_dirs': 'auto_examples',
 }
 

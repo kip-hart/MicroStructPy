@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 r"""
-piss off
+Plot all demos
 
 """
 
