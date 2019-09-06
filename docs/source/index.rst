@@ -61,3 +61,13 @@ and the Python package.
     :end-before: .. end-readme
 
 
+.. toctree::
+   :maxdepth: 3
+   :hidden:
+
+   getting_started
+   examples
+   cli
+   package_guide
+   troubleshooting
+   API <microstructpy>
