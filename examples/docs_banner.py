@@ -116,8 +116,8 @@ def main():
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
-    plt.xlim(xlim)
-    plt.ylim(ylim)
+    #plt.xlim(xlim)
+    #plt.ylim(ylim)
     plt.savefig(os.path.join(dirname, 'banner.png'), bbox='tight',
                 pad_inches=0)
 
