@@ -15,6 +15,8 @@
 More information is available on the :ref:`getting_started` and
 :ref:`troubleshooting` pages.
 
+Adding extra info to force RTD to rebuild entirely.
+
 .. include:: ../../README.rst
     :start-after: .. end-download-install
     :end-before: .. begin-demo-block
