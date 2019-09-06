@@ -112,6 +112,7 @@ html_theme_options = {
     'logo': 'pad_logo.svg',
     'logo_name': True,
     'sidebar_width': '230px',
+    'touch_icon': 'logo.svg',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
     'show_relbars': False,
     'show_related': False,

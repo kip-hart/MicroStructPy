@@ -63,7 +63,6 @@ and the Python package.
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
    :hidden:
 
    getting_started
