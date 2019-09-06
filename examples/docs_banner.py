@@ -109,8 +109,8 @@ def main():
     ylim[0] -= off
     ylim[1] += off
 
-    plt.axis('scaled')
-    plt.axis(xlim[0], xlim[1], ylim[0], ylim[1])
+    plt.axis('off')
+    plt.axis(xlim[0], xlim[1], ylim[0], ylim[1], option='scaled')
     plt.savefig(os.path.join(dirname, 'banner.png'), bbox='tight',
                 pad_inches=0)
 
