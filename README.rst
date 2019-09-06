@@ -3,8 +3,6 @@
 MicroStructPy - Microstructure Mesh Generation in Python
 ========================================================
 
-.. end-title
-
 |s-travis|
 |s-license|
 

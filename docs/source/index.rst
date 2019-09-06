@@ -2,16 +2,7 @@
 
 .. include:: ../../README.rst
     :start-after: .. begin-readme
-    :end-before: .. end-title
-
-.. only:: latex
-
-    Welcome
-    =======
-
-.. include:: ../../README.rst
-    :start-after: .. end-title
-    :end-before: .. end-begin-banner
+    :end-before: .. begin-banner
 
 .. image:: ../../examples/docs_banner/banner.png
     :alt: Banner image showing the three steps for creating microstructure.
