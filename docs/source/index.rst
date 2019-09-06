@@ -3,14 +3,12 @@
 MicroStructPy - Microstructure Mesh Generation in Python
 ========================================================
 
-.. only::
+|s-travis|
+|s-license|
 
-    |s-travis|
-    |s-license|
-
-    |l-github| `Repository`_
-    |l-rtd| `Documentation`_
-    |l-pypi| `PyPI`_
+|l-github| `Repository`_
+|l-rtd| `Documentation`_
+|l-pypi| `PyPI`_
 
 
 MicroStructPy is a microstructure mesh generator written in Python.
