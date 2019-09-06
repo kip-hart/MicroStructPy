@@ -101,9 +101,7 @@ def main():
     tri_colors = [seed_colors[n] for n in tmesh.element_attributes]
     tmesh.plot(color=tri_colors, alpha=0.8, edgecolor='k', linewidth=0.3)
 
-    # Set Up Axes
-    plt.axis('image')
-
+    # Set Up Axes\
     xlim, ylim = domain.limits
     xlim[0] -= off
     xlim[1] += 3 * off + 2 * domain.length
@@ -111,13 +109,8 @@ def main():
     ylim[0] -= off
     ylim[1] += off
 
-    ax = plt.gca()
-    ax.set_axis_off()
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-
-    plt.xlim(xlim)
-    plt.ylim(ylim)
+    plt.axis('off')
+    plt.axis(xlim[0], xlim[1], ylim[0], ylim[1], option='scaled')
     plt.savefig(os.path.join(dirname, 'banner.png'), bbox='tight',
                 pad_inches=0)
 
