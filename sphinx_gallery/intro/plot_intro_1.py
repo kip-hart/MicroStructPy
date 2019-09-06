@@ -40,6 +40,7 @@ Output Plots
 
 # sphinx_gallery_thumbnail_number = 3
 
+import locale
 import os
 import shutil
 
@@ -47,6 +48,8 @@ import matplotlib.pyplot as plt
 import pylab
 
 import microstructpy as msp
+
+locale.setlocale(locale.LC_ALL, '')
 
 filename = '../../examples/intro_1_basic.xml'
 
