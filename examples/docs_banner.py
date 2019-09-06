@@ -57,6 +57,7 @@ def main():
 
 
     # Plot Seeds
+    plt.clf()
     seed_colors = [phases[s.phase]['color'] for s in seeds]
     seeds.plot(color=seed_colors, alpha=0.8, edgecolor='k', linewidth=0.5)
     domain.plot(facecolor='none', edgecolor='k', linewidth=0.5)
