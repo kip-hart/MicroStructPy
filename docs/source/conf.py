@@ -29,9 +29,9 @@ copyright = '2019, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
-version = microstructpy.__version__
+version = ''.join(microstructpy.__version__.split('.')[:2])
 # The full version, including alpha/beta/rc tags
-release = version
+release = microstructpy.__version__
 
 
 # -- General configuration ---------------------------------------------------
