@@ -13,7 +13,7 @@ import microstructpy as msp
 
 locale.setlocale(locale.LC_NUMERIC, "C")
 
-example_dir = '../examples'
+example_dir = '../../../examples'
 
 # Run XML files
 xml_pattern = os.path.join(example_dir, '*.xml')
