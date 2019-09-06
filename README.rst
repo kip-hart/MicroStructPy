@@ -159,7 +159,7 @@ advised by Prof. Julian Rimoli.
 
 .. SHIELDS
 
-.. |s-travis| image:: https://travis-ci.org/kip-hart/MicroStructPy.svg?branch=master
+.. |s-travis| image:: https://img.shields.io/travis/kip-hart/MicroStructPy
     :target: https://travis-ci.org/kip-hart/MicroStructPy
     :alt: Travis CI
 
