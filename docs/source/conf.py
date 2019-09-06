@@ -114,9 +114,7 @@ html_theme_options = {
     'sidebar_width': '230px',
     'touch_icon': 'logo.svg',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
-    'show_relbars': False,
-    'show_related': False,
-    'anchor': '#949494'
+    'analytics_id': 'UA-147258715-1',
 }
 
 # The name for this set of Sphinx documents.  If None, it defaults to
