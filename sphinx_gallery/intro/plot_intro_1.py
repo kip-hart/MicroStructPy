@@ -49,7 +49,7 @@ import pylab
 
 import microstructpy as msp
 
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 filename = '../../examples/intro_1_basic.xml'
 
