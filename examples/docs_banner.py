@@ -55,9 +55,13 @@ def main():
                                               max_edge_length=0.2,
                                               max_volume=0.4)
 
+    # Create Figure
+    k = 0.2
+    len_x = 3 * domain.length + 4 * off
+    len_y = domain.width + 2 * off
+    plt.figure(figsize=(k * len_x, k * len_y))
 
-    # Plot Seeds
-    plt.clf()
+    # Plot Seeds 
     seed_colors = [phases[s.phase]['color'] for s in seeds]
     seeds.plot(color=seed_colors, alpha=0.8, edgecolor='k', linewidth=0.5)
     domain.plot(facecolor='none', edgecolor='k', linewidth=0.5)
@@ -102,8 +106,9 @@ def main():
     tmesh.plot(color=tri_colors, alpha=0.8, edgecolor='k', linewidth=0.3)
 
     # Set Up Axes
+    plt.gca().set_position([0, 0, 1, 1])
     plt.axis('image')
-
+    
     xlim, ylim = domain.limits
     xlim[0] -= off
     xlim[1] += 3 * off + 2 * domain.length
@@ -111,15 +116,10 @@ def main():
     ylim[0] -= off
     ylim[1] += off
 
-    ax = plt.gca()
-    ax.set_axis_off()
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
+    plt.axis(list(xlim) + list(ylim))
 
-    #plt.xlim(xlim)
-    #plt.ylim(ylim)
-    plt.savefig(os.path.join(dirname, 'banner.png'), bbox='tight',
-                pad_inches=0)
+    fname = os.path.join(dirname, 'banner.png')
+    plt.savefig(fname, bbox='tight', pad_inches=0)
 
 
 def plot_seeds(seeds, phases, domain):
