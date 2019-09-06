@@ -117,7 +117,8 @@ def main():
 
     plt.xlim(xlim)
     plt.ylim(ylim)
-    plt.savefig(os.path.join(dirname, 'banner.png'))
+    plt.savefig(os.path.join(dirname, 'banner.png'), bbox='tight',
+                pad_inches=0)
 
 
 def plot_seeds(seeds, phases, domain):
