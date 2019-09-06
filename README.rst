@@ -1,5 +1,3 @@
-.. begin-readme
-
 MicroStructPy - Microstructure Mesh Generation in Python
 ========================================================
 
@@ -21,12 +19,9 @@ Features of MicroStructPy include:
 * Output to common file formats
 * Customizable workflow
 
-.. begin-banner
 
 .. image:: https://microstructpy.readthedocs.io/en/latest/_images/banner.png
     :alt: Banner image showing the three steps for creating microstructure.
-
-.. end-banner
 
 *The three steps to creating a microstructure are:
 1) seed the domain with particles,
@@ -44,8 +39,7 @@ If there is an error with the install, try ``pip install pybind11`` first,
 then install MicroStructPy.
 
 
-MicroStructPy can also be installed from source, hosted on the project GitHub_
-page::
+MicroStructPy can also be installed from source::
 
     git clone https://github.com/kip-hart/MicroStructPy.git
     pip install -e MicroStructPy/
@@ -55,17 +49,16 @@ the Python package ``microstructpy``.
 The command line program executes a standard workflow on XML input files,
 while the package exposes classes and functions for a customized workflow.
 
-.. end-download-install
-
 
 Run a Demo
 ----------
 
 MicroStructPy includes several demo and example files to help new users get
 started with the program.
-Here is a example XML input file:
+A full list of examples is available online at
+https://microstructpy.readthedocs.io/examples.html.
 
-.. begin-demo-block
+Here is minimal example input file:
 
 .. code-block:: XML
 
@@ -81,26 +74,43 @@ Here is a example XML input file:
         </domain>
     </input>
 
-.. end-demo-block
-
-You can run this input file from the command line::
+This example can be run from the command line by excuting::
 
     microstructpy --demo=minimal.xml
 
 Alternatively, you can copy the text to a file such as
-``my_input.xml`` and run::
+``my_input.xml`` and run ``microstructpy my_input.xml``.
 
-    microstructpy my_input.xml
+The same output can be obtained from using the package in a script:
 
-.. demo-midpoint
+.. code-block:: python
 
-To build all of the available demos and examples, run::
+    import matplotlib.pyplot as plt
+    import microstructpy as msp
 
-    microstructpy --demo=all
 
-Note that this may take up to 10 minutes, depending on your system.
+    phase = {'shape': 'circle', 'size': 0.15}
+    domain = msp.geometry.Square()
 
-.. begin-doc
+    # Unpositioned list of seeds
+    seeds = msp.seeding.SeedList.from_info(phase, domain.area)
+
+    # Position seeds in domain
+    seeds.position(domain)
+
+    # Create polygonal mesh
+    polygon_mesh = msp.meshing.PolyMesh.from_seeds(seeds, domain)
+
+    # Create triangular mesh
+    triangle_mesh = msp.meshing.TriMesh.from_polymesh(polygon_mesh)
+
+    # Plot outputs
+    for output in [seeds, polygon_mesh, triangle_mesh]:
+        plt.figure()
+        output.plot(edgecolor='k')
+        plt.axis('image')
+        plt.axis([-0.5, 0.5, -0.5, 0.5])
+        plt.show()
 
 Documentation
 -------------
@@ -116,14 +126,11 @@ top-level directory of the MicroStructPy repository::
 
 Once built, the documentation will be in ``docs/build/``.
 
-.. end-doc
-
 Contributing
 ------------
 
 Contributions to the project are welcome.
-Please visit the `repository`_ to clone the source files,
-create a pull request, and submit issues.
+Please use the GitHub pull request and issue submission features.
 
 
 License and Attributions
@@ -134,8 +141,6 @@ MIT license.
 Copyright for MicroStructPy is held by Georgia Tech Research Corporation.
 MicroStructPy is a major part of Kenneth (Kip) Hart's doctoral thesis,
 advised by Prof. Julian Rimoli.
-
-.. end-license
 
 
 .. LINKS
@@ -166,5 +171,3 @@ advised by Prof. Julian Rimoli.
 .. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
-
-.. end-readme
