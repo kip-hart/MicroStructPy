@@ -7,7 +7,7 @@ This page addresses some problems that may be encountered with MicroStructPy.
 If this page does not address your problem, please submit an issue through the
 package GitHub_ page.
 
-.. _GitHub: https://github.gatech.edu/khart31/MicroStructPy
+.. _GitHub: https://github.com/kip-hart/MicroStructPy
 
 Installation
 ------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ Command Line Interface
 
 These are problems encountered when running ``microstructpy input_file.xml``.
 
-command not found on Linux
+Command not found on Linux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Problem Description**
