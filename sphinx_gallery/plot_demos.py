@@ -5,11 +5,13 @@ piss off
 """
 
 import glob
+import locale
 import os
 import subprocess
 
 import microstructpy as msp
 
+locale.setlocale(locale.LC_NUMERIC, "C")
 
 example_dir = '../examples'
 
