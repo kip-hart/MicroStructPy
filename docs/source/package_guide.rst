@@ -34,10 +34,8 @@ above and a few key methods.
 
 **The following describes the 3-step process of generating a microstructure
 mesh in MicroStructPy**, including the relevant classes and methods.
-For a complete list of MicroStructPy classes, visit the
-:any:`API <microstructpy>` page.
-Visit the :ref:`Examples <package_examples>` page for examples using the
-API.
+See :any:`API <microstructpy>` for the complete list of MicroStructPy classes.
+For examples using the API, see :ref:`Examples <package_examples>`.
 
 0. List of Seed Geometries
 --------------------------

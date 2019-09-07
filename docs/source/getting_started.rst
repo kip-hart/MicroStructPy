@@ -56,7 +56,8 @@ A demonstration can be run from the command line by::
 
 When a demo is run, the XML input file is copied to the current working
 directory.
-To see a full list of available demos, visit the :ref:`examples_page` page.
+See :ref:`examples_page` for a full list of available examples and 
+demostrations.
 
 
 Using the Python Package

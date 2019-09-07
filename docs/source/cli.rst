@@ -501,7 +501,7 @@ a "color" field.
 The default color is "CN" where N is the order of the material in the XML file,
 starting from 0.
 For more information about color specification, visit the Matplotlib
-`Specifying Colors`_ page.
+`Specifying Colors`_ webpage.
 
 For example:
 
@@ -1114,7 +1114,7 @@ The colormap field is used when ``color_by`` is set to either "seed number" or
 "material number".
 This gives the name of the colormap to be used in coloring the seeds/grains.
 For a complete list of available colormaps, visit the `Choosing Colormaps in
-Matplotlib`_ page.
+Matplotlib`_ webpage.
 
 seeds_kwargs
 ^^^^^^^^^^^^
