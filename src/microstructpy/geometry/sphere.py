@@ -91,11 +91,9 @@ class Sphere(NSphere):
 
         .. math::
 
-            \begin{align}
-                \mathbb{E}[V] &= \mathbb{E}[\frac{4}{3}\pi R^3] \\
-                              &= \frac{4}{3}\pi \mathbb{E}[R^3] \\
-                              &= \frac{4}{3}\pi (\mu_R^3 + 3 \mu_R \sigma_R^2 + \gamma_{1, R} \sigma_R^3)
-            \end{align}
+            \mathbb{E}[V] &= \mathbb{E}[\frac{4}{3}\pi R^3] \\
+                            &= \frac{4}{3}\pi \mathbb{E}[R^3] \\
+                            &= \frac{4}{3}\pi (\mu_R^3 + 3 \mu_R \sigma_R^2 + \gamma_{1, R} \sigma_R^3)
 
         Args:
             **kwargs: Keyword arguments, see :class:`microstructpy.geometry.Sphere`.

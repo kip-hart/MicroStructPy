@@ -482,21 +482,17 @@ class Ellipsoid(object):
 
         .. math::
 
-            \begin{align}
-                \mathbb{E}[V] &= \mathbb{E}[\frac{4}{3}\pi A B C] \\
-                              &= \frac{4}{3}\pi \mathbb{E}[A] \mathbb{E}[B] \mathbb{E}[C] \\
-                              &= \frac{4}{3}\pi \mu_A \mu_B \mu_C
-            \end{align}
+            \mathbb{E}[V] &= \mathbb{E}[\frac{4}{3}\pi A B C] \\
+                            &= \frac{4}{3}\pi \mathbb{E}[A] \mathbb{E}[B] \mathbb{E}[C] \\
+                            &= \frac{4}{3}\pi \mu_A \mu_B \mu_C
 
         If the ellisoid is specified by size and aspect ratios, then the
         expected volume is computed by:
 
         .. math::
 
-            \begin{align}
-                \mathbb{E}[V] &= \mathbb{E}[\frac{\pi}{6} S^3] \\
-                              &= \frac{\pi}{6} (\mu_S^3 + 3 \mu_S \sigma_S^2 + \gamma_{1, S} \sigma_S^3)
-            \end{align}
+            \mathbb{E}[V] &= \mathbb{E}[\frac{\pi}{6} S^3] \\
+                            &= \frac{\pi}{6} (\mu_S^3 + 3 \mu_S \sigma_S^2 + \gamma_{1, S} \sigma_S^3)
 
         If the ellipsoid is specified using a combination of semi-axes and
         aspect ratios, then the expected volume is the mean of 1000 random

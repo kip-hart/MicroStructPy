@@ -361,10 +361,8 @@ class Ellipse(object):
 
         .. math::
 
-            \begin{align}
             \mathbb{E}[A] &= \frac{\pi}{4} \mathbb[S^2] \\
                           &= \frac{\pi}{4} (\mu_S^2 + \sigma_S^2)
-            \end{align}
 
         If the ellipse is specified by independent distributions for each
         semi-axis, the expected value is computed by:
@@ -378,20 +376,16 @@ class Ellipse(object):
 
         .. math::
 
-            \begin{align}
             \mathbb{E}[A] &= \pi \mathbb{E}[K B^2] \\
                           &= \pi \mu_K (\mu_B^2 + \sigma_B^2)
-            \end{align}
 
         Finally, if the ellipse is specified by the first semi-axis and the
         aspect ratio, the expected value is computed by Monte Carlo:
 
         .. math::
 
-            \begin{align}
             \mathbb{E}[A] &= \pi \mathbb{E}\left[\frac{A^2}{K}\right] \\
                           &\approx \frac{\pi}{n} \sum_{i=1}^n \frac{A_i}{K_i}
-            \end{align}
 
         where :math:`n=1000`.
 
