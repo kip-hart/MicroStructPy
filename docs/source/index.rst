@@ -23,8 +23,8 @@ Contents
    examples
    cli
    package_guide
-   troubleshooting
    API <microstructpy>
+   troubleshooting
 
 .. LINKS
 
