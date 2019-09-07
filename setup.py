@@ -27,7 +27,7 @@ def find_version(*fname):
 
 
 setup(
-    name='MicroStructPy',
+    name='microstructpy',
     version=find_version('src/microstructpy', '__init__.py'),
     license='MIT License',
     description=desc,
