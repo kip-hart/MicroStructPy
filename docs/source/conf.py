@@ -216,7 +216,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'MicroStructPy.tex', 'MicroStructPy Documentation',
+    ('contents', 'MicroStructPy.tex', 'MicroStructPy Documentation',
      'Kenneth Hart', 'manual'),
 ]
 
