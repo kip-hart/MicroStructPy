@@ -276,6 +276,12 @@ class SeedList(object):
                 elif str(i_val) != 'False':
                     self.seeds[int(i_val)] = s[ind]
 
+    def __add__(self, seedlist):
+        if type(self) == type(seedlist):
+            return SeedList(self.seeds + seedlist.seeds)
+        else:
+            return SeedList(self.seeds + seedlist)
+
     def __len__(self):
         return len(self.seeds)
 
