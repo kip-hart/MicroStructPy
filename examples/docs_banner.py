@@ -56,15 +56,15 @@ def main():
                                               max_volume=0.4)
 
     # Create Figure
-    k = 0.2
+    k = 0.12
     len_x = 3 * domain.length + 4 * off
     len_y = domain.width + 2 * off
     plt.figure(figsize=(k * len_x, k * len_y))
 
     # Plot Seeds 
     seed_colors = [phases[s.phase]['color'] for s in seeds]
-    seeds.plot(color=seed_colors, alpha=0.8, edgecolor='k', linewidth=0.5)
-    domain.plot(facecolor='none', edgecolor='k', linewidth=0.5)
+    seeds.plot(color=seed_colors, alpha=0.8, edgecolor='k', linewidth=0.3)
+    domain.plot(facecolor='none', edgecolor='k', linewidth=0.3)
 
     # Plot Polygonal Mesh
     pmesh.points = np.array(pmesh.points)
@@ -97,18 +97,20 @@ def main():
         common_regions = ellipse_regions & set(neighbors)
         if len(common_regions) < 2:
             x, y = zip(*[pmesh.points[kp] for kp in facet])
-            plt.plot(x, y, color='k', linewidth=0.5)
+            plt.plot(x, y, color='k', linewidth=0.3)
 
     # Plot Triangular Mesh
     tmesh.points = np.array(tmesh.points)
     tmesh.points[:, 0] += 2 * off + 2 * domain.length
     tri_colors = [seed_colors[n] for n in tmesh.element_attributes]
-    tmesh.plot(color=tri_colors, alpha=0.8, edgecolor='k', linewidth=0.3)
+    tmesh.plot(color=tri_colors, alpha=0.8, edgecolor='k', linewidth=0.2)
 
     # Set Up Axes
     plt.gca().set_position([0, 0, 1, 1])
     plt.axis('image')
-    plt.axis('off')
+    plt.gca().set_axis_off()
+    plt.gca().get_xaxis().set_visible(False)
+    plt.gca().get_yaxis().set_visible(False)
     
     xlim, ylim = domain.limits
     xlim[0] -= off
@@ -121,90 +123,7 @@ def main():
 
     fname = os.path.join(dirname, 'banner.png')
     plt.savefig(fname, bbox='tight', pad_inches=0)
-
-
-def plot_seeds(seeds, phases, domain):
-    plt.clf()
-    colors = []
-    for seed in seeds:
-        colors.append(phases[seed.phase]['color'])
-    seeds.plot(color=colors, alpha=0.8, edgecolor='none')
-    seeds.plot(color='none', alpha=0.8, edgecolor='k', linewidth=0.1)
-
-    show_plot(domain, 'seeds.pdf')
-
-
-def plot_seeds_breakdown(seeds, phases, domain):
-    plt.clf()
-    colors = []
-    for seed in seeds:
-        colors.append(phases[seed.phase]['color'])
-    seeds.plot_breakdown(color=colors, alpha=0.8, edgecolor='none')
-    seeds.plot_breakdown(color='none', alpha=0.8, edgecolor='k', linewidth=0.1)
-
-    show_plot(domain, 'breakdown.pdf')
-
-def plot_polymesh(pmesh, phases, domain):
-    plt.clf()
-    colors = []
-    for phase_num in pmesh.phase_numbers:
-        colors.append(phases[phase_num]['color'])
-    pmesh.plot(color=colors, alpha=0.8, edgecolor='none')
-    pmesh.plot(color='none', alpha=0.8, edgecolor='k', linewidth=0.1)
-
-    show_plot(domain, 'polymesh.pdf')
-
-def plot_polymesh_without(pmesh, phases, domain):
-    plt.clf()
-    pmesh_facets = np.array(pmesh.facets)
-
-    # Plot Surrounding
-    for region, phase_num in zip(pmesh.regions, pmesh.phase_numbers):
-        if phase_num == 1:
-            continue
-        color = phases[0]['color']
-
-        facets = [pmesh.facets[f] for f in region]
-        kps = ordered_kps(facets)
-        x, y = zip(*[pmesh.points[kp] for kp in kps])
-        plt.fill(x, y, color=color, alpha=0.8, edgecolor='none')
-
-    # Plot Ellipse
-    ellipse_regions = set()
-    for region_num, phase_num in enumerate(pmesh.phase_numbers):
-        if phase_num == 1:
-            ellipse_regions.add(region_num)
-
-    ellipse_facets = []
-    for facet, neighbors in zip(pmesh.facets, pmesh.facet_neighbors):
-        common_regions = ellipse_regions & set(neighbors)
-        if len(common_regions) == 1:
-            ellipse_facets.append(facet)
-    ellipse_kps = ordered_kps(ellipse_facets)
-    x, y = zip(*[pmesh.points[kp] for kp in ellipse_kps])
-    plt.fill(x, y, color=phases[1]['color'], alpha=0.8, edgecolor='k',
-             linewidth=0.1)
-
-    # Plot Facets
-    for facet, neighbors in zip(pmesh.facets, pmesh.facet_neighbors):
-        common_regions = ellipse_regions & set(neighbors)
-        if len(common_regions) < 2:
-            x, y = zip(*[pmesh.points[kp] for kp in facet])
-            plt.plot(x, y, color='k', linewidth=0.1)
-
-    show_plot(domain, 'polymesh_without.pdf')
-
-
-def plot_trimesh(tmesh, seeds, phases, domain):
-    plt.clf()
-    colors = []
-    for seed_num in tmesh.element_attributes:
-        phase_num = seeds[seed_num].phase
-        color = phases[phase_num]['color']
-        colors.append(color)
-    tmesh.plot(color=colors, alpha=0.8, edgecolor='k', linewidth=0.1)
-
-    show_plot(domain, 'trimesh.pdf')
+    plt.savefig(fname.replace('.png', '.pdf'), bbox='tight', pad_inches=0)
 
 
 def ordered_kps(pairs):
@@ -217,24 +136,6 @@ def ordered_kps(pairs):
         assert kps[-1] in pair, pairs
         kps += [kp for kp in t_pairs.pop(i) if kp != kps[-1]]
     return kps[:-1]
-
-
-def show_plot(domain, fname=None):
-    plt.axis('square')
-
-    xlim, ylim = domain.limits
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-
-    ax = plt.gca()
-    ax.set_axis_off()
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-
-    if not fname:
-        plt.show()
-    else:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == '__main__':
