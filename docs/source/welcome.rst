@@ -16,8 +16,25 @@ Features of MicroStructPy include:
 * Output to common file formats
 * Customizable workflow
 
-.. image:: ../../examples/docs_banner/banner.png
-    :alt: Banner image showing the three steps for creating microstructure.
+.. only:: html
+
+    .. image:: ../../examples/docs_banner/banner.png
+        :alt: Banner image showing the three steps for creating microstructure.
+
+    *The three major steps to creating a microstructure are:
+    1) seed the domain with particles,
+    2) create a Voronoi power diagram, and
+    3) convert the diagram into an unstructured mesh.*
+
+.. only:: not html
+
+    .. figure:: ../../examples/docs_banner/banner.pdf
+        :alt: Banner image showing the three steps for creating microstructure.
+
+        The three major steps to creating a microstructure are:
+        1) seed the domain with particles,
+        2) create a Voronoi power diagram, and
+        3) convert the diagram into an unstructured mesh.
 
 
 Quick Start
