@@ -76,17 +76,43 @@ The text files contain all of the data related to the seed geometries and
 meshes.
 The image files contain:
 
-.. image:: ../../examples/seeds.png
-    :width: 30%
-    :alt: Seed geometries for minimal example.
+.. only:: not latex
 
-.. image:: ../../examples/polymesh.png
-    :width: 30%
-    :alt: Polygonal mesh for minimal example.
+    .. image:: ../../examples/seeds.png
+        :width: 30%
+        :alt: Seed geometries for minimal example.
 
-.. image:: ../../examples/trimesh.png
-    :width: 30%
-    :alt: Unstructured mesh for minimal example.
+    .. image:: ../../examples/polymesh.png
+        :width: 30%
+        :alt: Polygonal mesh for minimal example.
+
+    .. image:: ../../examples/trimesh.png
+        :width: 30%
+        :alt: Unstructured mesh for minimal example.
+
+    *1) The seed geometries,
+    2) the polygonal mesh,
+    3) the triangular mesh*
+
+.. only:: latex
+
+    .. raw:: latex
+
+        \begin{figure}[ht]
+            \centering
+            \subfloat[Seed geometries]{
+                \includegraphics[width=0.3\textwidth]{../../examples/seeds.png}
+            }
+            ~
+            \subfloat[Polygonal Mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/polymesh.png}
+            }
+            ~
+            \subfloat[Triangular Mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/trimesh.png}
+            }
+            \caption{Output plots for a minimal example.}
+        \end{figure}
 
 The same results can be produced using this script:
 

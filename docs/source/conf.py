@@ -205,7 +205,7 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    # 'preamble': '',
+    'preamble': '\usepackage{subfig}\n',
 
     # Latex figure (float) alignment
     #
