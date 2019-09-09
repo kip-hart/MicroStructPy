@@ -631,8 +631,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
     plt.clf()
     plt.close('all')
     fig = plt.figure()
-    ax = plt.axes(projection={2: None, 3: Axes3D.name}[n_dim],
-                  label='seed')
+    ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='seeds')
 
     if not plot_axes:
         if n_dim == 2:
@@ -669,11 +668,11 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
         plt.ylim(lims[1])
 
     else:
-        lbs, ubs = np.array(lims).T
-        ds_max = np.max(ubs - lbs)
-        cen = 0.5 * (lbs + ubs)
-        plt_lims = [(x - 0.5 * ds_max, x + 0.5 * ds_max) for x in cen]
-        plt.gca().auto_scale_xyz(*plt_lims)
+        for x in lims[0]:
+            for y in lims[1]:
+                for z in lims[2]:
+                    ax.plot([x], [y], [z])
+        ax.set_aspect('equal')
 
     # Save plot
     for fname in plot_files:
@@ -728,8 +727,7 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
     plt.clf()
     plt.close('all')
     fig = plt.figure()
-    ax = plt.axes(projection={2: None, 3: Axes3D.name}[n_dim],
-                  label='poly')
+    ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='poly')
 
     if not plot_axes:
         if n_dim == 2:
@@ -738,7 +736,6 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
             ax.get_yaxis().set_visible(False)
         else:
             ax._axis3don = False
-    fig.add_axes(ax)
 
     # Plot polygons
     fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
@@ -779,11 +776,11 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
         plt.ylim(lims[1])
 
     else:
-        lbs, ubs = np.array(lims).T
-        ds_max = np.max(ubs - lbs)
-        cen = 0.5 * (lbs + ubs)
-        plt_lims = [(x - 0.5 * ds_max, x + 0.5 * ds_max) for x in cen]
-        plt.gca().auto_scale_xyz(*plt_lims)
+        for x in lims[0]:
+            for y in lims[1]:
+                for z in lims[2]:
+                    ax.plot([x], [y], [z])
+        ax.set_aspect('equal')
 
     # save plot
     for fname in plot_files:
@@ -851,8 +848,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     plt.clf()
     plt.close('all')
     fig = plt.figure()
-    ax = plt.axes(projection={2: None, 3: Axes3D.name}[n_dim],
-                  label='tri')
+    ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='tri')
 
     if not plot_axes:
         if n_dim == 2:
@@ -893,11 +889,11 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         plt.ylim(lims[1])
 
     else:
-        lbs, ubs = np.array(lims).T
-        ds_max = np.max(ubs - lbs)
-        cen = 0.5 * (lbs + ubs)
-        plt_lims = [(x - 0.5 * ds_max, x + 0.5 * ds_max) for x in cen]
-        plt.gca().auto_scale_xyz(*plt_lims)
+        for x in lims[0]:
+            for y in lims[1]:
+                for z in lims[2]:
+                    ax.plot([x], [y], [z])
+        ax.set_aspect('equal')
 
     # save plot
     for fname in plot_files:
