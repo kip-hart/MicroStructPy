@@ -81,6 +81,7 @@ Examples Using the CLI
     ex_minimal
     ex_basalt
     ex_2phase_3d
+    ex_colormap
 
 .. figure:: ../../examples/elliptical_grains/seeds.png
   :alt: Seed particles for the elliptical grains.

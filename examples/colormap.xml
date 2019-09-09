@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <shape> sphere </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 1 </loc>
+            <scale> 2 </scale>
+        </size>
+    </material>
+
+    <domain>
+        <shape> cube </shape>
+        <side_length> 15 </side_length>
+    </domain>
+
+    <settings>
+        <directory> colormap </directory>
+        <mesh_min_angle> 15 </mesh_min_angle>
+        <color_by> seed number </color_by>
+        <colormap> RdYlBu </colormap>
+    </settings>
+</input>
