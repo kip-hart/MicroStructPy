@@ -658,7 +658,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     if given_names and color_by == 'material':
         handles = [h for h in custom_seeds if h is not None]
-        plt.gca().legend(handles=handles, loc=4)
+        ax.legend(handles=handles, loc=4)
 
     # Set limits
     lims = domain.limits
@@ -766,7 +766,7 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
                 phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
                 custom_seeds[phase_num] = phase_patch
         handles = [h for h in custom_seeds if h is not None]
-        plt.gca().legend(handles=handles, loc=4)
+        ax.legend(handles=handles, loc=4)
 
     # format axes
     lims = np.array([np.min(pmesh.points, 0), np.max(pmesh.points, 0)]).T
@@ -879,7 +879,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
                 phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
                 custom_seeds[phase_num] = phase_patch
         handles = [h for h in custom_seeds if h is not None]
-        plt.gca().legend(handles=handles, loc=4)
+        ax.legend(handles=handles, loc=4)
 
     # format axes
     lims = np.array([np.min(tmesh.points, 0), np.max(tmesh.points, 0)]).T
