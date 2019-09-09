@@ -658,7 +658,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     if given_names and color_by == 'material':
         handles = [h for h in custom_seeds if h is not None]
-        plt.gca().legend(handles=handles, loc=4)
+        ax.legend(handles=handles, loc=4)
 
     # Set limits
     lims = domain.limits
@@ -766,7 +766,7 @@ def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
                 phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
                 custom_seeds[phase_num] = phase_patch
         handles = [h for h in custom_seeds if h is not None]
-        plt.gca().legend(handles=handles, loc=4)
+        ax.legend(handles=handles, loc=4)
 
     # format axes
     lims = np.array([np.min(pmesh.points, 0), np.max(pmesh.points, 0)]).T
@@ -879,7 +879,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
                 phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
                 custom_seeds[phase_num] = phase_patch
         handles = [h for h in custom_seeds if h is not None]
-        plt.gca().legend(handles=handles, loc=4)
+        ax.legend(handles=handles, loc=4)
 
     # format axes
     lims = np.array([np.min(tmesh.points, 0), np.max(tmesh.points, 0)]).T
@@ -903,18 +903,11 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
 
 def _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim):
+    seed_colors = _seed_colors(seeds, phases, color_by, colormap)
+
     if n_dim == 2:
-        if color_by == 'material':
-            return [_phase_color(seeds[n].phase, phases) for n in
-                    tmesh.element_attributes]
-        if color_by == 'seed number':
-            n = np.max(tmesh.element_attributes) + 1
-            return [_cm_color(i / (n - 1), colormap) for i in
-                    tmesh.element_attributes]
-        if color_by == 'material number':
-            n = len(phases)
-            return [_cm_color(seeds[i].phase / (n - 1), colormap) for i in
-                    tmesh.element_attributes]
+        return [seed_colors[n] for n in tmesh.element_attributes]
+
     else:
         facet_neighbors = np.array(pmesh.facet_neighbors)
         facet_is_ext = np.any(facet_neighbors < 0, axis=1)
@@ -958,7 +951,7 @@ def _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim):
                     phase = phases[phase_num]
                     phase_type = phase.get('material_type', 'solid')
                     if phase_type not in _misc.kw_void:
-                        facet_color = phase.get('color', 'C' + str(phase_num))
+                        facet_color = seed_colors[seed_num]
             elem_fcs.append(facet_color)
         return elem_fcs
 
