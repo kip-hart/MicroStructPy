@@ -5,32 +5,76 @@
         <shape> ellipse </shape>
         <a>
             <dist_type> uniform </dist_type>
-            <loc> 0.05 </loc>
+            <loc> 0.2  </loc>
             <scale> 0.35 </scale>
         </a>
-        <b> 0.05 </b>
-        <orientation> random </orientation>
-        <color> #eaaa00 </color>
+        <b> 0.03 </b>
+        <angle_deg>
+            <dist_type> uniform </dist_type>
+            <loc> 25 </loc>
+            <scale> 20 </scale>
+        </angle_deg>
+        <color> orange </color>
     </material>
 
     <material>
-        <fraction> 2 </fraction>
+        <fraction> 1 </fraction>
+        <!-- <material_type> matrix </material_type> -->
         <shape> circle </shape>
-        <diameter>
+        <area>
             <dist_type> lognorm </dist_type>
-            <scale> 0.06 </scale>
-            <s> 0.6 </s>
-        </diameter>
-        <color> #00263A </color>
+            <scale> 0.0002 </scale>
+            <s> 1.7 </s>
+        </area>
+        <color> plum </color>
+    </material>
+
+    <material>
+        <fraction> 1 </fraction>
+        <!-- <material_type> matrix </material_type> -->
+        <shape> circle </shape>
+        <area>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.0002 </scale>
+            <s> 1.7 </s>
+        </area>
+        <color> lightblue </color>
+    </material>
+
+    <material>
+        <fraction> 1 </fraction>
+        <!-- <material_type> matrix </material_type> -->
+        <shape> circle </shape>
+        <area>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.0002 </scale>
+            <s> 1.7 </s>
+        </area>
+        <color> lightgreen </color>
+    </material>
+
+    <material>
+        <fraction> 1 </fraction>
+        <!-- <material_type> matrix </material_type> -->
+        <shape> circle </shape>
+        <area>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.0002 </scale>
+            <s> 1.7 </s>
+        </area>
+        <color> khaki </color>
     </material>
 
     <domain>
         <shape> rectangle </shape>
-        <side_lengths> (2, 3) </side_lengths>
+        <side_lengths> (2.4, 1.2) </side_lengths>
     </domain>
 
     <settings>
+        <verbose> True </verbose>
         <mesh_min_angle> 20 </mesh_min_angle>
+        <mesh_max_edge_length> 0.01 </mesh_max_edge_length>
+        <mesh_max_volume> 0.001 </mesh_max_volume>
 
         <filetypes>
             <seeds_plot> png </seeds_plot>
@@ -42,17 +86,14 @@
         <plot_axes> False </plot_axes>
 
         <seeds_kwargs>
-            <edgecolor> w </edgecolor>
             <linewidth> 0.5 </linewidth>
         </seeds_kwargs>
 
         <poly_kwargs>
-            <edgecolors> w </edgecolors>
             <linewidth> 0.5 </linewidth>
         </poly_kwargs>
 
         <tri_kwargs>
-            <edgecolor> w </edgecolor>
             <linewidth> 0.1 </linewidth>
         </tri_kwargs>
     </settings>
