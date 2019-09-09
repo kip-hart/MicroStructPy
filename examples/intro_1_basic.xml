@@ -4,7 +4,6 @@
         <name> Matrix </name>
         <material_type> matrix </material_type>
         <fraction> 2 </fraction>
-
         <shape> circle </shape>
         <size>
             <dist_type> uniform </dist_type>
@@ -27,13 +26,7 @@
     </domain>
 
     <settings>
-        <filetypes>
-            <seeds_plot> png </seeds_plot>
-            <poly_plot> png </poly_plot>
-            <tri_plot> png </tri_plot>
-        </filetypes>
-
-        <directory> intro_1_basic </directory>
         <verbose> True </verbose>
+        <directory> intro_1_basic </directory>
     </settings>
 </input>
