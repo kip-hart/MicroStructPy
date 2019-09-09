@@ -120,6 +120,7 @@ Examples Using the Python Package
 .. toctree::
     :maxdepth: 1
 
+    ex_foam
     ex_standard_voronoi
     ex_uniform_seeding
     ex_grain_neighborhoods
