@@ -10,11 +10,11 @@ import scipy.stats
 
 
 # Define the domain
-domain = msp.geometry.Rectangle(corner=(0, 0), side_lengths=(8, 12))
+domain = msp.geometry.Square(corner=(0, 0), side_length=10)
 
 # Define the material phases
-r_dist = scipy.stats.lognorm(s=0.7, scale=0.1)
-matrix_phase = {'fraction': 2,
+r_dist = scipy.stats.lognorm(s=0.6, scale=0.1)
+matrix_phase = {'fraction': 1,
                 'material_type': 'matrix',
                 'shape': 'circle',
                 'r': r_dist}
