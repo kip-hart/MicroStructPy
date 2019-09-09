@@ -903,18 +903,11 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
 
 def _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim):
+    seed_colors = _seed_colors(seeds, phases, color_by, colormap)
+
     if n_dim == 2:
-        if color_by == 'material':
-            return [_phase_color(seeds[n].phase, phases) for n in
-                    tmesh.element_attributes]
-        if color_by == 'seed number':
-            n = np.max(tmesh.element_attributes) + 1
-            return [_cm_color(i / (n - 1), colormap) for i in
-                    tmesh.element_attributes]
-        if color_by == 'material number':
-            n = len(phases)
-            return [_cm_color(seeds[i].phase / (n - 1), colormap) for i in
-                    tmesh.element_attributes]
+        return [seed_colors[n] for n in tmesh.element_attributes]
+
     else:
         facet_neighbors = np.array(pmesh.facet_neighbors)
         facet_is_ext = np.any(facet_neighbors < 0, axis=1)
@@ -958,7 +951,7 @@ def _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim):
                     phase = phases[phase_num]
                     phase_type = phase.get('material_type', 'solid')
                     if phase_type not in _misc.kw_void:
-                        facet_color = phase.get('color', 'C' + str(phase_num))
+                        facet_color = seed_colors[seed_num]
             elem_fcs.append(facet_color)
         return elem_fcs
 
