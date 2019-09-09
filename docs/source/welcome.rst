@@ -104,11 +104,11 @@ The image files contain:
                 \includegraphics[width=0.3\textwidth]{../../examples/seeds.png}
             }
             ~
-            \subfloat[Polygonal Mesh]{
+            \subfloat[Polygonal mesh]{
                 \includegraphics[width=0.3\textwidth]{../../examples/polymesh.png}
             }
             ~
-            \subfloat[Triangular Mesh]{
+            \subfloat[Triangular mesh]{
                 \includegraphics[width=0.3\textwidth]{../../examples/trimesh.png}
             }
             \caption{Output plots for a minimal example.}
