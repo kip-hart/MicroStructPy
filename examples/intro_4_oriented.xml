@@ -42,12 +42,6 @@
     </domain>
 
     <settings>
-        <filetypes>
-            <seeds_plot> png </seeds_plot>
-            <poly_plot> png </poly_plot>
-            <tri_plot> png </tri_plot>
-        </filetypes>
-
         <directory> intro_4_oriented </directory>
         <verbose> True </verbose>
     </settings>

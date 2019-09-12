@@ -18,24 +18,11 @@ The full text of the file is:
     :language: xml
 
 
-Material 1 - Matrix
--------------------
-
-.. literalinclude:: ../../examples/intro_4_oriented.xml
-    :language: xml
-    :lines: 3-14
-    :dedent: 4
+Materials
+=========
 
 There are two materials, in a 2:1 ratio based on volume.
 The first is a matrix, which is represented with small circles.
-
-Material 2 - Inclusions
------------------------
-
-.. literalinclude:: ../../examples/intro_4_oriented.xml
-    :language: xml
-    :lines: 16-36
-    :dedent: 4
 
 The second material consists of elliptical inclusions with size ranging from
 0 to 2 and aspect ratio ranging from 1 to 3.
@@ -44,53 +31,81 @@ The orientation angle of the inclusions are uniformly distributed between -10
 and +10 degrees, relative to the +x axis.
 
 Domain Geometry
----------------
-
-.. literalinclude:: ../../examples/intro_4_oriented.xml
-    :language: xml
-    :lines: 38-42
-    :dedent: 4
+===============
 
 These two materials fill a square domain.
 The bottom-left corner of the rectangle is the origin, which puts the
 rectangle in the first quadrant.
-The side length is 20, which is 10x the size of the inclusions.
+The side length is 20, which is 10x the size of the inclusions
+to ensure that the microstructure is statistically representative.
 
 
 Settings
---------
+========
 
-.. literalinclude:: ../../examples/intro_4_oriented.xml
-    :language: xml
-    :lines: 44-53
-    :dedent: 4
+Many settings have been left to their defaults, with the exceptions being the
+verbose mode and output directory.
 
-PNG files of each step in the process will be output, as well as the
-intermediate text files.
-They are saved in a folder named ``intro_4_oriented``, in the current directory
-(i.e ``./intro_4_oriented``).
+By default, MicroStructPy does not print status updates to the command line.
+Switching the verbose mode on will regularly print the status of the code.
+
+The output directory is a filepath for writing text and image files.
+By default, MicroStructPy outputs texts files containing data on the seeds,
+polygon mesh, and triangular mesh as well as the corresponding image files,
+saved in PNG format.
+
+.. note::
+
+    The ``<directory>`` field can be an absolute or relative filepath. If it is
+    relative, outputs are written relative to the **input file**, not the
+    current working directory.
 
 
 Output Files
 ============
 
-The three plots that this file generates are the seeding, the polygon mesh,
-and the triangular mesh.
+.. only:: not latex
 
-Seeding Plot
-------------
+    The three plots that this file generates are the seeding, the polygon mesh,
+    and the triangular mesh.
+    These three plots are shown below.
 
-.. image:: ../../examples/intro_4_oriented/seeds.png
-   :alt: Seed particles.
+    .. figure:: ../../examples/intro_4_oriented/seeds.png
+        :alt: Seed geometries.
 
-Polygon Mesh Plot
------------------
+        Seed geometries
+        
+    .. figure:: ../../examples/intro_4_oriented/polymesh.png
+        :alt: Polygonal mesh.
 
-.. image:: ../../examples/intro_4_oriented/polymesh.png
-   :alt: Polygon mesh.
+        Polygonal mesh
+        
+    .. figure:: ../../examples/intro_4_oriented/trimesh.png
+        :alt: Triangular mesh.
 
-Triangular Mesh Plot
---------------------
+        Triangular mesh
 
-.. image:: ../../examples/intro_4_oriented/trimesh.png
-   :alt: Triangular mesh.
+.. only:: latex
+
+    .. raw:: latex
+
+        The three plots that this file generates are the seeding, the polygon mesh,
+        and the triangular mesh.
+        These three plots are shown in Fig.~\ref{fig:ex_4_oriented}.
+
+        \begin{figure}[htbp]
+            \centering
+            \subfloat[Seed geometries]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/seeds.png}
+            }
+            ~
+            \subfloat[Polygonal mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/polymesh.png}
+            }
+            ~
+            \subfloat[Triangular mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/trimesh.png}
+            }
+            \caption{Output plots for basic example.}
+            \label{fig:ex_4_oriented}
+        \end{figure}
