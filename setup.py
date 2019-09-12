@@ -73,7 +73,7 @@ setup(
     ],
     install_requires=[
         'aabbtree',
-        'matplotlib>=2.2.0',
+        'matplotlib>=2.2.0,<3.1.0',
         'pybind11',  # must come before meshpy for successful install
         'meshpy',
         'numpy>=1.13.0',
