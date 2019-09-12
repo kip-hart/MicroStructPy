@@ -205,7 +205,7 @@ latex_elements = {
 
     # Additional stuff for the LaTeX preamble.
     #
-    'preamble': '\n'.join(['\usepackage{subfig}',
+    'preamble': '\n'.join(['\\usepackage{subfig}',
                            '\\numberwithin{figure}{chapter}',
                            '\\numberwithin{table}{chapter}',
                            '\\numberwithin{equation}{chapter}'
