@@ -77,13 +77,13 @@ Examples Using the CLI
 
 .. only:: html
 
-  .. image:: ../../examples/elliptical_grains/seeds.png
-    :alt: Seed particles for the elliptical grains.=
+  .. image:: ../../examples/elliptical_grains/polymesh.png
+    :alt: Polygonal mesh with elliptical grains.
     :width: 64%
     :target: ex_elliptical_grains.html
 
   .. image:: ../../examples/minimal/polymesh.png
-    :alt: Polygonal mesh from minimal example.=
+    :alt: Polygonal mesh from minimal example.
     :width: 32%
     :target: ex_minimal.html
 
