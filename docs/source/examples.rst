@@ -23,50 +23,42 @@ Input File Introduction
     ex_5_plotting
     ex_6_culmination
 
-.. figure:: ../../examples/intro_1_basic/trimesh.png
-  :alt: Triangular mesh from first intro example.
-  :align: center
-  :width: 60%
+.. only:: html
 
-  :ref:`ex_1_basic`
-
-.. figure:: ../../examples/intro_2_quality/trimesh.png
-  :alt: Triangular mesh from second intro example.
-  :align: center
-  :width: 60%
-
-  :ref:`ex_2_quality`
+  .. image:: ../../examples/intro_1_basic/trimesh.png
+    :alt: Triangular mesh from first intro example.
+    :width: 32%
+    :target: ex_1_basic.html
 
 
-.. figure:: ../../examples/intro_3_size_shape/trimesh.png
-  :alt: Triangular mesh from third intro example.
-  :align: center
-  :width: 60%
-
-  :ref:`ex_3_shape`
+  .. image:: ../../examples/intro_2_quality/trimesh.png
+    :alt: Triangular mesh from second intro example.
+    :width: 32%
+    :target: ex_2_quality.html
 
 
-.. figure:: ../../examples/intro_4_oriented/trimesh.png
-  :alt: Triangular mesh from fourth intro example.
-  :align: center
-  :width: 60%
-
-  :ref:`ex_4_oriented`
+  .. image:: ../../examples/intro_3_size_shape/trimesh.png
+    :alt: Triangular mesh from third intro example.
+    :width: 32%
+    :target: ex_3_size_shape.html
 
 
-.. figure:: ../../examples/intro_5_plotting/trimesh.png
-  :alt: Triangular mesh from fifth intro example.
-  :align: center
-  :width: 60%
+  .. image:: ../../examples/intro_4_oriented/trimesh.png
+    :alt: Triangular mesh from fourth intro example.
+    :width: 32%
+    :target: ex_4_oriented.html
 
-  :ref:`ex_5_plotting`
 
-.. figure:: ../../examples/intro_6_culmination/trimesh.png
-  :alt: Triangular mesh from sixth intro example.
-  :align: center
-  :width: 60%
+  .. image:: ../../examples/intro_5_plotting/trimesh.png
+    :alt: Triangular mesh from fifth intro example.
+    :width: 32%
+    :target: ex_5_plotting.html
 
-  :ref:`ex_6_culmin`
+
+  .. image:: ../../examples/intro_6_culmination/trimesh.png
+    :alt: Triangular mesh from sixth intro example.
+    :width: 32%
+    :target: ex_6_culmination.html
 
 
 .. _cli_examples:
@@ -83,33 +75,32 @@ Examples Using the CLI
     ex_2phase_3d
     ex_colormap
 
-.. figure:: ../../examples/elliptical_grains/seeds.png
-  :alt: Seed particles for the elliptical grains.
-  :align: center
-  :width: 60%
+.. only:: html
 
-  :ref:`ex_elliptical_grains`
+  .. image:: ../../examples/elliptical_grains/seeds.png
+    :alt: Seed particles for the elliptical grains.=
+    :width: 64%
+    :target: ex_elliptical_grains.html
 
-.. figure:: ../../examples/minimal/polymesh.png
-  :alt: Polygonal mesh from minimal example.
-  :align: center
-  :width: 60%
+  .. image:: ../../examples/minimal/polymesh.png
+    :alt: Polygonal mesh from minimal example.=
+    :width: 32%
+    :target: ex_minimal.html
 
-  :ref:`ex_minimal`
+  .. image:: ../../examples/basalt_circle/trimesh.png
+    :alt: Triangular mesh from basalt example.
+    :width: 32%
+    :target: ex_basalt.html
 
-.. figure:: ../../examples/basalt_circle/trimesh.png
-  :alt: Triangular mesh from basalt example.
-  :align: center
-  :width: 60%
+  .. image:: ../../examples/two_phase_3D/polymesh.png
+    :alt: Polygonal mesh from 3D two phase example.
+    :width: 32%
+    :target: ex_2phase_3d.html
 
-  :ref:`ex_basalt`
-
-.. figure:: ../../examples/two_phase_3D/polymesh.png
-  :alt: Polygonal mesh from 3D two phase example.
-  :align: center
-  :width: 60%
-
-  :ref:`ex_2phase_3d`
+.. image:: ../../examples/colormap/trimesh.png
+    :alt: Triangular mesh from 3D colormap example.
+    :width: 32%
+    :target: ex_colormap.html
 
 
 
@@ -127,30 +118,29 @@ Examples Using the Python Package
     ex_grain_neighborhoods
     ex_from_image
 
-.. figure:: ../../examples/standard_voronoi/voronoi_diagram.png
-  :alt: Standard Voronoi diagram.
-  :align: center
-  :width: 60%
+.. only:: html
 
-  :ref:`ex_std_voro`
+  .. image:: ../../examples/foam/trimesh.png
+    :alt: Mesh of foam microstructure.
+    :width: 30%
+    :target: ex_foam.html
 
-.. figure:: ../../examples/uniform_seeding/voronoi_diagram.png
-  :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
-  :align: center
-  :width: 60%
+  .. image:: ../../examples/standard_voronoi/voronoi_diagram.png
+    :alt: Standard Voronoi diagram.
+    :width: 30%
+    :target: ex_standard_voronoi.html
 
-  :ref:`ex_uni_seed`
+  .. image:: ../../examples/uniform_seeding/voronoi_diagram.png
+    :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
+    :width: 30%
+    :target: ex_uniform_seeding.html
 
-.. figure:: ../../examples/grain_neighborhoods/trimesh.png
-  :alt: Triangular mesh of microstructure with seed neighborhoods.
-  :align: center
-  :width: 60%
+  .. image:: ../../examples/grain_neighborhoods/trimesh.png
+    :alt: Triangular mesh of microstructure with seed neighborhoods.
+    :width: 30%
+    :target: ex_grain_neighborhoods.html
 
-  :ref:`ex_grain_nbr`
-
-.. figure:: ../../examples/from_image/trimesh.png
-  :alt: Triangular mesh of aluminum microstructure.
-  :align: center
-  :width: 60%
-
-  :ref:`ex_from_image`
+  .. image:: ../../examples/from_image/trimesh.png
+    :alt: Triangular mesh of aluminum microstructure.
+    :width: 30%
+    :target: ex_from_image.html
