@@ -18,53 +18,29 @@ The full text of the file is:
     :language: xml
 
 
-Material 1 - Matrix
--------------------
-
-.. literalinclude:: ../../examples/intro_2_quality.xml
-    :language: xml
-    :lines: 3-14
-    :dedent: 4
+Materials
+=========
 
 There are two materials, in a 2:1 ratio based on volume.
 The first is a matrix, which is represented with small circles.
-
-Material 2 - Inclusions
------------------------
-
-.. literalinclude:: ../../examples/intro_2_quality.xml
-    :language: xml
-    :lines: 16-21
-    :dedent: 4
-
 The second material consists of circular inclusions with diameter 2.
 
 Domain Geometry
----------------
-
-.. literalinclude:: ../../examples/intro_2_quality.xml
-    :language: xml
-    :lines: 23-27
-    :dedent: 4
+===============
 
 These two materials fill a square domain.
 The bottom-left corner of the rectangle is the origin, which puts the
 rectangle in the first quadrant.
-The side length is 20, which is 10x the size of the inclusions.
+The side length is 20, which is 10x the size of the inclusions to ensure that
+microstructure is statistically representative.
 
 
 Settings
---------
+========
 
-.. literalinclude:: ../../examples/intro_2_quality.xml
-    :language: xml
-    :lines: 29-43
-    :dedent: 4
-
-PNG files of each step in the process will be output, as well as the
-intermediate text files.
-They are saved in a folder named ``intro_2_quality``, in the current directory
-(i.e ``./intro_2_quality``).
+The first two settings determine the output directory and whether to run the
+program in verbose mode.
+The following settings determine the quality of the triangular mesh.
 
 The minimum interior angle of the elements is 25 degrees, ensuring lower
 aspect ratios compared to the first example.
@@ -80,23 +56,48 @@ Note that the edge length control is currently unavailable in 3D.
 Output Files
 ============
 
-The three plots that this file generates are the seeding, the polygon mesh,
-and the triangular mesh.
+.. only:: not latex
 
-Seeding Plot
-------------
+    The three plots that this file generates are the seeding, the polygon mesh,
+    and the triangular mesh.
+    These three plots are shown below.
 
-.. image:: ../../examples/intro_2_quality/seeds.png
-   :alt: Seed particles.
+    .. figure:: ../../examples/intro_2_quality/seeds.png
+        :alt: Seed geometries.
 
-Polygon Mesh Plot
------------------
+        Seed geometries
+        
+    .. figure:: ../../examples/intro_2_quality/polymesh.png
+        :alt: Polygonal mesh.
 
-.. image:: ../../examples/intro_2_quality/polymesh.png
-   :alt: Polygon mesh.
+        Polygonal mesh
+        
+    .. figure:: ../../examples/intro_2_quality/trimesh.png
+        :alt: Triangular mesh.
 
-Triangular Mesh Plot
---------------------
+        Triangular mesh
 
-.. image:: ../../examples/intro_2_quality/trimesh.png
-   :alt: Triangular mesh.
+.. only:: latex
+
+    .. raw:: latex
+
+        The three plots that this file generates are the seeding, the polygon mesh,
+        and the triangular mesh.
+        These three plots are shown in Fig.~\ref{fig:ex_2_quality}.
+
+        \begin{figure}[htbp]
+            \centering
+            \subfloat[Seed geometries]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_2_quality/seeds.png}
+            }
+            ~
+            \subfloat[Polygonal mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_2_quality/polymesh.png}
+            }
+            ~
+            \subfloat[Triangular mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_2_quality/trimesh.png}
+            }
+            \caption{Output plots for basic example.}
+            \label{fig:ex_2_quality}
+        \end{figure}
