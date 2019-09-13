@@ -1,8 +1,8 @@
 .. _ex_4_oriented:
 
-====================================
-Oriented Grains and Amorphous Phases
-====================================
+===============
+Oriented Grains
+===============
 
 XML Input File
 ==============
