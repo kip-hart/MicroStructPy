@@ -18,24 +18,11 @@ The full text of the file is:
     :language: xml
 
 
-Material 1 - Matrix
--------------------
-
-.. literalinclude:: ../../examples/intro_6_culmination.xml
-    :language: xml
-    :lines: 3-14
-    :dedent: 4
+Materials
+=========
 
 There are two materials, in a 2:1 ratio based on volume.
 The first is a pink matrix, which is represented with small circles.
-
-Material 2 - Inclusions
------------------------
-
-.. literalinclude:: ../../examples/intro_6_culmination.xml
-    :language: xml
-    :lines: 16-36
-    :dedent: 4
 
 The second material consists of lime green elliptical inclusions with size
 ranging from 0 to 2 and aspect ratio ranging from 1 to 3.
@@ -44,12 +31,7 @@ The orientation angle of the inclusions are uniformly distributed between -10
 and +10 degrees, relative to the +x axis.
 
 Domain Geometry
----------------
-
-.. literalinclude:: ../../examples/intro_6_culmination.xml
-    :language: xml
-    :lines: 38-42
-    :dedent: 4
+===============
 
 These two materials fill a square domain.
 The bottom-left corner of the rectangle is the origin, which puts the
@@ -58,12 +40,7 @@ The side length is 20, which is 10x the size of the inclusions.
 
 
 Settings
---------
-
-.. literalinclude:: ../../examples/intro_6_culmination.xml
-    :language: xml
-    :lines: 44-53
-    :dedent: 4
+========
 
 PNG files of each step in the process will be output, as well as the
 intermediate text files.
@@ -93,23 +70,48 @@ Note that the edge length control is currently unavailable in 3D.
 Output Files
 ============
 
-The three plots that this file generates are the seeding, the polygon mesh,
-and the triangular mesh.
+.. only:: not latex
 
-Seeding Plot
-------------
+    The three plots that this file generates are the seeding, the polygon mesh,
+    and the triangular mesh.
+    These three plots are shown below.
 
-.. image:: ../../examples/intro_6_culmination/seeds.png
-   :alt: Seed particles.
+    .. figure:: ../../examples/intro_6_culmination/seeds.png
+        :alt: Seed geometries.
 
-Polygon Mesh Plot
------------------
+        Seed geometries
+        
+    .. figure:: ../../examples/intro_6_culmination/polymesh.png
+        :alt: Polygonal mesh.
 
-.. image:: ../../examples/intro_6_culmination/polymesh.png
-   :alt: Polygon mesh.
+        Polygonal mesh
+        
+    .. figure:: ../../examples/intro_6_culmination/trimesh.png
+        :alt: Triangular mesh.
 
-Triangular Mesh Plot
---------------------
+        Triangular mesh
 
-.. image:: ../../examples/intro_6_culmination/trimesh.png
-   :alt: Triangular mesh.
+.. only:: latex
+
+    .. raw:: latex
+
+        The three plots that this file generates are the seeding, the polygon mesh,
+        and the triangular mesh.
+        These three plots are shown in Fig.~\ref{fig:ex_6_culmination}.
+
+        \begin{figure}[htbp]
+            \centering
+            \subfloat[Seed geometries]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_6_culmination/seeds.png}
+            }
+            ~
+            \subfloat[Polygonal mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_6_culmination/polymesh.png}
+            }
+            ~
+            \subfloat[Triangular mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_6_culmination/trimesh.png}
+            }
+            \caption{Output plots for basic example.}
+            \label{fig:ex_6_culmination}
+        \end{figure}
