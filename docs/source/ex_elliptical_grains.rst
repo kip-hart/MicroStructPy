@@ -18,56 +18,39 @@ The full text of the file is:
     :language: xml
 
 
-Material 1 - Ellipses
----------------------------
+Materials
+=========
 
-.. literalinclude:: ../../examples/elliptical_grains.xml
-    :language: xml
-    :lines: 3-14
-    :dedent: 4
-
-There are two materials, in a 1:2 ratio based on volume.
+There are five materials, represented in equal proportions.
 The first material consists of ellipses and the semi-major axes are
-uniformly distributed, :math:`A \sim U(0.05, 0.40)`.
-The semi-minor axes are fixed at 0.05, meaning the aspect ratio of these
-seeds are 1-8. The orientation angles of the ellipses are uniform random
-in distribution.
+uniformly distributed, :math:`A \sim U(0.20, 0.75)`.
+The semi-minor axes are fixed at 0.03, meaning the aspect ratio of these
+seeds are 6.7-25.
+The orientation angles of the ellipses are uniform random in distribution from
+25 to 45 degrees counterclockwise from the +x axis.
 
-Material 2 - Circles
--------------------------
+The remaining four materials are all the same, with lognormal grain area
+distributions.
+The only difference among these materials is the color, which was done for
+visual effect.
 
-.. literalinclude:: ../../examples/elliptical_grains.xml
-    :language: xml
-    :lines: 16-25
-    :dedent: 4
-
-The second material consists of circles, which have a diameter
-that is log-normally distributed, :math:`D \sim 0.06 e^{N(0, 0.5)}`.
 
 Domain Geometry
----------------
+===============
 
-.. literalinclude:: ../../examples/elliptical_grains.xml
-    :language: xml
-    :lines: 27-30
-    :dedent: 4
-
-These two materials fill a rectangular domain.
-The bottom-left corner of the rectangle is the origin, which puts the
-rectangle in the first quadrant.
-The width of the rectangle is 2 and the height is 3.
+The domain of the microstructure is a rectangle with side lengths 2.4 in the
+x-direction and 1.2 in the y-direction.
+The domain is centered on the origin, though the position of the domain is
+not relevant considering that the plot axes are switched off.
 
 
 Settings
---------
-
-.. literalinclude:: ../../examples/elliptical_grains.xml
-    :language: xml
-    :lines: 32-58
-    :dedent: 4
+========
 
 The aspect ratio of elements in the triangular mesh is controlled
-by setting the minimum interior angle for the elements at 20 degrees.
+by setting the minimum interior angle for the elements at 20 degrees,
+the maximum element volume to 0.001, and the maximum edge length at grain
+boundaries to 0.01.
 
 The function will output only plots of the microstructure process
 (no text files), and those plots are saved as PNGs.
@@ -77,27 +60,56 @@ They are saved in a folder named ``elliptical_grains``, in the current directory
 The axes are turned off in these plots, creating PNG files with
 minimal whitespace.
 
+Finally, the linewiths in the seeds plot, polygonal mesh plot, and the
+triangular mesh plot are 0.5, 0.5, 0.1 respectively.
+
 
 Output Files
 ============
 
-The three plots that this file generates are the seeding, the polygon mesh,
-and the triangular mesh.
+.. only:: not latex
 
-Seeding Plot
-------------
+    The three plots that this file generates are the seeding, the polygon mesh,
+    and the triangular mesh.
+    These three plots are shown below.
 
-.. image:: ../../examples/elliptical_grains/seeds.png
-   :alt: Seed particles.
+    .. figure:: ../../examples/elliptical_grains/seeds.png
+        :alt: Seed geometries.
 
-Polygon Mesh Plot
------------------
+        Seed geometries
+        
+    .. figure:: ../../examples/elliptical_grains/polymesh.png
+        :alt: Polygonal mesh.
 
-.. image:: ../../examples/elliptical_grains/polymesh.png
-   :alt: Polygon mesh.
+        Polygonal mesh
+        
+    .. figure:: ../../examples/elliptical_grains/trimesh.png
+        :alt: Triangular mesh.
 
-Triangular Mesh Plot
---------------------
+        Triangular mesh
 
-.. image:: ../../examples/elliptical_grains/trimesh.png
-   :alt: Triangular mesh.
+.. only:: latex
+
+    .. raw:: latex
+
+        The three plots that this file generates are the seeding, the polygon mesh,
+        and the triangular mesh.
+        These three plots are shown in Fig.~\ref{fig:ex_elliptical_grains}.
+
+        \begin{figure}[htbp]
+            \centering
+            \subfloat[Seed geometries]{
+                \includegraphics[width=0.67\textwidth]{../../examples/elliptical_grains/seeds.png}
+            }
+            \\
+            \subfloat[Polygonal mesh]{
+                \includegraphics[width=0.67\textwidth]{../../examples/elliptical_grains/polymesh.png}
+            }
+            \\
+            \subfloat[Triangular mesh]{
+                \includegraphics[width=0.67\textwidth]{../../examples/elliptical_grains/trimesh.png}
+            }
+            \caption{Output plots for example with elliptical grains.}
+            \label{fig:ex_elliptical_grains}
+        \end{figure}
+

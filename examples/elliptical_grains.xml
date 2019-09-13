@@ -19,7 +19,6 @@
 
     <material>
         <fraction> 1 </fraction>
-        <!-- <material_type> matrix </material_type> -->
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
@@ -31,7 +30,6 @@
 
     <material>
         <fraction> 1 </fraction>
-        <!-- <material_type> matrix </material_type> -->
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
@@ -43,7 +41,6 @@
 
     <material>
         <fraction> 1 </fraction>
-        <!-- <material_type> matrix </material_type> -->
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
@@ -55,7 +52,6 @@
 
     <material>
         <fraction> 1 </fraction>
-        <!-- <material_type> matrix </material_type> -->
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
@@ -75,12 +71,6 @@
         <mesh_min_angle> 20 </mesh_min_angle>
         <mesh_max_edge_length> 0.01 </mesh_max_edge_length>
         <mesh_max_volume> 0.001 </mesh_max_volume>
-
-        <filetypes>
-            <seeds_plot> png </seeds_plot>
-            <poly_plot> png </poly_plot>
-            <tri_plot> png </tri_plot>
-        </filetypes>
 
         <directory> elliptical_grains </directory>
         <plot_axes> False </plot_axes>
