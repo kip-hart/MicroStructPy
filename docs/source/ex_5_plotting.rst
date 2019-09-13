@@ -98,7 +98,7 @@ Output Files
             \subfloat[Triangular mesh]{
                 \includegraphics[width=0.3\textwidth]{../../examples/intro_5_plotting/trimesh.png}
             }
-            \caption{Output plots for basic example.}
+            \caption{Output plots for plot controls example.}
             \label{fig:ex_5_plotting}
         \end{figure}
 

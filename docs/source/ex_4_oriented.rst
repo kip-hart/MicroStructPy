@@ -106,6 +106,6 @@ Output Files
             \subfloat[Triangular mesh]{
                 \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/trimesh.png}
             }
-            \caption{Output plots for basic example.}
+            \caption{Output plots for oriented grains example.}
             \label{fig:ex_4_oriented}
         \end{figure}

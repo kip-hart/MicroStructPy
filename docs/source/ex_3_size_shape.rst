@@ -106,6 +106,6 @@ Output Files
             \subfloat[Triangular mesh]{
                 \includegraphics[width=0.3\textwidth]{../../examples/intro_3_size_shape/trimesh.png}
             }
-            \caption{Output plots for basic example.}
+            \caption{Output plots for size and shape example.}
             \label{fig:ex_3_size_shape}
         \end{figure}
