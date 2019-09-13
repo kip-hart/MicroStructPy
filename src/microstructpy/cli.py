@@ -538,7 +538,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         os.makedirs(ver_dir)
 
     # Set plot types
-    plottypes = filetypes.get('verify_plot', [])
+    plottypes = filetypes.get('verify_plot', ['png'])
     if type(plottypes) is not list:
         plottypes = [plottypes]
 
