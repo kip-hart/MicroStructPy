@@ -97,10 +97,10 @@ Examples Using the CLI
     :width: 32%
     :target: ex_2phase_3d.html
 
-.. image:: ../../examples/colormap/trimesh.png
-    :alt: Triangular mesh from 3D colormap example.
-    :width: 32%
-    :target: ex_colormap.html
+  .. image:: ../../examples/colormap/trimesh.png
+      :alt: Triangular mesh from 3D colormap example.
+      :width: 32%
+      :target: ex_colormap.html
 
 
 
