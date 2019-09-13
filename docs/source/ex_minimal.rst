@@ -18,23 +18,13 @@ The full text of the file is:
     :language: xml
 
 
-Material 1
-----------
-
-.. literalinclude:: ../../examples/minimal_paired.xml
-    :language: xml
-    :lines: 3-6
-    :dedent: 4
+Material
+========
 
 There is only one material, with a constant size of 0.09.
 
 Domain Geometry
----------------
-
-.. literalinclude:: ../../examples/minimal_paired.xml
-    :language: xml
-    :lines: 8-10
-    :dedent: 4
+===============
 
 The material fills a square domain.
 The default side length is 1, meaning the domain is greater than 10x larger
@@ -42,12 +32,7 @@ than the grains.
 
 
 Settings
---------
-
-.. literalinclude:: ../../examples/minimal_paired.xml
-    :language: xml
-    :lines: 12-23
-    :dedent: 4
+========
 
 The function will output plots of the microstructure process and those plots
 are saved as PNGs.
@@ -64,23 +49,48 @@ material.
 Output Files
 ============
 
-The three plots that this file generates are the seeding, the polygon mesh,
-and the triangular mesh.
+.. only:: not latex
 
-Seeding Plot
-------------
+    The three plots that this file generates are the seeding, the polygon mesh,
+    and the triangular mesh.
+    These three plots are shown below.
 
-.. image:: ../../examples/minimal/seeds.png
-   :alt: Seed particles.
+    .. figure:: ../../examples/minimal/seeds.png
+        :alt: Seed geometries.
 
-Polygon Mesh Plot
------------------
+        Seed geometries
+        
+    .. figure:: ../../examples/minimal/polymesh.png
+        :alt: Polygonal mesh.
 
-.. image:: ../../examples/minimal/polymesh.png
-   :alt: Polygon mesh.
+        Polygonal mesh
+        
+    .. figure:: ../../examples/minimal/trimesh.png
+        :alt: Triangular mesh.
 
-Triangular Mesh Plot
---------------------
+        Triangular mesh
 
-.. image:: ../../examples/minimal/trimesh.png
-   :alt: Triangular mesh.
+.. only:: latex
+
+    .. raw:: latex
+
+        The three plots that this file generates are the seeding, the polygon mesh,
+        and the triangular mesh.
+        These three plots are shown in Fig.~\ref{fig:ex_minimal}.
+
+        \begin{figure}[htbp]
+            \centering
+            \subfloat[Seed geometries]{
+                \includegraphics[width=0.3\textwidth]{../../examples/minimal/seeds.png}
+            }
+            ~
+            \subfloat[Polygonal mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/minimal/polymesh.png}
+            }
+            ~
+            \subfloat[Triangular mesh]{
+                \includegraphics[width=0.3\textwidth]{../../examples/minimal/trimesh.png}
+            }
+            \caption{Output plots for minimal example with Paired colormap.}
+            \label{fig:ex_minimal}
+        \end{figure}
