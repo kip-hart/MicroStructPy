@@ -29,12 +29,6 @@
 
     <settings>
         <directory> two_phase_3D </directory>
-        <filetypes>
-            <seeds_plot> png </seeds_plot>
-            <poly_plot> png </poly_plot>
-            <tri_plot> png </tri_plot>
-            <verify_plot> png </verify_plot>
-        </filetypes>
         <verbose> True </verbose>
 
         <seeds_kwargs>
