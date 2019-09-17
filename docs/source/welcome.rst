@@ -3,6 +3,9 @@
 Welcome
 =======
 
+Summary
+-------
+
 .. index-start
 
 MicroStructPy is a microstructure mesh generator written in Python.
@@ -35,6 +38,71 @@ Features of MicroStructPy include:
         1) seed the domain with particles,
         2) create a Voronoi power diagram, and
         3) convert the diagram into an unstructured mesh.
+
+
+Examples
+--------
+
+These images were created using MicroStructPy.
+For more examples, see the :ref:`examples_page` section.
+
+.. only:: not latex
+
+    .. image:: ../../examples/intro_2_quality/trimesh.png
+        :width: 32%
+        :alt: Circular inclusions in a matrix.
+
+    .. image:: ../../examples/minimal/polymesh.png
+        :width: 32%
+        :alt: Minimial polygonal mesh.
+
+    .. image:: ../../examples/basalt_circle/trimesh.png
+        :width: 32%
+        :alt: Unstructured mesh of picritic basalt.
+
+    .. image:: ../../examples/foam/trimesh.png
+        :width: 32%
+        :alt: Unstructured mesh of foam.
+
+    .. image:: ../../examples/two_phase_3D/trimesh.png
+        :width: 32%
+        :alt: Unstructured mesh for 3D two phase composite.
+
+    .. image:: ../../examples/colormap/trimesh.png
+        :width: 32%
+        :alt: Unstructured mesh for 3D colormap example.
+
+.. only:: latex
+
+    .. raw:: latex
+
+        \begin{figure}[htbp]
+            \centering
+            \subfloat[Circular inclusions in a matrix]{
+                \includegraphics[width=0.32\textwidth]{../../examples/intro_2_quality/trimesh.png}
+            }
+            ~
+            \subfloat[Minimial polygonal mesh]{
+                \includegraphics[width=0.32\textwidth]{../../examples/minimal/polymesh.png}
+            }
+            ~
+            \subfloat[Unstructured mesh of picritic basalt]{
+                \includegraphics[width=0.32\textwidth]{../../examples/basalt_circle/trimesh.png}
+            }
+            \\
+            \subfloat[Unstructured mesh of foam]{
+                \includegraphics[width=0.32\textwidth]{../../examples/foam/trimesh.png}
+            }
+            ~
+            \subfloat[3D two phase composite]{
+                \includegraphics[width=0.32\textwidth]{../../examples/two_phase_3D/trimesh.png}
+            }
+            ~
+            \subfloat[3D colormap example]{
+                \includegraphics[width=0.32\textwidth]{../../examples/colormap/trimesh.png}
+            }
+            \caption{MicroStructPy examples.}
+        \end{figure}
 
 
 Quick Start
