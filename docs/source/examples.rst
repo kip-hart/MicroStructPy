@@ -118,6 +118,7 @@ Examples Using the Python Package
     ex_logo
     ex_grain_neighborhoods
     ex_from_image
+    ex_docs_banner
 
 .. only:: html
 
@@ -150,3 +151,7 @@ Examples Using the Python Package
     :alt: Triangular mesh of aluminum microstructure.
     :height: 200px
     :target: ex_from_image.html
+
+  .. image:: ../../examples/docs_banner/banner.png
+    :alt: Microstructure meshing process..
+    :target: ex_docs_banner.html
