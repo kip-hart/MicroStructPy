@@ -111,10 +111,10 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'logo': 'pad_logo.svg',
+    'logo': '../../../examples/logo/pad_logo.svg',
     'logo_name': True,
     'sidebar_width': '230px',
-    'touch_icon': 'logo.svg',
+    'touch_icon': '../../../examples/logo/logo.svg',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
     'analytics_id': 'UA-147258715-1',
 }
@@ -133,7 +133,7 @@ html_short_title = 'MSP'
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = '_static/favicon.ico'
+html_favicon = '../../examples/logo/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -216,7 +216,7 @@ latex_elements = {
     # 'figure_align': 'htbp',
 }
 
-latex_logo = '_static/pad_logo.png'
+latex_logo = '../../examples/logo/pad_logo.png'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,

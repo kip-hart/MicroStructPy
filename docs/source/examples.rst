@@ -112,35 +112,41 @@ Examples Using the Python Package
 .. toctree::
     :maxdepth: 1
 
-    ex_foam
     ex_standard_voronoi
     ex_uniform_seeding
+    ex_foam
+    ex_logo
     ex_grain_neighborhoods
     ex_from_image
 
 .. only:: html
 
-  .. image:: ../../examples/foam/trimesh.png
-    :alt: Mesh of foam microstructure.
-    :width: 30%
-    :target: ex_foam.html
-
   .. image:: ../../examples/standard_voronoi/voronoi_diagram.png
     :alt: Standard Voronoi diagram.
-    :width: 30%
+    :height: 180px
     :target: ex_standard_voronoi.html
 
   .. image:: ../../examples/uniform_seeding/voronoi_diagram.png
     :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
-    :width: 30%
+    :height: 180px
     :target: ex_uniform_seeding.html
+
+  .. image:: ../../examples/foam/trimesh.png
+    :alt: Mesh of foam microstructure.
+    :height: 180px
+    :target: ex_foam.html
+
+  .. image:: ../../examples/logo/logo.png
+    :alt: MicroStructPy logo.
+    :height: 200px
+    :target: ex_logo.html
 
   .. image:: ../../examples/grain_neighborhoods/trimesh.png
     :alt: Triangular mesh of microstructure with seed neighborhoods.
-    :width: 30%
+    :height: 200px
     :target: ex_grain_neighborhoods.html
 
   .. image:: ../../examples/from_image/trimesh.png
     :alt: Triangular mesh of aluminum microstructure.
-    :width: 30%
+    :height: 200px
     :target: ex_from_image.html
