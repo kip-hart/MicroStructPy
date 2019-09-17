@@ -72,6 +72,6 @@ Plot Logo
         \centering
         \includegraphics[width=0.33\textwidth]{../../examples/logo/logo.png}
         \caption{MicroStructPy logo.}
-        \label{fig:logo}
+        \label{fig:ex_logo}
     \end{figure}
 

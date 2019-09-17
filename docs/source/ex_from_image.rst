@@ -116,7 +116,7 @@ Save Plot and Copy Input File
             \label{fig:ex_from_image_out}
         }
         \caption{Input and output microstructures of aluminum.}
-        \label{fig:ex_minimal}
+        \label{fig:ex_from_image}
     \end{figure}
 
 
