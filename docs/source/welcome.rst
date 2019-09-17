@@ -79,15 +79,15 @@ The image files contain:
 .. only:: not latex
 
     .. image:: ../../examples/seeds.png
-        :width: 30%
+        :width: 32%
         :alt: Seed geometries for minimal example.
 
     .. image:: ../../examples/polymesh.png
-        :width: 30%
+        :width: 32%
         :alt: Polygonal mesh for minimal example.
 
     .. image:: ../../examples/trimesh.png
-        :width: 30%
+        :width: 32%
         :alt: Unstructured mesh for minimal example.
 
     *1) The seed geometries,
@@ -101,15 +101,15 @@ The image files contain:
         \begin{figure}[ht]
             \centering
             \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/seeds.png}
+                \includegraphics[width=0.32\textwidth]{../../examples/seeds.png}
             }
             ~
             \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/polymesh.png}
+                \includegraphics[width=0.32\textwidth]{../../examples/polymesh.png}
             }
             ~
             \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/trimesh.png}
+                \includegraphics[width=0.32\textwidth]{../../examples/trimesh.png}
             }
             \caption{Output plots for a minimal example.}
         \end{figure}
