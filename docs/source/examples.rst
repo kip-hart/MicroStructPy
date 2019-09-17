@@ -3,9 +3,10 @@
 Examples
 =========
 
-This page contains all of the examples for MicroStructPy.
-Below each image is a link to a page that describes each example in greater
-detail.
+The following contains examples of MicroStructPy.
+These examples include an introduction to the XML input files,
+some more advanced input files used on the CLI,
+and scripts that use the Python package.
 
 .. _intro_examples:
 
@@ -63,8 +64,8 @@ Input File Introduction
 
 .. _cli_examples:
 
-Examples Using the CLI
-----------------------
+CLI Examples
+------------
 
 .. toctree::
     :maxdepth: 1
@@ -106,8 +107,8 @@ Examples Using the CLI
 
 .. _package_examples:
 
-Examples Using the Python Package
----------------------------------
+Python Package Examples
+-----------------------
 
 .. toctree::
     :maxdepth: 1
