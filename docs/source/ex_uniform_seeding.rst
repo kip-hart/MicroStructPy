@@ -18,13 +18,13 @@ The full text of the script is:
     :language: python
 
 Domain
-------
+======
 
 The domain of the microstructure is a :class:`.Square`.
 Without arguments, the square's center is (0, 0) and side length is 1.
 
 Seeds
------
+=====
 
 A set of 200 seed circles with small radius is initially created.
 The positions of the seeds are set with Mitchell's Best Candidate Algorithm
@@ -32,26 +32,42 @@ The positions of the seeds are set with Mitchell's Best Candidate Algorithm
 random points and picking the one that is furthest from its nearest neighbor.
 
 Polygon Mesh
-------------
+============
 
 A polygon mesh is created from the list of seed points using the
 :func:`~microstructpy.meshing.polymesh.PolyMesh.from_seeds` class method.
 
 Plotting
---------
+========
 
-The facecolor of each polygon is determined by its area. If it is below the
-standard area (domain area / number of cells), then it is shaded blue. If
-it is above the standard area, it is shaded red. A custom colorbar is added
-to the figure and it is saved as a PNG.
+.. only:: not latex
 
-Output File
-===========
+  The facecolor of each polygon is determined by its area. If it is below the
+  standard area (domain area / number of cells), then it is shaded blue. If
+  it is above the standard area, it is shaded red. A custom colorbar is added
+  to the figure and it is saved as a PNG, shown below.
 
-The output PNG file of this script is:
+  .. figure:: ../../examples/uniform_seeding/voronoi_diagram.png
+    :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
+    
+    Uniformly seeded Voronoi diagram with cells colored by area.
 
-.. image:: ../../examples/uniform_seeding/voronoi_diagram.png
-  :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
+.. only:: latex
+
+  .. raw:: latex
+
+    The facecolor of each polygon is determined by its area. If it is below the
+    standard area (domain area / number of cells), then it is shaded blue. If
+    it is above the standard area, it is shaded red. A custom colorbar is added
+    to the figure and it is saved as a PNG, shown in
+    Fig.~\ref{fig:ex_uniform_seeding}.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.5\textwidth]{../../examples/uniform_seeding/voronoi_diagram.png}
+        \caption{Uniformly seeded Voronoi diagram with cells colored by area.}
+        \label{fig:ex_uniform_seeding}
+    \end{figure}
 
 
 .. [#f1] Mitchell, T.J., "An Algorithm for the Construction of "D-Optimal"
