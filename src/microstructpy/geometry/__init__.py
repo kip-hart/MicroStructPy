@@ -7,7 +7,7 @@ from microstructpy.geometry.rectangle import Rectangle
 from microstructpy.geometry.rectangle import Square
 from microstructpy.geometry.sphere import Sphere
 
-__all__ = ['Box', 'Cube', 'Circle', 'Cylinder', 'Ellipse', 'Ellipsoid',
+__all__ = ['Box', 'Cube', 'Circle', 'Ellipse', 'Ellipsoid',
            'Rectangle', 'Square', 'Sphere']
 
 
