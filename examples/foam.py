@@ -13,7 +13,7 @@ def main():
         os.makedirs(dirname)
 
     # Define Domain
-    domain = msp.geometry.Square(side_length=15)
+    domain = msp.geometry.Square(side_length=10)
 
     # Create Void Tessellation
     void_mat = {'material_type': 'void',
