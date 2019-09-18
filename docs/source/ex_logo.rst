@@ -53,7 +53,7 @@ Plot Logo
 
   .. figure:: ../../examples/logo/logo.png
 
-    MicroStructPy logo.
+      MicroStructPy logo.
 
 .. only:: latex
 

@@ -111,10 +111,10 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'logo': '../../../examples/logo/pad_logo.svg',
+    'logo': '../../examples/logo/pad_logo.svg',
     'logo_name': True,
     'sidebar_width': '230px',
-    'touch_icon': '../../../examples/logo/logo.svg',
+    'touch_icon': '../../examples/logo/logo.svg',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
     'analytics_id': 'UA-147258715-1',
 }
