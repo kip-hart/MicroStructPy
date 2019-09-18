@@ -119,19 +119,8 @@ named ``microstructpy``.
 To use the command line interface, create a file called ``input.xml`` and copy
 this into it:
 
-.. code-block:: XML
-
-    <?xml version="1.0" encoding="UTF-8"?>
-    <input>
-        <material>
-            <shape> circle </shape>
-            <size> 0.15 </size>
-        </material>
-
-        <domain>
-            <shape> square </shape>
-        </domain>
-    </input>
+.. literalinclude:: ../../examples/minimal.xml
+    :language: xml
 
 Next, run the file from the command line::
 

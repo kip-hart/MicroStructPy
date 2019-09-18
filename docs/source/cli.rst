@@ -68,19 +68,8 @@ Input files for MicroStructPy must be in XML format and included a minimum
 of 2 pieces of information: the material phases and the domain.
 A minimal input file is:
 
-.. code-block:: xml
-
-    <?xml version="1.0" encoding="UTF-8"?>
-    <input>
-        <material>
-            <shape> circle </shape>
-            <size> 0.1 </size>
-        </material>
-
-        <domain>
-            <shape> square </shape>
-        </domain>
-    </input>
+.. literalinclude:: ../../examples/minimal.xml
+    :language: xml
 
 
 This will create a microstructure with approximately circular grains that
