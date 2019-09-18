@@ -26,7 +26,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
 
 .. LINKS
 
-.. _Documentation : https://microstructpy.readthedocs.io
+.. _Documentation : https://docs.microstructpy.org
 .. _PyPI : https://pypi.org/project/microstructpy/
 .. _Repository: https://github.com/kip-hart/MicroStructPy
 

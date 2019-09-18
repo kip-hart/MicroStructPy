@@ -20,7 +20,7 @@ Features of MicroStructPy include:
 * Customizable workflow
 
 
-.. image:: https://microstructpy.readthedocs.io/en/latest/_images/banner.png
+.. image:: https://docs.microstructpy.org/en/latest/_images/banner.png
     :alt: Banner image showing the three steps for creating microstructure.
 
 *The three steps to creating a microstructure are:
@@ -56,7 +56,7 @@ Run a Demo
 MicroStructPy includes several demo and example files to help new users get
 started with the program.
 A full list of examples is available online at
-https://microstructpy.readthedocs.io/examples.html.
+https://docs.microstructpy.org/examples.html.
 
 Here is minimal example input file:
 
@@ -116,7 +116,7 @@ Documentation
 -------------
 
 MicroStructPy documentation is available online at
-https://microstructpy.readthedocs.io.
+https://docs.microstructpy.org.
 
 To build a local copy of the documentation, execute the following from the
 top-level directory of the MicroStructPy repository::

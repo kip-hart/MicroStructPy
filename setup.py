@@ -37,7 +37,7 @@ setup(
     author_email='kiphart91@gmail.com',
     url='https://github.com/kip-hart/MicroStructPy',
     project_urls={
-        'Documentation': 'https://microstructpy.readthedocs.io',
+        'Documentation': 'https://docs.microstructpy.org',
     },
     packages=find_packages('src'),
     package_dir={'': 'src'},
