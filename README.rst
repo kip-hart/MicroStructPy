@@ -20,7 +20,7 @@ Features of MicroStructPy include:
 * Customizable workflow
 
 
-.. image:: https://microstructpy.readthedocs.io/_images/banner.png
+.. image:: https://microstructpy.readthedocs.io/en/latest/_images/banner.png
     :alt: Banner image showing the three steps for creating microstructure.
 
 *The three steps to creating a microstructure are:
