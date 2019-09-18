@@ -11,32 +11,21 @@ The command line interface (CLI) for this package is ``microstructpy``.
 This command accepts the names of user-generated files and demonstration files.
 Multiple filenames can be specified.
 
-For example, to run the XML file that creates the microstructure on the front
-page, run::
+To run demos, you can specify a particular demo file or to run all of them::
 
-    microstructpy --demo=docs_banner.xml
-
-This command will copy ``docs_banner.xml`` to the current working directory,
-then run that XML file.
-For your own input files, run the command::
-
-    microstructpy path/to/my/input_file.xml
-
-Note that relative and absolute file paths are acceptable.
-
-To run multiple input files::
-
-    microstructpy file_1.xml file_2.xml file_3.xml
-
-or::
-
-    microstructpy file_*.xml
-
-To run all of the demonstration files, use the command::
-
+    microstructpy --demo=minimal.xml
     microstructpy --demo=all
 
-Note that this may take some time.
+Demo files are copied to the current working directory and then executed.
+Running all of the demonstration files may take several minutes.
+
+User-generated input files can be run in a number of ways::
+
+    microstructpy /path/to/my/input_file.xml
+    microstructpy input_1.xml input_2.xml input_3.xml
+    microstructpy input_*.xml
+
+Both relative and absolute filepaths are acceptable.
 
 Command Line Procedure
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -73,11 +62,9 @@ A minimal input file is:
 
 
 This will create a microstructure with approximately circular grains that
-fill a domain that is 10x larger.
-MicroStructPy will output three files: ``seeds.txt``, ``polymesh.txt``, and
-``trimesh.txt``.
-To output plots requires addition settings, described in the :ref:`settings`
-section.
+fill a domain that is 6.7x larger.
+MicroStructPy will output six files: ``seeds.txt``, ``polymesh.txt``,
+``trimesh.txt``, ``seeds.png``, ``polymesh.png``, and ``trimesh.png``.
 
 The :ref:`materials` section describes more advanced materials specification,
 while the :ref:`domain` section discusses specifying the geometry of the
@@ -221,16 +208,8 @@ Both PDF and CDF files should be in CSV format.
 Grain Geometries
 ^^^^^^^^^^^^^^^^
 
-MicroStructPy supports the following grain geometries:
-
-* Circle (2D)
-* Ellipse (2D)
-* Ellipsoid (3D)
-* Rectangle (2D)
-* Sphere (3D)
-* Square (2D)
-
-Each geometry can be specified in multiple ways.
+MicroStructPy supports several grain geometries and each can be specified in
+multiple ways.
 For example, the ellipse can be specified in terms of its area and aspect
 ratio, or by its semi-major and semi-minor axes.
 The 'size' of a grain is defined as the diameter of a circle or sphere with
@@ -240,10 +219,16 @@ The parameters available for each geometry are described in the lists below.
 Circle
 ++++++
 
-- radius (or r)
-- diameter (or d)
-- size (same as d)
-- area
+**Class**: :class:`microstructpy.geometry.Circle`
+
+**Parameters**:
+
+- *area* - the area of the circle
+- *d* - alias for *diameter*
+- *diameter* - the diameter of the circle
+- *r* - alias for *radius*
+- *radius* - the radius of the circle
+- *size* - same as *diameter*
 
 Ellipse
 +++++++
