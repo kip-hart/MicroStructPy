@@ -3,6 +3,7 @@ r"""
 Plot all demos
 
 """
+from __future__ import print_function
 
 import glob
 import locale
@@ -23,4 +24,5 @@ for filename in glob.glob(xml_pattern):
 # Run Python Scripts
 py_pattern = os.path.join(example_dir, '*.py')
 for filename in glob.glob(py_pattern):
+    print(filename)
     subprocess.call(['python', filename])
