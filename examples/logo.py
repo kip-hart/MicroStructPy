@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import microstructpy as msp
 import numpy as np
 from matplotlib import collections
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 __author__ = 'Kenneth (Kip) Hart'
 
@@ -21,6 +22,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
 
     logo_basename = 'logo.svg'
     favicon_basename = 'favicon.ico'
+    social_basename = 'social.png'
     file_dir = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(file_dir, 'logo')
     if not os.path.exists(path):
@@ -29,6 +31,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     logo_filename = os.path.join(path, logo_basename)
     pad_filename = os.path.join(path, 'pad_' + logo_basename)
     favicon_filename = os.path.join(path, favicon_basename)
+    social_filename = os.path.join(path, social_basename)
 
     # Set Domain
     domain = msp.geometry.Circle()
@@ -140,6 +143,34 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     fav_im = fav_im[:, inds]
     
     plt.imsave(favicon_filename, fav_im, dpi=dpi, format='png')
+
+    # Create the Social Banner
+    fig_social, ax_social = plt.subplots()
+
+    ax_social.set_xlim(0, 2)
+    ax_social.set_ylim(0, 1)
+    ax_social.set_aspect('equal')
+
+    ax_social.set_axis_off()
+    ax_social.get_xaxis().set_visible(False)
+    ax_social.get_yaxis().set_visible(False)
+
+    imagebox = OffsetImage(logo_im, zoom=0.05)
+    ab = AnnotationBbox(imagebox, (1, 0.7), frameon=False)
+    ax_social.add_artist(ab)
+    ax_social.text(1, 0.35, 'MicroStructPy',
+                   fontsize=20,
+                   weight='bold',
+                   horizontalalignment='center',
+                   verticalalignment='center')
+    ax_social.text(1, 0.23, 'Microstructure Mesh Generation in Python',
+                   fontsize=10,
+                   horizontalalignment='center',
+                   verticalalignment='center')
+    plt.draw()
+    plt.savefig(social_filename, bbox_inches='tight')
+    plt.close('all')
+
 
 
 if __name__ == '__main__':
