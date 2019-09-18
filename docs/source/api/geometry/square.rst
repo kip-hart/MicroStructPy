@@ -3,7 +3,7 @@
 .. currentmodule:: microstructpy.geometry
 
 microstructpy.geometry.Square
-==========================
+=============================
 
 .. autoclass:: Square
     :members:

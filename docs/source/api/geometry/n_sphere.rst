@@ -3,7 +3,7 @@
 .. currentmodule:: microstructpy.geometry.n_sphere
 
 microstructpy.geometry.n_sphere.NSphere
-=================================
+=======================================
 
 .. autoclass:: NSphere
     :members:
