@@ -13,11 +13,11 @@ import scipy.stats
 domain = msp.geometry.Square(corner=(0, 0), side_length=10)
 
 # Define the material phases
-r_dist = scipy.stats.lognorm(s=0.6, scale=0.1)
+a_dist = scipy.stats.lognorm(s=1, scale=0.1)
 matrix_phase = {'fraction': 1,
                 'material_type': 'matrix',
                 'shape': 'circle',
-                'r': r_dist}
+                'area': a_dist}
 
 neighborhood_phase = {'fraction': 1,
                       'material_type': 'solid',
