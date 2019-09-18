@@ -4,7 +4,7 @@ API
 .. toctree::
 
     cli
-    geometry
+    geometry/index
     meshing
     seeding
     verification
