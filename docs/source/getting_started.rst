@@ -1,7 +1,5 @@
 .. _getting_started:
 
-.. sectnum::
-
 Getting Started
 ===============
 
