@@ -140,11 +140,6 @@ html_favicon = '../../examples/logo/favicon.ico'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_context = {'css_files': ['_static/theme_overrides.css']}
-# the above was copied from:
-# https://rackerlabs.github.io/docs-rackspace/tools/rtd-tables.html
-# it fixes the table widths in the RTD theme
-
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
