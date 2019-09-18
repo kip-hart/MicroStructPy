@@ -13,10 +13,8 @@ MicroStructPy - Microstructure Mesh Generation in Python
 .. include:: welcome.rst
     :start-after: .. index-start
 
-Contents
---------
-
 .. toctree::
+   :hidden:
    :maxdepth: 2
 
    getting_started
