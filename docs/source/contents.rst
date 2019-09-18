@@ -11,5 +11,5 @@ MicroStructPy Contents
    examples
    cli
    package_guide
-   API <microstructpy>
+   api/index
    troubleshooting

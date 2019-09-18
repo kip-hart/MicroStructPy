@@ -21,8 +21,9 @@ MicroStructPy - Microstructure Mesh Generation in Python
    examples
    cli
    package_guide
-   API <microstructpy>
+   api/index
    troubleshooting
+
 
 .. LINKS
 
