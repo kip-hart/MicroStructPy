@@ -8,4 +8,3 @@ microstructpy.geometry.Square
 .. autoclass:: Square
     :members:
     :inherited-members:
-    :show-inheritance:

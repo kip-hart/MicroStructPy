@@ -8,4 +8,3 @@ microstructpy.geometry.Cube
 .. autoclass:: Cube
     :members:
     :inherited-members:
-    :show-inheritance:
