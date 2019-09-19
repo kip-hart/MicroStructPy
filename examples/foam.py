@@ -81,7 +81,7 @@ def main():
 
     for ext in ['png', 'pdf']:
         fname = os.path.join(dirname, 'trimesh.' + ext)
-        plt.savefig(fname, bbox_inches='tight')
+        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
 
 def pick_edge(void_tess):
