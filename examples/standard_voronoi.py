@@ -29,4 +29,4 @@ filename = os.path.join(file_dir, 'standard_voronoi/voronoi_diagram.png')
 dirs = os.path.dirname(filename)
 if not os.path.exists(dirs):
     os.makedirs(dirs)
-plt.savefig(filename)
+plt.savefig(filename, bbox_inches='tight', pad_inches=0)

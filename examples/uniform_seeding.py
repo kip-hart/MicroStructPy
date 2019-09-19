@@ -10,7 +10,7 @@ from scipy.spatial import distance
 
 
 # Create domain
-domain = msp.geometry.Square()
+domain = msp.geometry.Square(corner=(0,0))
 
 # Create list of seed points
 factory = msp.seeding.Seed.factory
@@ -61,7 +61,8 @@ cmap = mpl.colors.LinearSegmentedColormap.from_list('area_cmap', colors)
 norm = mpl.colors.Normalize(vmin=min_area, vmax=max_area)
 sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
-cb = plt.colorbar(sm, ticks=[min_area, std_area, max_area])
+cb = plt.colorbar(sm, ticks=[min_area, std_area, max_area],
+                  orientation='horizontal', fraction=0.046, pad=0.08)
 cb.set_label('Cell Area')
 
 # Plot Voronoi diagram and seed points
@@ -78,4 +79,4 @@ filename = os.path.join(file_dir, 'uniform_seeding/voronoi_diagram.png')
 dirs = os.path.dirname(filename)
 if not os.path.exists(dirs):
     os.makedirs(dirs)
-plt.savefig(filename)
+plt.savefig(filename, bbox_inches='tight', pad_inches=0)
