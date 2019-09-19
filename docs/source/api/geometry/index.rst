@@ -1,6 +1,8 @@
 microstructpy.geometry
 ======================
 
+.. automodule:: microstructpy.geometry
+
 The geometry module contains classes for several 2D and 3D geometries.
 The module also contains some N-D geometries, which are inherited by the 
 2D and 3D geometries.
@@ -47,11 +49,9 @@ To assist with creating geometries, a factory method is included in the module:
 
 * :ref:`api_geometry_factory`
 
-
-.. only:: not latex
+.. only:: html
 
     **Module Contents**
-
 
 .. toctree::
 
@@ -66,5 +66,3 @@ To assist with creating geometries, a factory method is included in the module:
     sphere
     square
     factory
-
-    
