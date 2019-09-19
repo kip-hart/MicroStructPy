@@ -95,4 +95,4 @@ filename = os.path.join(file_dir, 'grain_neighborhoods/trimesh.png')
 dirs = os.path.dirname(filename)
 if not os.path.exists(dirs):
     os.makedirs(dirs)
-plt.savefig(filename)
+plt.savefig(filename, bbox_inches='tight')
