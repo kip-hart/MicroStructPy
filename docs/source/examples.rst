@@ -125,17 +125,17 @@ Python Package Examples
 
   .. image:: ../../examples/standard_voronoi/voronoi_diagram.png
     :alt: Standard Voronoi diagram.
-    :height: 185px
+    :height: 210px
     :target: ex_standard_voronoi.html
 
   .. image:: ../../examples/uniform_seeding/voronoi_diagram.png
     :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
-    :height: 185px
+    :height: 210px
     :target: ex_uniform_seeding.html
 
   .. image:: ../../examples/foam/trimesh.png
     :alt: Mesh of foam microstructure.
-    :height: 185px
+    :height: 210px
     :target: ex_foam.html
 
   .. image:: ../../examples/logo/logo.png
