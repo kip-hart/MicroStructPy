@@ -24,10 +24,10 @@ Materials
 There are five materials, represented in equal proportions.
 The first material consists of ellipses and the semi-major axes are
 uniformly distributed, :math:`A \sim U(0.20, 0.75)`.
-The semi-minor axes are fixed at 0.03, meaning the aspect ratio of these
-seeds are 6.7-25.
+The semi-minor axes are fixed at 0.05, meaning the aspect ratio of these
+seeds are 4-15.
 The orientation angles of the ellipses are uniform random in distribution from
-25 to 45 degrees counterclockwise from the +x axis.
+0 to 20 degrees counterclockwise from the +x axis.
 
 The remaining four materials are all the same, with lognormal grain area
 distributions.

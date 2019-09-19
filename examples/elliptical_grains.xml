@@ -1,17 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="0.5" encoding="UTF-8"?>
 <input>
     <material>
-        <fraction> 1 </fraction>
+        <fraction> 2 </fraction>
         <shape> ellipse </shape>
         <a>
             <dist_type> uniform </dist_type>
             <loc> 0.2  </loc>
             <scale> 0.35 </scale>
         </a>
-        <b> 0.03 </b>
+        <b> 0.05 </b>
         <angle_deg>
             <dist_type> uniform </dist_type>
-            <loc> 25 </loc>
+            <loc> 0 </loc>
             <scale> 20 </scale>
         </angle_deg>
         <color> orange </color>
@@ -22,8 +22,8 @@
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
-            <scale> 0.0002 </scale>
-            <s> 1.7 </s>
+            <scale> 0.004 </scale>
+            <s> 1.0 </s>
         </area>
         <color> plum </color>
     </material>
@@ -33,8 +33,8 @@
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
-            <scale> 0.0002 </scale>
-            <s> 1.7 </s>
+            <scale> 0.004 </scale>
+            <s> 1.0 </s>
         </area>
         <color> lightblue </color>
     </material>
@@ -44,8 +44,8 @@
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
-            <scale> 0.0002 </scale>
-            <s> 1.7 </s>
+            <scale> 0.004 </scale>
+            <s> 1.0 </s>
         </area>
         <color> lightgreen </color>
     </material>
@@ -55,8 +55,8 @@
         <shape> circle </shape>
         <area>
             <dist_type> lognorm </dist_type>
-            <scale> 0.0002 </scale>
-            <s> 1.7 </s>
+            <scale> 0.004 </scale>
+            <s> 1.0 </s>
         </area>
         <color> khaki </color>
     </material>
@@ -70,17 +70,17 @@
         <verbose> True </verbose>
         <mesh_min_angle> 20 </mesh_min_angle>
         <mesh_max_edge_length> 0.01 </mesh_max_edge_length>
-        <mesh_max_volume> 0.001 </mesh_max_volume>
+        <mesh_max_volume> 0.004 </mesh_max_volume>
 
         <directory> elliptical_grains </directory>
         <plot_axes> False </plot_axes>
 
         <seeds_kwargs>
-            <linewidth> 0.5 </linewidth>
+            <linewidth> 1.0 </linewidth>
         </seeds_kwargs>
 
         <poly_kwargs>
-            <linewidth> 0.5 </linewidth>
+            <linewidth> 1.0 </linewidth>
         </poly_kwargs>
 
         <tri_kwargs>

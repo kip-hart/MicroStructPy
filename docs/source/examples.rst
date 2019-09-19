@@ -78,8 +78,8 @@ CLI Examples
 
 .. only:: html
 
-  .. image:: ../../examples/elliptical_grains/polymesh.png
-    :alt: Polygonal mesh with elliptical grains.
+  .. image:: ../../examples/elliptical_grains/trimesh.png
+    :alt: Triangular mesh with elliptical grains.
     :width: 64%
     :target: ex_elliptical_grains.html
 
