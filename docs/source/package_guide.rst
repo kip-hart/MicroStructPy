@@ -4,9 +4,10 @@
 Python Package Guide
 ====================
 
-The python package for MicroStructPy includes the following classes::
+The Python package for MicroStructPy includes the following::
 
     microstructpy
+    ├─ cli
     ├─ geometry
     │  ├─ Box
     │  ├─ Cube
@@ -20,8 +21,151 @@ The python package for MicroStructPy includes the following classes::
     │  ├─ Seed
     │  └─ SeedList
     └─ meshing
-       ├─ PolyMesh
-       └─ TriMesh
+    │  ├─ PolyMesh
+    │  └─ TriMesh
+    └─ verification
+
+The cli module contains the functions related to the command line interface
+(CLI), including converting XML input files into dictionaries.
+The geometry module contains classes for seed and domain geometries.
+In the seeding package, there is the single Seed class and the SeedList class,
+which functions like a Python list but includes some additional methods such
+as positioning and plotting the seeds.
+Next, the PolyMesh and TriMesh classes are contained in the meshing module.
+A PolyMesh can be created from a SeedList and a TriMesh can be created from
+a PolyMesh.
+Finally, the verification module contains functions to compare the output
+PolyMesh and TriMesh with desired microstructural properties.
+
+**This guide explains how to use the MicroStructPy Python package.**
+It starts with a script that executes an abbreviated version of the
+standard workflow.
+The checks, restarts, etc are excluded to show how the principal classes are
+used in a workflow.
+The following section lists the file I/O and plotting functions, while the last
+section explains the formatting of a phase dictionary.
+
+The Standard Workflow
+---------------------
+
+Below is an input file similar to the :ref:`intro_examples`.
+The script that follows will produce the same results as running this script
+from the command line interface.
+
+.. code-block:: xml
+	:caption: XML Input File
+
+	<?xml version="1.0" encoding="UTF-8"?>
+	<input>
+		<material>
+			<name> Matrix </name>
+			<material_type> matrix </material_type>
+			<fraction> 2 </fraction>
+			<shape> circle </shape>
+			<size>
+				<dist_type> uniform </dist_type>
+				<loc> 0 </loc>
+				<scale> 1.5 </scale>
+			</size>
+		</material>
+
+		<material>
+			<name> Inclusions </name>
+			<fraction> 1 </fraction>
+			<shape> circle </shape>
+			<diameter> 2 </diameter>
+		</material>
+
+		<domain>
+			<shape> square </shape>
+			<side_length> 20 </side_length>
+			<corner> (0, 0) </corner>
+		</domain>
+
+		<settings>
+			<rng_seeds>
+				<size> 1 </size>
+			</rng_seeds>
+
+			<mesh_min_angle> 25 </mesh_min_angle>
+		</settings>
+	</input>
+
+.. code-block:: python
+	:caption: Equivalent Python Script
+	:emphasize-lines: 29, 32, 35, 39
+
+	import matplotlib.pyplot as plt
+	import microstructpy as msp
+	import scipy.stats
+
+	# Create Materials
+	material_1 = {
+		'name': 'Matrix',
+		'material_type': 'matrix',
+		'fraction': 2,
+		'shape': 'circle',
+		'size': scipy.stats.uniform(loc=0, scale=1.5)
+	}
+
+	material_2 = {
+		'name': 'Inclusions',
+		'fraction': 1,
+		'shape': 'circle',
+		'diameter': 2
+	}
+
+	materials = [material_1, material_2]
+
+	# Create Domain
+	domain = msp.geometry.Square(side_length=15, corner=(0, 0))
+
+	# Create List of Un-Positioned Seeds
+	seed_area = domain.area
+	rng_seeds = {'size': 1}
+	seeds = msp.seeding.SeedList.from_info(materials,
+										   seed_area,
+										   rng_seeds)
+
+	# Position Seeds in Domain
+	seeds.position(domain)
+
+	# Create Polygonal Mesh
+	pmesh = msp.meshing.PolyMesh.from_seeds(seeds, domain)
+
+	# Create Triangular Mesh
+	min_angle = 25
+	tmesh = msp.meshing.TriMesh.from_polymesh(pmesh,
+											  materials,
+											  min_angle)
+
+	# Save txt files
+	seeds.write('seeds.txt')
+	pmesh.write('polymesh.txt')
+	tmesh.write('trimesh.txt')
+
+	# Plot outputs
+	seed_colors = ['C' + str(s.phase) for s in seeds]
+	seeds.plot(facecolors=seed_colors, edgecolor='k')
+	plt.axis('image')
+	plt.savefig('seeds.png')
+	plt.clf()
+
+	poly_colors = [seed_colors[n] for n in pmesh.seed_numbers]
+	pmesh.plot(facecolors=poly_colors, edgecolor='k')
+	plt.axis('image')
+	plt.savefig('polymesh.png')
+	plt.clf()
+
+	tri_colors = [seed_colors[n] for n in tmesh.element_attributes]
+	tmesh.plot(facecolors=tri_colors, edgecolor='k')
+	plt.axis('image')
+	plt.savefig('trimesh.png')
+	plt.clf()
+
+Highlighted are the four principal methods used in generating a microstructure.
+
+.. todo- edit the content below
 
 Seeds are given a geometry and a material number,
 SeedLists are lists of Seeds,
