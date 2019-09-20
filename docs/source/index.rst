@@ -19,7 +19,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
 
    getting_started
    examples
-   cli
+   cli/index
    package_guide
    api/index
    troubleshooting
