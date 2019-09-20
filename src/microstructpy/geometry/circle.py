@@ -26,8 +26,8 @@ class Circle(NSphere):
     a center point and size parameter, which can be either radius or diameter.
 
     Args:
-        r (float, optional): The radius of the circle. Defaults to 1.
-        center (list, optional): The coordinates of the center.
+        r (float): The radius of the circle. Defaults to 1. *(optional)*
+        center (list): The coordinates of the center. *(optional)*
             Defaults to (0, 0).
         diameter : Alias for 2x *r*.
         radius : Alias for *r*.

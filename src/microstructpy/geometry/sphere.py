@@ -30,11 +30,11 @@ class Sphere(NSphere):
     a center point and size parameter, which can be either radius or diameter.
 
     Args:
-        r (float, optional): The radius of the n-sphere.
-        radius (float, optional): The radius of the n-sphere.
-        d (float, optional): The diameter of the n-sphere.
-        diameter (float, optional): The diameter of the n-sphere.
-        size (float, optional): The size of the n-sphere.
+        r (float): The radius of the sphere. *(optional)*
+        radius (float): The radius of the sphere. *(optional)*
+        d (float): The diameter of the sphere. *(optional)*
+        diameter (float): The diameter of the sphere. *(optional)*
+        size (float): The size of the sphere. *(optional)*
         center (list, float, numpy.ndarray): The coordinates of the center.
         position (list, float, numpy.ndarray): The coordinates of the center.
 

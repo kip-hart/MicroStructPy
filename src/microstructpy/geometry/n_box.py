@@ -26,13 +26,13 @@ class NBox(object):
     This class contains a generic, n-dimensinoal box.
 
     Args:
-        side_lengths (list, optional): Side lengths.
-        center (list, optional): Center of box.
-        corner (list, optional): Bottom-left corner.
-        bounds (list, optional): Bounds of box. Expected in the form
-            [(xmin, xmax), (ymin, ymax), ...].
+        side_lengths (list): Side lengths. *(optional)*
+        center (list): Center of box. *(optional)*
+        corner (list): Bottom-left corner. *(optional)*
+        bounds (list): Bounds of box. Expected in the form
+            [(xmin, xmax), (ymin, ymax), ...]. *(optional)*
         limits : Alias for *bounds*.
-        matrix (nxn list, optional): Rotation matrix
+        matrix (list, numpy.ndarray): Rotation matrix, nxn *(optional)*
     """
 
     def __init__(self, **kwargs):

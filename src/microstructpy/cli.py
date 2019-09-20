@@ -967,15 +967,14 @@ def dict_convert(raw_in, filepath='.'):
     This function converts the dictionary created by xmltodict_.
     The input is an ordered dictionary, where the keys are strings and the
     items are either strings, lists, or ordered dictionaries. Strings occur
-    are the "leaves" of the dictionary and are converted into values using
-    :func:`microstructpy._misc.from_str`. Lists are return
-    with each of their elements converted into values. Ordered dictionaries
-    are converted by (recursively) calling this function.
+    as the "leaves" of the dictionary and are converted into values.
+    Lists are return with each of their elements converted into values.
+    Ordered dictionaries are converted by (recursively) calling this function.
 
     Args:
         raw_in: unconverted input- either dict, list, or str
-        filepath (str, optional): filepath of input XML, to resolve relative
-            paths in the input file
+        filepath (str): filepath of input XML, to resolve relative
+            paths in the input file *(optional)*
 
     Returns:
         A copy of the input where the strings have been converted

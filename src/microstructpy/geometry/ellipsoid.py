@@ -34,32 +34,34 @@ class Ellipsoid(object):
     is no guarantee for which keywords are used.
 
     Args:
-        center (list, optional): The ellipsoid center.
-            Defaults to (0, 0, 0).
-        axes (list, optional): List of 3 semi-axes.
-            Defaults to (1, 1, 1).
-        size (float, optional): The diameter of a sphere with equal volume.
-            Defaults to 2.
-        ratio_ab (float, optional): The ratio of a to b.
-        ratio_ac (float, optional): The ratio of a to c.
-        ratio_bc (float, optional): The ratio of b to c.
-        ratio_ba (float, optional): The ratio of b to a.
-        ratio_ca (float, optional): The ratio of c to a.
-        ratio_cb (float, optional): The ratio of c to b.
-        rot_seq (list, optional): List of rotations (deg). Each element of
+        center (list): The ellipsoid center.
+            Defaults to (0, 0, 0). *(optional)*
+        axes (list): List of 3 semi-axes.
+            Defaults to (1, 1, 1). *(optional)*
+        size (float): The diameter of a sphere with equal volume.
+            Defaults to 2. *(optional)*
+        ratio_ab (float): The ratio of a to b. *(optional)*
+        ratio_ac (float): The ratio of a to c. *(optional)*
+        ratio_bc (float): The ratio of b to c. *(optional)*
+        ratio_ba (float): The ratio of b to a. *(optional)*
+        ratio_ca (float): The ratio of c to a. *(optional)*
+        ratio_cb (float): The ratio of c to b. *(optional)*
+        rot_seq (list): List of rotations (deg). Each element of
             the list should be an (axis, angle) tuple. The options for the
             axis are: 'x', 'y', 'z', 1, 2, or 3.
             For example::
 
                 rot_seq = [('x', 10), (2, -20), ('z', 85), ('x', 21)]
 
-        rot_seq_deg (list, optional): Alias for *rot_seq*, with degrees stated
-            explicitly.
-        rot_seq_rad (list, optional): Same format as *rot_seq*, except the
-            angles are expressed in radians.
-        matrix (3x3 numpy.ndarray, optional): A 3x3 rotation matrix expressing
+             *(optional)*
+
+        rot_seq_deg (list): Alias for *rot_seq*, with degrees stated
+            explicitly. *(optional)*
+        rot_seq_rad (list): Same format as *rot_seq*, except the
+            angles are expressed in radians. *(optional)*
+        matrix (numpy.ndarray): A 3x3 rotation matrix expressing
             the orientation of the ellipsoid. Defaults to the identity.
-        position : Alias for *center*.
+        position : Alias for *center*. *(optional)*
         a : Alias for *axes[0]*.
         b : Alias for *axes[1]*.
         c : Alias for *axes[2]*.
@@ -505,7 +507,7 @@ class Ellipsoid(object):
         where :math:`n=1000`.
 
         Args:
-            **kwargs: Keyword arguments, see :class:`microstructpy.geometry.ellipsoid.Ellipsoid`.
+            **kwargs: Keyword arguments, see :class:`microstructpy.geometry.Ellipsoid`.
 
         Returns:
             float: Expected value of the volume of the sphere.

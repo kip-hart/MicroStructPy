@@ -32,11 +32,11 @@ class Box(NBox):
     box can be specified using any of the parameters below.
 
     Args:
-        side_lengths (list, optional): Side lengths.
-        center (list, optional): Center of box.
-        corner (list, optional): bottom-left corner.
-        limits (list, optional): Bounds of box.
-        bounds (list, optional): Alias for *limits*.
+        side_lengths (list): Side lengths. *(optional)*
+        center (list): Center of box. *(optional)*
+        corner (list): bottom-left corner. *(optional)*
+        limits (list): Bounds of box. *(optional)*
+        bounds (list): Alias for *limits*. *(optional)*
 
     """
     def __init__(self, **kwargs):
@@ -133,9 +133,9 @@ class Cube(Box):
     multiple side lengths.
 
     Args:
-        side_length (float, optional): Side length.
-        center (list, tuple, numpy.ndarray, optional): Center of box.
-        corner (list, tuple, numpy.ndarray, optional): bottom-left corner.
+        side_length (float): Side length. *(optional)*
+        center (list, tuple, numpy.ndarray): Center of box. *(optional)*
+        corner (list, tuple, numpy.ndarray): bottom-left corner. *(optional)*
     """
     def __init__(self, **kwargs):
         if 'side_length' in kwargs:

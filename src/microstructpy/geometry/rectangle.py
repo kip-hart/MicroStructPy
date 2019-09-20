@@ -26,18 +26,18 @@ class Rectangle(NBox):
     of the box can be specified using any of the parameters below.
 
     Args:
-        length (float, optional): Length of the rectangle.
-        width (float, optional): Width of the rectangle.
-        side_lengths (list, optional): Side lengths. Defaults to (1, 1).
-        center (list, optional): Center of rectangle. Defaults to (0, 0).
-        corner (list, optional): bottom-left corner.
-        bounds (list, optional): Bounds of rectangle. Expected to be in the
-            format [(xmin, xmax), (ymin, ymax)].
+        length (float): Length of the rectangle. *(optional)*
+        width (float): Width of the rectangle. *(optional)*
+        side_lengths (list): Side lengths. Defaults to (1, 1). *(optional)*
+        center (list): Center of rectangle. Defaults to (0, 0). *(optional)*
+        corner (list): bottom-left corner. *(optional)*
+        bounds (list): Bounds of rectangle. Expected to be in the
+            format [(xmin, xmax), (ymin, ymax)]. *(optional)*
         limits : Alias for *bounds*.
-        angle (float, optional): The rotation angle, in degrees.
-        angle_deg (float, optional): The rotation angle, in degrees.
-        angle_rad (float, optional): The rotation angle, in radians.
-        matrix (2x2 array, optional): The rotation matrix.
+        angle (float): The rotation angle, in degrees. *(optional)*
+        angle_deg (float): The rotation angle, in degrees. *(optional)*
+        angle_rad (float): The rotation angle, in radians. *(optional)*
+        matrix (numpy.ndarray): The 2x2 rotation matrix. *(optional)*
     """
 
     def __init__(self, **kwargs):
@@ -343,9 +343,9 @@ class Square(Rectangle):
     ``side_length`` property, rather than multiple side lengths.
 
     Args:
-        side_length (float, optional): Side length. Defaults to 1.
-        center (list, optional): Center of rectangle. Defaults to (0, 0).
-        corner (list, optional): bottom-left corner.
+        side_length (float): Side length. Defaults to 1. *(optional)*
+        center (list): Center of rectangle. Defaults to (0, 0). *(optional)*
+        corner (list): bottom-left corner. *(optional)*
     """
 
     def __init__(self, **kwargs):

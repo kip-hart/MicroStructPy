@@ -25,8 +25,9 @@ class NSphere(object):
     whhich keywords are used to create the geometry.
 
     Args:
-        r (float, optional): The radius of the n-sphere. Defaults to 1.
-        center (list, optional): The coordinates of the center. Defaults to [].
+        r (float): The radius of the n-sphere. Defaults to 1. *(optional)*
+        center (list): The coordinates of the center. Defaults to [].
+            *(optional)*
         radius : Alias for *r*.
         d : Alias for *2r*.
         diameter : Alias for *2r*.

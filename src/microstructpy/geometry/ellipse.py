@@ -24,18 +24,18 @@ class Ellipse(object):
     and an orientation.
 
     Args:
-        center (list, optional): The ellipse center.
-            Defaults to (0, 0).
-        axes (list, optional): A 2-element list of semi-axes.
-            Defaults to [1, 1].
-        size (float, optional): The diameter of a circle with equivalent area.
-            Defaults to 1.
-        aspect_ratio (float, optional): The ratio of x-axis to y-axis length
-            Defaults to 1.
-        angle (float, optional): The rotation angle, in degrees.
-        angle_deg (float, optional): The rotation angle, in degrees.
-        angle_rad (float, optional): The rotation angle, in radians.
-        matrix (2x2 array, optional): The rotation matrix.
+        center (list): The ellipse center.
+            Defaults to (0, 0). *(optional)*
+        axes (list): A 2-element list of semi-axes.
+            Defaults to [1, 1]. *(optional)*
+        size (float): The diameter of a circle with equivalent area.
+            Defaults to 1. *(optional)*
+        aspect_ratio (float): The ratio of x-axis to y-axis length
+            Defaults to 1. *(optional)*
+        angle (float): The rotation angle, in degrees. *(optional)*
+        angle_deg (float): The rotation angle, in degrees. *(optional)*
+        angle_rad (float): The rotation angle, in radians. *(optional)*
+        matrix (numpy.ndarray): The 2x2 rotation matrix. *(optional)*
         a : Alias for *axes[0]*.
         b : Alias for *axes[1]*.
         angle_deg: Alias for *angle*.

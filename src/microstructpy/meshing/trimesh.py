@@ -46,16 +46,16 @@ class TriMesh(object):
     though they are also optional.
 
     Args:
-        points (list or numpy.ndarray): List of coordinates in the mesh.
-        elements (list or numpy.ndarray): List of indices of the points at
+        points (list, numpy.ndarray): List of coordinates in the mesh.
+        elements (list, numpy.ndarray): List of indices of the points at
             the corners of each element. The shape should be Nx3 in 2D or
             Nx4 in 3D.
-        element_attributes (list or numpy.ndarray, optional): A number
-            associated with each element.
-        facets (list or numy.ndarray, optional): A list of facets in the mesh.
-            The shape should be Nx2 in 2D or Nx3 in 3D.
-        facet_attributes (list or numpy.ndarray, optional): A number
-            associated with each facet.
+        element_attributes (list, numpy.ndarray): A number
+            associated with each element. *(optional)*
+        facets (list, numpy.ndarray): A list of facets in the mesh.
+            The shape should be Nx2 in 2D or Nx3 in 3D. *(optional)*
+        facet_attributes (list, numpy.ndarray): A number
+            associated with each facet. *(optional)*
 
     """
     # ----------------------------------------------------------------------- #

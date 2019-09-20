@@ -1,2 +1,4 @@
+:orphan:
+
 Sphinx Gallery
 ==============

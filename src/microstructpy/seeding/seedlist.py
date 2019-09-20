@@ -588,15 +588,16 @@ class SeedList(object):
         Args:
             domain (from the :any:`microstructpy.geometry`): The domain of the
                 microstructure.
-            pos_dists (dict, optional): Position distributions for each phase,
-                formatted like the example above.
-            rng_seed (int, optional): Random number generator (RNG) seed for
+            pos_dists (dict): Position distributions for each phase,
+                formatted like the example above. *(optional)*
+            rng_seed (int): Random number generator (RNG) seed for
                 positioning the seeds. Should be a non-negative integer.
-            hold (list, optional): List of booleans for holding the positions
-                of seeds.
-            max_attempts (int, optional): Number of random trials before
-                removing a seed from the list.
-            rtol ('fit' or float): The relative overlap tolerance between
+                *(optional)*
+            hold (list): List of booleans for holding the positions
+                of seeds. *(optional)*
+            max_attempts (int): Number of random trials before
+                removing a seed from the list. *(optional)*
+            rtol (str or float): The relative overlap tolerance between
                 seeds. This parameter should be between 0 and 1. Using the
                 'fit' option, the function will pick a value for rtol based on
                 the mean and standard deviation in seed volumes.
@@ -738,7 +739,7 @@ def sample_pos(distribution, n=1):
         distribution (list or scipy.stats distribution): The position
             distribution.
 
-        n (int, optional): Number of samples.
+        n (int): Number of samples. *(optional)*
 
     Returns:
         list: A sample of the distribution.

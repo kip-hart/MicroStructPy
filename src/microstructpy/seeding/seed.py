@@ -97,16 +97,17 @@ class Seed(object):
 
         Args:
             seed_type (str): type of seed, from list above.
-            phase (optional, int): Material phase number of seed.
-            breakdown (optional, list): List of circles or spheres
+            phase (int): Material phase number of seed. *(optional)*
+            breakdown (list): List of circles or spheres
                 that approximate the geometry. The list should be formatted as
                 follows::
 
                     breakdown = [(x1, y1, z1, r1), (x2, y2, z2, r2), ...]
 
                 The breakdown will be automatically generated if not provided.
-            position (optional, list): The coordinates of the seed. Default is
-                the origin.
+                *(optional)*
+            position (list): The coordinates of the seed. Default is
+                the origin. *(optional)*
             **kwargs: Keyword arguments that define the size, shape, etc of the
                 seed geometry.
 

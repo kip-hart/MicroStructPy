@@ -103,8 +103,8 @@ def tangent_sphere(points, radii=None, simplices=None):
 
     Args:
         points (list, tuple, numpy.ndarray): List of points.
-        radii (list, tuple, numpy.ndarray, optional): List of radii.
-        simplices (list, tuple, numpy.ndarray, optional): List of simplices.
+        radii (list, tuple, numpy.ndarray): List of radii. *(optional)*
+        simplices (list, tuple, numpy.ndarray): List of simplices. *(optional)*
 
     Returns:
         numpy.ndarray: The centers and radii of tangent spheres.

@@ -5,5 +5,4 @@
 microstructpy.geometry.factory
 ==============================
 
-.. automodule:: microstructpy.geometry
-    :members: factory
+.. automethod:: microstructpy.geometry.factory

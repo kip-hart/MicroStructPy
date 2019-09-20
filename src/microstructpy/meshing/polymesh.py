@@ -72,13 +72,13 @@ class PolyMesh(object):
             of edges (Nx2). In 3D, this is a list of 3D polygons.
         regions (list): A list of polygons (2D) or polyhedra (3D), with each
             element of the list being a list of facet indices.
-        seed_numbers (list, optional): The seed number associated with each
-            region.
-        phase_numbers (list, optional): The phase number associated with each
-            region.
-        facet_neighbors (list, optional): The region numbers on either side of
-            each facet
-        volumes (list, optional): The area/volume of each region.
+        seed_numbers (list): The seed number associated with each
+            region. *(optional)*
+        phase_numbers (list): The phase number associated with each
+            region. *(optional)*
+        facet_neighbors (list): The region numbers on either side of
+            each facet *(optional)*
+        volumes (list): The area/volume of each region. *(optional)*
 
     """  # NOQA: E501
 
@@ -499,22 +499,21 @@ class PolyMesh(object):
     # ----------------------------------------------------------------------- #
     @classmethod
     def from_seeds(cls, seedlist, domain):
-        """Create from :class:`.SeedList` and :class:`.Domain`.
+        """Create from :class:`.SeedList` and a domain.
 
         This function creates a polygon/polyhedron mesh from a seed list and
         a domain. It relies on the pyvoro package, which wraps `Voro++`_.
         The mesh is a Voronoi power diagram / Laguerre tessellationself.
 
         The pyvoro package operates on rectangular domains, so other domains
-        are meshed by reflecting seeds across their boundaries and meshing
-        a larger domain. The reflection process will double the number of
-        points in the voro++ input, which may cause a noticable slow-down
-        for high-population microstructures. This reflection process is
-        unnecessary for rectangular and box domains.
+        are meshed in 2D by meshing in a bounding box then the boundary cells
+        are clipped to the domain boundary.
+        Currently non-rectangular domains in 3D are not supported.
 
         Args:
             seedlist (SeedList): A list of seeds in the microstructure.
-            domain (Domain): The domain to be filled by the seeds.
+            domain : The domain to be filled by the seed. From
+                :mod:`microstructpy.geometry`.
 
         Returns:
             :class:`.PolyMesh`: A polygon/polyhedron mesh.
