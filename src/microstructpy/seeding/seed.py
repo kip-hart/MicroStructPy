@@ -102,7 +102,9 @@ class Seed(object):
                 that approximate the geometry. The list should be formatted as
                 follows::
 
-                    breakdown = [(x1, y1, z1, r1), (x2, y2, z2, r2), ...]
+                    breakdown = [(x1, y1, z1, r1),
+                                 (x2, y2, z2, r2),
+                                 ...]
 
                 The breakdown will be automatically generated if not provided.
                 *(optional)*
