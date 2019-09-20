@@ -17,7 +17,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../examples/foam.py
+.. literalinclude:: ../../../../examples/foam.py
     :language: python
 
 Domain
@@ -73,7 +73,7 @@ Plotting
   Finally, the triangular mesh is saved as a PNG and as a PDF, with the
   resulting plot shown below.
   
-  .. figure:: ../../examples/foam/trimesh.png
+  .. figure:: ../../../../examples/foam/trimesh.png
 
     Triangular mesh of foam.
 

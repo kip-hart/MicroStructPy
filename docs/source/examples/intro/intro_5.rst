@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is given below.
 
-.. literalinclude:: ../../examples/intro_5_plotting.xml
+.. literalinclude:: ../../../../examples/intro_5_plotting.xml
     :language: xml
 
 
@@ -62,17 +62,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/intro_5_plotting/seeds.png
+    .. figure:: ../../../../examples/intro_5_plotting/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/intro_5_plotting/polymesh.png
+    .. figure:: ../../../../examples/intro_5_plotting/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/intro_5_plotting/trimesh.png
+    .. figure:: ../../../../examples/intro_5_plotting/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh

@@ -22,7 +22,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../examples/from_image.py
+.. literalinclude:: ../../../../examples/from_image.py
     :language: python
 
 Read Image
@@ -34,7 +34,7 @@ Read Image
   The brightness of the image is taken as the red channel, since the RGB values
   are equal. That image is shown below.
 
-  .. figure:: ../../examples/aluminum_micro.png
+  .. figure:: ../../../../examples/aluminum_micro.png
     :alt: Micrograph of aluminum.
     :align: center
     :width: 50%
@@ -89,7 +89,7 @@ Save Plot and Copy Input File
   same directory for comparison.
   The output PNG file of this script is shown below.
 
-  .. figure:: ../../examples/from_image/trimesh.png
+  .. figure:: ../../../../examples/from_image/trimesh.png
     :alt: Triangular mesh of aluminum microstructure.
     :width: 50%
 

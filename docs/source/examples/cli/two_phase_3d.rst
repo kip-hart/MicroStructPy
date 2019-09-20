@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../examples/two_phase_3D.xml
+.. literalinclude:: ../../../../examples/two_phase_3D.xml
     :language: xml
 
 
@@ -54,17 +54,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/two_phase_3D/seeds.png
+    .. figure:: ../../../../examples/two_phase_3D/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/two_phase_3D/polymesh.png
+    .. figure:: ../../../../examples/two_phase_3D/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/two_phase_3D/trimesh.png
+    .. figure:: ../../../../examples/two_phase_3D/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh

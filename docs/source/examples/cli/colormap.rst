@@ -17,7 +17,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../examples/colormap.xml
+.. literalinclude:: ../../../../examples/colormap.xml
     :language: xml
 
 
@@ -63,17 +63,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/colormap/seeds.png
+    .. figure:: ../../../../examples/colormap/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/colormap/polymesh.png
+    .. figure:: ../../../../examples/colormap/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/colormap/trimesh.png
+    .. figure:: ../../../../examples/colormap/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh

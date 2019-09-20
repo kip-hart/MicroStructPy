@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../examples/uniform_seeding.py
+.. literalinclude:: ../../../../examples/uniform_seeding.py
     :language: python
 
 Domain
@@ -47,7 +47,7 @@ Plotting
   it is above the standard area, it is shaded red. A custom colorbar is added
   to the figure and it is saved as a PNG, shown below.
 
-  .. figure:: ../../examples/uniform_seeding/voronoi_diagram.png
+  .. figure:: ../../../../examples/uniform_seeding/voronoi_diagram.png
     :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
     
     Uniformly seeded Voronoi diagram with cells colored by area.

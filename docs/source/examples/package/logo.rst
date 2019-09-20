@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../examples/logo.py
+.. literalinclude:: ../../../../examples/logo.py
     :language: python
 
 Domain
@@ -51,7 +51,7 @@ Plot Logo
   HTML documentation.
   The logo that results is shown below.
 
-  .. figure:: ../../examples/logo/logo.png
+  .. figure:: ../../../../examples/logo/logo.png
 
       MicroStructPy logo.
 

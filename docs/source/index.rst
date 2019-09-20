@@ -18,7 +18,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
    :maxdepth: 2
 
    getting_started
-   examples
+   examples/index
    cli/index
    package_guide
    api/index

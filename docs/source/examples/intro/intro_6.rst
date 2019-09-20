@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../examples/intro_6_culmination.xml
+.. literalinclude:: ../../../../examples/intro_6_culmination.xml
     :language: xml
 
 
@@ -76,17 +76,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/intro_6_culmination/seeds.png
+    .. figure:: ../../../../examples/intro_6_culmination/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/intro_6_culmination/polymesh.png
+    .. figure:: ../../../../examples/intro_6_culmination/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/intro_6_culmination/trimesh.png
+    .. figure:: ../../../../examples/intro_6_culmination/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh

@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../examples/intro_3_size_shape.xml
+.. literalinclude:: ../../../../examples/intro_3_size_shape.xml
     :language: xml
 
 
@@ -70,17 +70,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/intro_3_size_shape/seeds.png
+    .. figure:: ../../../../examples/intro_3_size_shape/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/intro_3_size_shape/polymesh.png
+    .. figure:: ../../../../examples/intro_3_size_shape/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/intro_3_size_shape/trimesh.png
+    .. figure:: ../../../../examples/intro_3_size_shape/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh

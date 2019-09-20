@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../examples/minimal_paired.xml
+.. literalinclude:: ../../../../examples/minimal_paired.xml
     :language: xml
 
 
@@ -55,17 +55,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/minimal/seeds.png
+    .. figure:: ../../../../examples/minimal/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/minimal/polymesh.png
+    .. figure:: ../../../../examples/minimal/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/minimal/trimesh.png
+    .. figure:: ../../../../examples/minimal/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh

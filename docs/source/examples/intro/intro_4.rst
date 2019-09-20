@@ -1,20 +1,20 @@
-.. _ex_1_basic:
+.. _ex_4_oriented:
 
-=============
-Basic Example
-=============
+===============
+Oriented Grains
+===============
 
 XML Input File
 ==============
 
-The basename for this file is ``intro_1_basic.xml``.
+The basename for this file is ``intro_4_oriented.xml``.
 The file can be run using this command::
 
-    microstructpy --demo=intro_1_basic.xml
+    microstructpy --demo=intro_4_oriented.xml
 
 The full text of the file is:
 
-.. literalinclude:: ../../examples/intro_1_basic.xml
+.. literalinclude:: ../../../../examples/intro_4_oriented.xml
     :language: xml
 
 
@@ -23,17 +23,21 @@ Materials
 
 There are two materials, in a 2:1 ratio based on volume.
 The first is a matrix, which is represented with small circles.
-The size and shape of matrix grain particles are not critical, since
-the boundaries between them will be removed before triangular meshing.
-The second material consists of circular inclusions with diameter 2.
+
+The second material consists of elliptical inclusions with size ranging from
+0 to 2 and aspect ratio ranging from 1 to 3.
+Note that the size is defined as the diameter of a circle with equivalent area.
+The orientation angle of the inclusions are uniformly distributed between -10
+and +10 degrees, relative to the +x axis.
 
 Domain Geometry
 ===============
 
-The domain of the microstructure is a square with its bottom-left
-corner fixed to the origin.
-The side length is 20, which is 10x the size of the inclusions to ensure that
-the microstructure is statistically representative.
+These two materials fill a square domain.
+The bottom-left corner of the rectangle is the origin, which puts the
+rectangle in the first quadrant.
+The side length is 20, which is 10x the size of the inclusions
+to ensure that the microstructure is statistically representative.
 
 
 Settings
@@ -66,17 +70,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/intro_1_basic/seeds.png
+    .. figure:: ../../../../examples/intro_4_oriented/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/intro_1_basic/polymesh.png
+    .. figure:: ../../../../examples/intro_4_oriented/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/intro_1_basic/trimesh.png
+    .. figure:: ../../../../examples/intro_4_oriented/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh
@@ -87,21 +91,21 @@ Output Files
 
         The three plots that this file generates are the seeding, the polygon mesh,
         and the triangular mesh.
-        These three plots are shown in Fig.~\ref{fig:ex1_1_basic}.
+        These three plots are shown in Fig.~\ref{fig:ex_4_oriented}.
 
         \begin{figure}[htbp]
             \centering
             \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_1_basic/seeds.png}
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/seeds.png}
             }
             ~
             \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_1_basic/polymesh.png}
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/polymesh.png}
             }
             ~
             \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_1_basic/trimesh.png}
+                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/trimesh.png}
             }
-            \caption{Output plots for basic example.}
-            \label{fig:ex1_1_basic}
+            \caption{Output plots for oriented grains example.}
+            \label{fig:ex_4_oriented}
         \end{figure}

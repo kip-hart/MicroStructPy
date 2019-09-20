@@ -8,7 +8,7 @@ MicroStructPy Contents
 
    welcome
    getting_started
-   examples
+   examples/index
    cli/index
    package_guide
    api/index

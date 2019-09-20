@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../examples/standard_voronoi.py
+.. literalinclude:: ../../../../examples/standard_voronoi.py
     :language: python
 
 Domain
@@ -45,7 +45,7 @@ Plotting
 
   The output Voronoi diagram is plotted below.
 
-  .. figure:: ../../examples/standard_voronoi/voronoi_diagram.png
+  .. figure:: ../../../../examples/standard_voronoi/voronoi_diagram.png
 
     Standard Voronoi diagram.
 

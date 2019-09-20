@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../examples/elliptical_grains.xml
+.. literalinclude:: ../../../../examples/elliptical_grains.xml
     :language: xml
 
 
@@ -73,17 +73,17 @@ Output Files
     and the triangular mesh.
     These three plots are shown below.
 
-    .. figure:: ../../examples/elliptical_grains/seeds.png
+    .. figure:: ../../../../examples/elliptical_grains/seeds.png
         :alt: Seed geometries.
 
         Seed geometries
         
-    .. figure:: ../../examples/elliptical_grains/polymesh.png
+    .. figure:: ../../../../examples/elliptical_grains/polymesh.png
         :alt: Polygonal mesh.
 
         Polygonal mesh
         
-    .. figure:: ../../examples/elliptical_grains/trimesh.png
+    .. figure:: ../../../../examples/elliptical_grains/trimesh.png
         :alt: Triangular mesh.
 
         Triangular mesh
