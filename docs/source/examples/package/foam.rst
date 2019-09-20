@@ -48,13 +48,13 @@ Polygon Mesh
 ============
 
 A polygon mesh is created from the list of seed points using the
-:func:`~microstructpy.meshing.polymesh.PolyMesh.from_seeds` class method.
+:func:`~microstructpy.meshing.PolyMesh.from_seeds` class method.
 
 Triangular Mesh
 ===============
 
 A triangular mesh is created from the polygonal mesh using the
-:func:`~microstructpy.meshing.trimesh.TriMesh.from_polymesh` class method.
+:func:`~microstructpy.meshing.TriMesh.from_polymesh` class method.
 The optional ``phases`` parameter is used in this case since the mesh contains
 non-crystalline materials.
 Additionally, the minimum interior angle of the mesh elements is set to 20 to

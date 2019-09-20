@@ -34,7 +34,7 @@ above and a few key methods.
 
 **The following describes the 3-step process of generating a microstructure
 mesh in MicroStructPy**, including the relevant classes and methods.
-See :any:`API <microstructpy>` for the complete list of MicroStructPy classes.
+See :ref:`api-index` for the complete list of MicroStructPy classes.
 For examples using the API, see :ref:`Examples <package_examples>`.
 
 0. List of Seed Geometries
@@ -57,7 +57,7 @@ geometry name and keyword arguments and returns a Seed with that geometry.
 1. Pack Geometries into Domain
 ------------------------------
 
-The standard domain is a geometry from the :any:`microstructpy.geometry`.
+The standard domain is a geometry from the :mod:`microstructpy.geometry`.
 To pack the geometries into the domain, the centers of the seeds are specified
 such that there is a tolerable about of overlap with other seeds, if any.
 
@@ -125,7 +125,7 @@ methods:
 * :meth:`.SeedList.plot`
 * :meth:`.SeedList.plot_breakdown`
 * :meth:`.PolyMesh.plot`
-* :meth:`.PolyMesh.plot_facet`
+* :meth:`.PolyMesh.plot_facets`
 * :meth:`.TriMesh.plot`
 
 

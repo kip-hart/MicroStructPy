@@ -551,7 +551,7 @@ class SeedList(object):
         """Position seeds in a domain
 
         This method positions the seeds within a domain. The "domain" should be
-        a geometry instance from the :any:`microstructpy.geometry`.
+        a geometry instance from the :mod:`microstructpy.geometry` module.
 
         The "pos_dist" input is for phases with custom position distributions,
         the default being a uniform random distribution.
@@ -586,8 +586,8 @@ class SeedList(object):
         1 based on the ratio of standard deviation to mean in grain volumes.
 
         Args:
-            domain (from the :any:`microstructpy.geometry`): The domain of the
-                microstructure.
+            domain: The domain of the microstructure.
+                (from the :mod:`microstructpy.geometry` module)
             pos_dists (dict): Position distributions for each phase,
                 formatted like the example above. *(optional)*
             rng_seed (int): Random number generator (RNG) seed for

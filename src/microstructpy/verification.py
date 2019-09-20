@@ -159,7 +159,7 @@ def plot_volume_fractions(vol_fracs, phases, filename='volume_fractions.png'):
     Args:
         vol_fracs (list or numpy.ndarray): Output volume fractions.
         phases (list): List of phase dictionaries
-        filename (str or list of strs): Filename(s) to save the plot. Defaults
+        filename (str or list): Filename(s) to save the plot. Defaults
             to `volume_fractions.png`.
 
     Returns:
@@ -310,7 +310,7 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
         seeds (.SeedList): List of seeds to compare.
         phases (list): List of phase dictionaries.
         dirname (str): Plot output directory. Defaults to `.`.
-        ext (str or list of strs): File extension(s) of the output plots.
+        ext (str or list): File extension(s) of the output plots.
         poly_mesh (.PolyMesh): Polygonal mesh, useful for phases with an area
             or volume distribution.
 
@@ -658,7 +658,7 @@ def mle_phases(seeds, phases, poly_mesh=None, verif_mask=None):
 
     Args:
         seeds (.SeedList): List of seeds.
-        phases (list of dicts): List of input phases.
+        phases (list): List of input phase dictionaries.
         poly_mesh (.PolyMesh): Polygonal/polyhedral mesh.
     """
     circ_highs = {'angle': 360, 'angle_deg': 360, 'angle_rad': 2 * np.pi}
@@ -699,8 +699,8 @@ def write_mle_phases(inp_phases, out_phases, filename='mles.txt'):
     maximum likelihood estimators (MLEs) for the outputs.
 
     Args:
-        inp_phases (list of dicts): List of input phase dictionaries.
-        out_phases (list of dicts): List of output phase dictionaries.
+        inp_phases (list): List of input phase dictionaries.
+        out_phases (list): List of output phase dictionaries.
         filename (str): Filename of the output table.
 
     Returns:
@@ -817,7 +817,7 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
     Args:
         fit_seeds (.SeedList): List of seeds of best fit.
         seeds (.SeedList): List of seeds.
-        phases (list of dicts): List of input phases.
+        phases (list): List of input phase dictionaries.
         poly_mesh (.PolyMesh): Polygonal/polyhedral mesh.
 
     Returns:

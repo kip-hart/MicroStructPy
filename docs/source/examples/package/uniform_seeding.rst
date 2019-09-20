@@ -35,7 +35,7 @@ Polygon Mesh
 ============
 
 A polygon mesh is created from the list of seed points using the
-:func:`~microstructpy.meshing.polymesh.PolyMesh.from_seeds` class method.
+:func:`~microstructpy.meshing.PolyMesh.from_seeds` class method.
 
 Plotting
 ========

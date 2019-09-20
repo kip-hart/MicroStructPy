@@ -27,14 +27,14 @@ Seeds
 =====
 
 The seeds are 14 circles with radii uniformly distributed from 0 to 0.3.
-Calling the :func:`~microstructpy.seeding.seedlist.SeedList.position` method
+Calling the :func:`~microstructpy.seeding.SeedList.position` method
 positions the points according to random uniform distributions in the domain.
 
 Polygon Mesh
 ============
 
 A polygon mesh is created from the list of seed points using the
-:func:`~microstructpy.meshing.polymesh.PolyMesh.from_seeds` class method.
+:func:`~microstructpy.meshing.PolyMesh.from_seeds` class method.
 The mesh is plotted and saved into a PNG file in the remaining lines of the
 script.
 

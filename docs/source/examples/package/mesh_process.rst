@@ -36,7 +36,7 @@ rectangular domain and the elliptical seed from phase 2.
 
 Next, the phase 2 seed is appended to the list of phase 0 and 1 seeds.
 A hold list is then created to indicate to
-:func:`~microstructpy.seeding.seedlist.SeedList.position`
+:func:`~microstructpy.seeding.SeedList.position`
 which seeds should have their positions (centers) held.
 The default position of a seed is the origin, so by setting the hold flag to
 ``True`` for the elliptical seed, it will be fixed to the center of the domain
@@ -46,9 +46,9 @@ Polygonal and Triangular Meshing
 ================================
 
 Once the seeds are positioned in the domain, a polygonal mesh is created using
-:func:`~microstructpy.meshing.polymesh.PolyMesh.from_seeds`.
+:func:`~microstructpy.meshing.PolyMesh.from_seeds`.
 The triangular mesh is created using
-:func:`~microstructpy.meshing.trimesh.TriMesh.from_polymesh`,
+:func:`~microstructpy.meshing.TriMesh.from_polymesh`,
 with the quality control settings ``min_angle``, ``max_edge_length``, and
 ``max_volume``.
 
@@ -58,9 +58,9 @@ Plot Figure
 The figure contains three plots: the seeds, the polygonal mesh, and the
 triangular/unstructured mesh.
 First, the seeds plot is generated using SeedList
-:func:`~microstructpy.seeding.seedlist.SeedList.plot`
+:func:`~microstructpy.seeding.SeedList.plot`
 and Rectangle
-:func:`~microstructpy.geometry.rectangle.Rectangle.plot`
+:func:`~microstructpy.geometry.Rectangle.plot`
 to show the boundary of the domain.
 The seeds are plotted with some transparency to show overlap.
 
@@ -73,7 +73,7 @@ grain is plotted without internal geomtry.
 
 Finally, the triangular mesh is translated to the right of the polygonal mesh
 and plotted using TriMesh
-:func:`~microstructpy.meshing.trimesh.TriMesh.plot`.
+:func:`~microstructpy.meshing.TriMesh.plot`.
 
 .. only:: not latex
 

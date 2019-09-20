@@ -20,8 +20,9 @@ The full text of the script is:
 Domain
 ======
 
-The domain of the microstructure is a :class:`geometry.Rectangle`,
-with the bottom left corner at the origin and side lengths of 8 and 12.
+The domain of the microstructure is a
+:class:`microstructpy.geometry.Rectangle`, with the bottom left corner at the
+origin and side lengths of 8 and 12.
 
 Phases
 ======
