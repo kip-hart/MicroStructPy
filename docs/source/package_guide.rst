@@ -20,7 +20,7 @@ The Python package for MicroStructPy includes the following::
     ├─ seeding
     │  ├─ Seed
     │  └─ SeedList
-    └─ meshing
+    ├─ meshing
     │  ├─ PolyMesh
     │  └─ TriMesh
     └─ verification
@@ -42,8 +42,8 @@ It starts with a script that executes an abbreviated version of the
 standard workflow.
 The checks, restarts, etc are excluded to show how the principal classes are
 used in a workflow.
-The following section lists the file I/O and plotting functions, while the last
-section explains the formatting of a phase dictionary.
+The following sections describe the meshing methods, the file I/O and plotting
+functions, and the format of a material phase dictionary.
 
 The Standard Workflow
 ---------------------
@@ -93,7 +93,7 @@ from the command line interface.
 
 .. code-block:: python
 	:caption: Equivalent Python Script
-	:emphasize-lines: 29, 32, 35, 39
+	:emphasize-lines: 29-31, 34, 37, 41-43
 
 	import matplotlib.pyplot as plt
 	import microstructpy as msp
@@ -163,83 +163,52 @@ from the command line interface.
 	plt.savefig('trimesh.png')
 	plt.clf()
 
-Highlighted are the four principal methods used in generating a microstructure.
+Highlighted are the four principal methods used in generating a microstructure:
+:meth:`.SeedList.from_info`,
+:meth:`.SeedList.position`,
+:meth:`.PolyMesh.from_seeds`,
+:meth:`.TriMesh.from_polymesh`.
 
-.. todo- edit the content below
+Meshing Methods
+---------------
 
-Seeds are given a geometry and a material number,
-SeedLists are lists of Seeds,
-the PolyMesh can be created from a SeedList,
-and finally the TriMesh can be created from a PolyMesh.
-This is the flow of information built into the MicroStructPy command line
-interface (CLI).
-Custom algorithms for seeding or meshing can be implemented using the classes
-above and a few key methods.
+Laguerre-Voronoi Tessellation
++++++++++++++++++++++++++++++
 
-**The following describes the 3-step process of generating a microstructure
-mesh in MicroStructPy**, including the relevant classes and methods.
-See :ref:`api-index` for the complete list of MicroStructPy classes.
-For examples using the API, see :ref:`Examples <package_examples>`.
+Polygonal/polyhedral meshes are generated in MicroStructPy using a
+Laguerre-Voronoi tessellation, also known as a `Power Diagram`_.
+It is conceptually similar to a Voronoi diagram, the difference being that seed
+points are weighted rather than unweighted.
+In the :meth:`.PolyMesh.from_seeds` method, the center of a seed is consider
+a Voronoi seed point and the radius is its weight.
 
-0. List of Seed Geometries
---------------------------
+Non-circular seeds are replaced by their breakdown, resulting in
+multiple Voronoi cells representing a single grain.
+To retrieve all of the cells that represent a single grain, mask the
+``seed_numbers`` property of a :class:`.PolyMesh`.
 
-The list of seed geometries is a :class:`.SeedList`.
-The SeedList can be created from a list of :class:`.Seed` instances, which
-each contain a geometry and a phase.
+The Laguerre-Voronoi diagram is created by `Voro++`_, which is accessed
+using `pyvoro`_.
 
-A SeedList can also be generated from a list of material phase dictionaries
-and a total seed volume using the :meth:`.SeedList.from_info` class method.
-The default seed volume is the volume of the domain.
-For more information on how to format the phase information, see the
-:ref:`phase_dict_guide` below.
+Unstructured Meshing
+++++++++++++++++++++
 
-One convenience function is :meth:`.Seed.factory`, which takes in a
-geometry name and keyword arguments and returns a Seed with that geometry.
+The triangular/tetrahedral meshes are generated in MicroStructPy using the
+`MeshPy`_ package.
+It links with `Triangle`_ to create 2D triangular meshes and with `TetGen`_
+to create 3D tetrahedral meshes.
 
+A polygonal mesh, :class:`.PolyMesh`, can be converted into an unstructured
+mesh using the :meth:`.TriMesh.from_polymesh` method.
+Facets between cells of the same seed number are merged before meshing to
+prevent unnecessary internal geometry.
+Similarly, if the ``material_type`` of a phase is set to ``amorphous``, then
+facets between cells of the same phase number are also merged.
+Cells with the ``material_type`` set to ``void`` are treated as holes in
+MeshPy, resulting in voids in the output mesh.
 
-1. Pack Geometries into Domain
-------------------------------
-
-The standard domain is a geometry from the :mod:`microstructpy.geometry`.
-To pack the geometries into the domain, the centers of the seeds are specified
-such that there is a tolerable about of overlap with other seeds, if any.
-
-The standard method for positioning seeds in a domain is
-:meth:`.SeedList.position`.
-This function updates the :any:`Seed.position` property of each Seed in the
-SeedList.
-The centers of all the seeds are within the domain geometry.
-
-
-2. Tessellate the Domain
-------------------------
-
-A tessellation of the domain divides its interior into polygonal/polyhedral
-cells with no overlap or gaps between them.
-This tessellation is stored in a :class:`.PolyMesh` class.
-The default method for creating a PolyMesh from a positioned list of seeds and
-a domain is :meth:`.PolyMesh.from_seeds`.
-This method creates a Voronoi-Laguerre diagram using the `Voro++`_ package.
-Note that the only supported 3D domains are cubes and boxes.
-
-
-3. Unstructured Meshing
+File I/O & Plot Methods
 -----------------------
-
-Unstructured (triangular or tetrahedral) meshes can be used in finite
-element software to analyze the behavior of the microstructure.
-Their data are contained in the :class:`.TriMesh` class.
-This mesh can be created from a polygonal tessellation using the
-:meth:`.TriMesh.from_polymesh` method.
-The mesh can be output to several different file formats.
-
-The unstructured meshes are generated using `Triangle`_ in 2D, `TetGen`_ in 3D,
-and `MeshPy`_ is the wrapper.
-
-
-File I/O
---------
 
 There are file read and write functions associated with each of the classes
 listed above.
@@ -259,9 +228,6 @@ The write methods are:
 The read functions currently only support reading cache text files.
 The SeedList only writes to cache text files, while PolyMesh and TriMesh can
 output to several file formats.
-
-Plotting
---------
 
 The SeedList, PolyMesh, and TriMesh classes have the following plotting
 methods:
@@ -321,6 +287,8 @@ phase-specific.
 
 
 .. _`MeshPy`: https://mathema.tician.de/software/meshpy/
+.. _`Power Diagram`: https://en.wikipedia.org/wiki/Power_diagram
+.. _`pyvoro`: https://github.com/mmalahe/pyvoro
 .. _`SciPy statistical distribution`: https://docs.scipy.org/doc/scipy/reference/stats.html
 .. _`TetGen`: http://wias-berlin.de/software/tetgen/
 .. _`Triangle`: https://www.cs.cmu.edu/~quake/triangle.html
