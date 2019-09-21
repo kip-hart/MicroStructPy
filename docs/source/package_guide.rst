@@ -200,10 +200,10 @@ to create 3D tetrahedral meshes.
 
 A polygonal mesh, :class:`.PolyMesh`, can be converted into an unstructured
 mesh using the :meth:`.TriMesh.from_polymesh` method.
-Facets between cells of the same seed number are merged before meshing to
-prevent unnecessary internal geometry.
+Cells of the same seed number are merged before meshing to prevent unnecessary
+internal geometry.
 Similarly, if the ``material_type`` of a phase is set to ``amorphous``, then
-facets between cells of the same phase number are also merged.
+cells of the same phase number are also merged.
 Cells with the ``material_type`` set to ``void`` are treated as holes in
 MeshPy, resulting in voids in the output mesh.
 
