@@ -54,38 +54,6 @@ add the following to your ``~/.bash_profile`` file::
 
 then source the .bash_profile file by running ``source ~/.bash_profile``.
 
-Could not connect to display
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Problem Description**
-
-The program crashes while trying to plot and there is an error message that
-says::
-
-  QXcbConnection: Could not connect to display
-
-The ``show_plots`` setting in the input file is set to False, so a display
-should not be necessary.
-
-**Problem Solution**
-
-The default behavior for matplotlib is to use an interactive backend.
-If MicroStructPy is running in an environment that cannot create windows,
-then matplotlib will crash.
-
-This problem can be solved in two way, 1) run MicrostructPy in an environment
-with windows or 2) set the default behavior of matplotlib to use a
-non-interactive backend. For option 2, add the following to your
-``matplotlibrc`` file::
-
-    backend : agg
-
-The path to ``matplotlibrc`` file is OS-dependent and explained on the
-matplotlib_ website. For Linux, the path is
-``~/.config/matplotlib/matplotlibrc``.
-
-.. _matplotlib: https://matplotlib.org/users/customizing.html#the-matplotlibrc-file
-
 'tkinter' not found on Linux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
