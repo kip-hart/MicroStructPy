@@ -7,6 +7,6 @@ API
 
     cli
     geometry/index
-    meshing
-    seeding
+    meshing/index
+    seeding/index
     verification
