@@ -9,41 +9,26 @@ The module also contains some N-D geometries, which are inherited by the
 
 **2D Geometries**
 
-* :ref:`api_geometry_circle`
-* :ref:`api_geometry_ellipse`
-* :ref:`api_geometry_rectangle`
-* :ref:`api_geometry_square`
+* :ref:`api_geometry_circle` † ‡
+* :ref:`api_geometry_ellipse` † ‡
+* :ref:`api_geometry_rectangle` † ‡
+* :ref:`api_geometry_square` † ‡
 
 **3D Geometries**
 
-* :ref:`api_geometry_box`
-* :ref:`api_geometry_cube`
-* :ref:`api_geometry_ellipsoid`
-* :ref:`api_geometry_sphere`
+* :ref:`api_geometry_box` ‡
+* :ref:`api_geometry_cube` ‡
+* :ref:`api_geometry_ellipsoid` †
+* :ref:`api_geometry_sphere` †
 
 **ND Geometries**
 
 * :ref:`api_geometry_n_box`
 * :ref:`api_geometry_n_sphere`
 
-The following classes may be used to define seed particles:
+†: These classes may be used to define seed particles.
 
-* Circle
-* Ellipse
-* Ellipsoid
-* Rectangle
-* Square
-* Sphere
-
-
-The following classes may be used to define the microstructure domain:
-
-* Box
-* Cube
-* Circle
-* Ellipse
-* Rectangle
-* Square
+‡: These classes may be used to define the microstructure domain.
 
 To assist with creating geometries, a factory method is included in the module:
 
