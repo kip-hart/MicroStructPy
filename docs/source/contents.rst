@@ -11,5 +11,6 @@ MicroStructPy Contents
    examples/index
    cli/index
    package_guide
+   file_formats
    api/index
    troubleshooting
