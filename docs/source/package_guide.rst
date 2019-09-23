@@ -52,8 +52,9 @@ Below is an input file similar to the :ref:`intro_examples`.
 The script that follows will produce the same results as running this script
 from the command line interface.
 
+**XML Input File**
+
 .. code-block:: xml
-	:caption: XML Input File
 
 	<?xml version="1.0" encoding="UTF-8"?>
 	<input>
@@ -91,8 +92,9 @@ from the command line interface.
 		</settings>
 	</input>
 
+**Equivalent Python Script**
+
 .. code-block:: python
-	:caption: Equivalent Python Script
 	:emphasize-lines: 29-31, 34, 37, 41-43
 
 	import matplotlib.pyplot as plt
