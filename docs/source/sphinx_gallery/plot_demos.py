@@ -18,7 +18,7 @@ example_dir = '../../../examples'
 
 # Copy Supporting Files
 for fname in ['aphanitic.csv', 'olivine.csv']:
-    filename = os.path.join(example_dict, fname)
+    filename = os.path.join(example_dir, fname)
     shutil.copy(filename, '.')
 
 # Run XML files
