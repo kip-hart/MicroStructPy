@@ -17,7 +17,7 @@ locale.setlocale(locale.LC_NUMERIC, "C")
 example_dir = '../../../examples'
 
 # Copy Supporting Files
-for fname in ['aphanitic.csv', 'olivine.csv']:
+for fname in ['aphanitic_cdf.csv', 'olivine_cdf.csv']:
     filename = os.path.join(example_dir, fname)
     shutil.copy(filename, '.')
 
