@@ -1080,7 +1080,7 @@ def _dist_convert(dist_dict):
 
         bin_bnds = [x for x, _ in cdf]
         bin_cnts = [cdf[i + 1][1] - cdf[i][1] for i in range(len(cdf) - 1)]
-        return scipy.stats.rv_histogram(tuple(bin_cnts, bin_bnds))
+        return scipy.stats.rv_histogram(tuple([bin_cnts, bin_bnds]))
 
     elif dist_type == 'histogram':
         hist_filename = params['filename']
