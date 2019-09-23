@@ -7,6 +7,7 @@ Plot all demos
 import glob
 import locale
 import os
+import shutil
 import subprocess
 
 import microstructpy as msp
@@ -14,6 +15,11 @@ import microstructpy as msp
 locale.setlocale(locale.LC_NUMERIC, "C")
 
 example_dir = '../../../examples'
+
+# Copy Supporting Files
+for fname in ['aphanitic.csv', 'olivine.csv']:
+    filename = os.path.join(example_dict, fname)
+    shutil.copy(filename, '.')
 
 # Run XML files
 xml_pattern = os.path.join(example_dir, '*.xml')
