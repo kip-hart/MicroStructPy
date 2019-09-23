@@ -56,6 +56,7 @@ intersphinx_mapping = {
     'meshpy': ('https://documen.tician.de/meshpy/', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'python': ('https://docs.python.org/3', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None)
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -124,6 +125,7 @@ html_theme_options = {
     'touch_icon': 'logo/logo.svg',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
     'analytics_id': 'UA-147258715-1',
+    'code_font_size': '12.5px',
 }
 
 # The name for this set of Sphinx documents.  If None, it defaults to

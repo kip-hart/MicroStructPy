@@ -116,6 +116,15 @@ def main():
 
 
 def run_file(filename):
+    """Run an input file
+
+    This function reads an input file and runs it through the standard
+    workflow.
+
+    Args:
+        filename (str): The name of an XML input file.
+
+    """
     in_data = read_input(filename)
     phases = in_data['material']
     domain = in_data['domain']
@@ -124,6 +133,17 @@ def run_file(filename):
 
 
 def read_input(filename):
+    """Convert input file to dictionary
+
+    This function reads an input file and parses it into a dictionary.
+
+    Args:
+        filename (str): The name of an XML input file.
+
+    Returns:
+        collections.OrderedDict: Dictionary of run inputs.
+
+    """
     # Read in the file
     file_path = os.path.dirname(filename)
 
@@ -170,96 +190,26 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         * (optional) Perform mesh verification
 
     Args:
-        phases (dict or list): A dictionary or list of dictionaries for each
-            material phase. The dictionary entries depend on the shape of the
-            seeds, but one example is::
-
-                phase1 = {'name': 'foam',
-                         'material_type': 'amorphous',
-                         'volume': 0.25,
-                         'shape': 'sphere',
-                         'd': scipy.stats.lognorm(s=0.4, scale=1)
-                         }
-
-                phase2 = {'name': 'voids',
-                          'material_type': 'void',
-                          'volume': 0.75,
-                          'shape': 'sphere',
-                          'r': 1
-                          }
-
-                phases = [phase1, phase2]
-
-            The entries can be either constants (``'r': 1``) or
-            distributed, (``'d': scipy.stats.lognorm(s=0.4, scale=1)``).
-
-            The entries can be either constants (``'radius': 1``)
-            or distributed,
-            (``'diameter': scipy.stats.lognorm(s=0.4, scale=0.5)``).
-            The following non-shape keywords can be used in each phase:
-
-            .. table:: Non-Shape Phase Keywords
-                :align: center
-
-                +---------------+--------------+------------------------------+
-                | Keyword       | Default      | Notes                        |
-                +===============+==============+==============================+
-                | color         | C<n>         | Can be any matplotlib color. |
-                |               |              | Defaults to the standard     |
-                |               |              | matplotlib color cycle. More |
-                |               |              | info on the matplotlib       |
-                |               |              | `Specifying Colors`_ page.   |
-                +---------------+--------------+------------------------------+
-                | material_type | crystalline  | Options: **crystalline**,    |
-                |               |              | granular, solid,             |
-                |               |              | **amorphous**, glass         |
-                |               |              | matrix, **void**, crack,     |
-                |               |              | hole.                        |
-                |               |              | (Non-bolded words are        |
-                |               |              | alies for the bolded words.) |
-                +---------------+--------------+------------------------------+
-                | name          | Material <n> | Can be non-string variable.  |
-                +---------------+--------------+------------------------------+
-                | position      | *uniform*    | Uniform random distribution, |
-                |               |              | see below for options.       |
-                +---------------+--------------+------------------------------+
-                | fraction      | 1            | Can be proportional volumes  |
-                |               |              | (such as 1:3) or fractions   |
-                |               |              | (such as 0.1, 0.2, and 0.7). |
-                |               |              | Can also be a `scipy.stats`_ |
-                |               |              | distribution.                |
-                |               |              | Volume fractions are         |
-                |               |              | normalized by their sum.     |
-                +---------------+--------------+------------------------------+
-
-            The position distribution of the phase can be customized for
-            non-randomly sorted phases. For example::
-
-                # independent distributions for each axis
-                position = [0,
-                            scipy.stats.uniform(0, 1),
-                            scipy.stats.uniform(0.25, 0.5)]
-
-                # correlated position distributions
-                mu = [2, 3]
-                sigma = [[3, 1], [1, 4]]
-                position = scipy.stats.multivariate_normal(mu, sigma)
-
-        domain (class from :mod:`microstructpy.geometry`): The geometry of the
+        phases (list or dict): Single phase dictionary or list of multiple
+            phase dictionaries. See :ref:`phase_dict_guide` for more details.
+        domain (from :mod:`microstructpy.geometry`): The geometry of the
             domain.
-        verbose (bool): Option to run in verbose mode. Prints status updates
-            to the terminal. Defaults to False.
-        restart (bool): Option to run in restart mode. Saves caches at the
-            end of each step and reads caches to restart the analysis.
-            Defaults to True.
-        directory (str): File path where outputs will be saved. This path can
-            either be relative to the current directory, or an absolute path.
-            Defaults to the current working directory.
-        filetypes (dict): Filetypes for the output files. A dictionary
-            containing many of the possible file types is::
+        verbose (bool): *(optional)* Option to run in verbose mode.
+            Prints status updates to the terminal. Defaults to False.
+        restart (bool): *(optional)* Option to run in restart mode.
+            Saves caches at the end of each step and reads caches to restart
+            the analysis. Defaults to True.
+        directory (str): *(optional)* File path where outputs will be saved.
+            This path can either be relative to the current directory,
+            or an absolute path. Defaults to the current working directory.
+        filetypes (dict): *(optional)* Filetypes for the output files.
+            A dictionary containing many of the possible file types is::
 
                 filetypes = {'seeds': 'txt',
-                             'seeds_plot': ['eps', 'pdf', 'png', 'svg'],
+                             'seeds_plot': ['eps',
+                                            'pdf',
+                                            'png',
+                                            'svg'],
                              'poly': ['txt', 'ply', 'vtk'],
                              'poly_plot': 'png',
                              'tri': ['txt', 'abaqus', 'vtk'],
@@ -270,8 +220,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             If an entry is not included in the dictionary, then that output
             is not saved. Default is an empty dictionary. If *restart* is
             True, then 'txt' is added to the 'seeds', 'poly', and 'tri' fields.
-        rng_seeds (dict): The random number generator (RNG) seeds.
+        rng_seeds (dict): *(optional)* The random number generator (RNG) seeds.
             The dictionary values should all be non-negative integers.
+            Specifically, RNG seeds should be convertible to NumPy `uint32`_.
             An example dictionary is::
 
                 rng_seeds = {'fraction': 0,
@@ -283,50 +234,51 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
                              }
 
             If a seed is not specified, the default value is 0.
-        rtol (float): The relative overlap tolerance between seeds. This
-            parameter should be between 0 and 1. The condition for two
-            circles to overlap is:
+        rtol (float or str): *(optional)* The relative overlap tolerance
+            between seeds. This parameter should be between 0 and 1.
+            The condition for two circles to overlap is:
 
             .. math::
 
-                || x_2 - x_1 || + \text{rtol} min(r_1, r_2) < r_1 + r_2
+                || x_2 - x_1 || + \text{rtol} \min(r_1, r_2) < r_1 + r_2
 
             The default value is ``'fit'``, which uses the mean and variance
             of the size distribution to estimate a value for rtol.
-        mesh_max_volume (float): The maximum volume (area in 2D) of a mesh
-            cell in the triangular mesh. Default is infinity, which turns off
-            the maximum volume quality setting. Should be stritly positive.
-        mesh_min_angle (float): The minimum interior angle, in degrees,  of a
-            cell in the triangular mesh. For 3D meshes, this is the dihedral
-            angle between faces of the tetrahedron. Defaults to 0, which turns
-            off the angle quality constraint. Should be in the range 0-60.
-        mesh_max_edge_length (float): The maximum edge length of elements
-            along grain boundaries. Currently only supported in 2D.
-        plot_axes (bool): Option to show the axes in output plots. When False,
-            The plots are saved without axes and very tight borders. Defaults
-            to True.
-        verify (bool): Option to verify the output mesh against the
-            input phases.
-        color_by (str): Method for coloring seeds and grains in the output
-            plots. The options are {'material', 'seed number',
-            'material number'}. For 'material', the color field of each phase
-            is used. For 'seed number' and 'material number', the seeds are
-            colored using the colormap specified in the 'colormap' keyword
-            argument.
-        colormap (str): Name of the colormap used to color the seeds and grains
-            if 'color_by' is set to 'seed number' or 'material number'. A full
-            explanation of the matplotlib colormaps is availabe at
-            `Choosing Colormaps in Matplotlib`_.
-        seeds_kwargs (dict): Optional keyword arguments for plotting seeds. For
-            example, the line width and color.
-        poly_kwargs (dict): Optional keyword arguments for plotting polygonal
-            meshes. For example, the line width and color.
-        tri_kwargs (dict): Optional keyword arguments for plotting triangular
-            meshes. For example, the line width and color.
+        mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
+            of a mesh cell in the triangular mesh. Default is infinity,
+            which turns off the maximum volume quality setting.
+            Value should be stritly positive.
+        mesh_min_angle (float): *(optional)* The minimum interior angle,
+            in degrees,  of a cell in the triangular mesh. For 3D meshes,
+            this is the dihedral angle between faces of the tetrahedron.
+            Defaults to 0, which turns off the angle quality constraint.
+            Value should be in the range 0-60.
+        mesh_max_edge_length (float): *(optional)* The maximum edge length of
+            elements along grain boundaries. Currently only supported in 2D.
+        plot_axes (bool): *(optional)* Option to show the axes in output plots.
+            When False, the plots are saved without axes and very tight
+            borders. Defaults to True.
+        verify (bool): *(optional)* Option to verify the output mesh against
+            the input phases. Defaults to False.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        seed_kwargs (dict): additional keyword arguments that will be passed to
+            :meth:`.SeedList.plot`.
+        poly_kwargs (dict): Additional keyword arguments that will be passed to
+            :meth:`.PolyMesh.plot_facets` in 2D and
+            :meth:`.PolyMesh.plot` in 3D.
+        tri_kwargs (dict): Additional keyword arguments that will be passed to
+            :meth:`.TriMesh.plot`.
 
     .. _`Specifying Colors`: https://matplotlib.org/users/colors.html
     .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
     .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/tutorials/colors/colormaps.html
+    .. _`uint32`: https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html
     """  # NOQA: E501
     # ----------------------------------------------------------------------- #
     # Condition Inputs                                                        #
@@ -378,7 +330,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         if verbose:
             print('Creating un-positioned list of seeds.')
 
-        seeds = unpositioned_seeds(phases, domain, rng_seeds)
+        seeds = _unpositioned_seeds(phases, domain, rng_seeds)
 
         if verbose:
             print('There are ' + str(len(seeds)) + ' seeds.')
@@ -598,7 +550,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 # Created Unpositioned List of Seeds                                          #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-def unpositioned_seeds(phases, domain, rng_seeds={}):
+def _unpositioned_seeds(phases, domain, rng_seeds={}):
     if domain.n_dim == 2:
         dom_vol = domain.area
     else:
@@ -613,6 +565,30 @@ def unpositioned_seeds(phases, domain, rng_seeds={}):
 # --------------------------------------------------------------------------- #
 def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
                color_by='material', colormap='viridis', **edge_kwargs):
+    """Plot seeds
+
+    This function creates formatted plots of a :class:`.SeedList`.
+
+    Args:
+        seeds (SeedList): Seed list to plot.
+        phases (list): List of phase dictionaries. See :ref:`phase_dict_guide`
+            for more details.
+        domain (from :mod:`microstructpy.geometry`): Domain geometry.
+        plot_files (list): *(optional)* List of files to save the output plot.
+            Defaults to saving the plot to ``polymesh.png``.
+        plot_axes (bool): *(optional)* Flag to turn the axes on or off.
+            True shows the axes, False removes them. Defaults to True.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        **edge_kwargs: additional keyword arguments that will be passed to
+            :meth:`.SeedList.plot`.
+
+    """
     if not plot_files:
         return
 
@@ -705,8 +681,32 @@ def _cm_color(f, colormap='viridis'):
 # Plot Polygon                                                                #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-def plot_poly(pmesh, phases, plot_files=[], plot_axes=True,
+def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
               color_by='material', colormap='viridis', **edge_kwargs):
+    """Plot polygonal/polyhedral mesh
+
+    This function creates formatted plots of a :class:`.PolyMesh`.
+
+    Args:
+        pmesh (PolyMesh): Polygonal mesh to plot.
+        phases (list): List of phase dictionaries. See :ref:`phase_dict_guide`
+            for more details.
+        plot_files (list): *(optional)* List of files to save the output plot.
+            Defaults to saving the plot to ``polymesh.png``.
+        plot_axes (bool): *(optional)* Flag to turn the axes on or off.
+            True shows the axes, False removes them. Defaults to True.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        **edge_kwargs: Additional keyword arguments that will be passed to
+            :meth:`.PolyMesh.plot_facets` in 2D and
+            :meth:`.PolyMesh.plot` in 3D.
+
+    """
     if not plot_files:
         return
 
@@ -829,6 +829,31 @@ def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
 # --------------------------------------------------------------------------- #
 def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
              color_by='material', colormap='viridis', **edge_kwargs):
+    """Plot seeds
+
+    This function creates formatted plots of a :class:`.TriMesh`.
+
+    Args:
+        tmesh (TriMesh): Triangular mesh to plot.
+        phases (list): List of phase dictionaries. See :ref:`phase_dict_guide`
+            for more details.
+        seeds (SeedList): List of seed geometries.
+        pmesh (PolyMesh): Polygonal mesh from which ``tmesh`` was generated.
+        plot_files (list): *(optional)* List of files to save the output plot.
+            Defaults to saving the plot to ``polymesh.png``.
+        plot_axes (bool): *(optional)* Flag to turn the axes on or off.
+            True shows the axes, False removes them. Defaults to True.
+        color_by (str): *(optional)* {'material' | 'seed number' |
+            'material number'} Option to choose how the polygons/polyhedra
+            are colored. Defaults to 'material'.
+        colormap (str): *(optional)* Name of the matplotlib colormap to color
+            the seeds. Ignored if `color_by='material'`. Defaults to 'viridis',
+            the standard matplotlib colormap.
+            See `Choosing Colormaps in Matplotlib`_ for more details.
+        **edge_kwargs: Additional keyword arguments that will be passed to
+            :meth:`.TriMesh.plot`.
+
+    """
     if not plot_files:
         return
 
@@ -961,94 +986,110 @@ def _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim):
 # Recursively Convert Dictionary Contents                                     #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-def dict_convert(raw_in, filepath='.'):
-    """Convert dictionary from xmltodict
+def dict_convert(dictionary, filepath='.'):
+    """Convert dictionary from xmltodict_
 
-    This function converts the dictionary created by xmltodict_.
-    The input is an ordered dictionary, where the keys are strings and the
-    items are either strings, lists, or ordered dictionaries. Strings occur
-    as the "leaves" of the dictionary and are converted into values.
-    Lists are return with each of their elements converted into values.
-    Ordered dictionaries are converted by (recursively) calling this function.
+    The xmltodict_ ``parse`` method creates dictionaries with values that
+    are all strings, rather than strings, floats, ints, etc.
+    This function recursively searches the dictionary for string values and
+    attempts to convert the dictionary values.
+
+    If a dictionary contains the key ``dist_type``, it is assumed that
+    the corresponding name is a :mod:`scipy.stats` statistical distribution
+    and the remaining keys are inputs for that distribution,
+    with two exceptions.
+    First, if the value of ``dist_type`` is ``cdf``, then the remaining key
+    should be ``filename`` and its value should be the path to a CSV file,
+    where each row contains the (x, CDF) points along the CDF curve.
+    Second, if the value of ``dist_type`` is ``histogram``, then the remaining
+    key should also be ``filename`` and its value should be the path to a CSV
+    file.
+    For the histogram, the first row of this CDF should be the *n+1* bin
+    locations and the second row should be the *n* bin heights.
+
+    Additionally, if a key in the dictionary contains ``filename`` or
+    ``directory`` and the value associated with that key is a relative path,
+    then the filepath is converted from a relative to an absolute path using
+    the ``filepath`` input as the reference point.
+    This behavior can be switched off by setting ``filepath=False``.
 
     Args:
-        raw_in: unconverted input- either dict, list, or str
-        filepath (str): filepath of input XML, to resolve relative
-            paths in the input file *(optional)*
+        dictionary (list, dict, or collections.OrderedDict): Dictionary or
+            dictionaries to be converted.
+        filepath (str): *(optional)* Reference path to resolve relative paths.
 
     Returns:
-        A copy of the input where the strings have been converted
+        list or collections.OrderedDict: A copy of the input where the string
+        values have been converted. If only one dict is passed into the
+        function, then an instance of :class:`collections.OrderedDict` is
+        returned.
 
     .. _xmltodict: https://github.com/martinblech/xmltodict
     """
 
-    # xmltodict.parse generates unicode strings, which are handled
-    # differently depending on Python 2 or 3. The following code attempts
-    # to convert the input to UTF-8. If it can be converted, then the type is
-    # set to str. This prevents the word "unicode" from appearing in the code
-    # and crashing certain versions of Python.
-    try:
-        raw_in.encode('utf8')
-    except AttributeError:
-        dict_type = type(raw_in)
-    else:
-        dict_type = str
+    if type(dictionary) is list:
+        return [dict_convert(d) for d in dictionary]
+    
+    new_dict = collections.OrderedDict()
+    for key in dictionary:
+        val = dictionary[key]
+        if type(val) in (dict, collections.OrderedDict):
+            new_val = dict_convert(val, filepath)
 
-    file_words = ('filename', 'dir', 'directory')
-    if dict_type in (dict, collections.OrderedDict):
-        new_dict = collections.OrderedDict()
-        for key in raw_in:
-            if any([s in key.lower() for s in file_words]):
-                fname = raw_in[key]
-                if not os.path.isabs(fname):
-                    fname = os.path.abspath(os.path.join(filepath, fname))
-                new_dict[key] = fname
+            # Exception for scipy.stats distributions
+            if 'dist_type' in val:
+                new_val = _dist_convert(new_val)
+                
+        elif type(val) is list:
+            if type(val[0]) is str:
+                new_val = [_misc.from_str(v) for v in val]
             else:
-                new_dict[key] = dict_convert(raw_in[key], filepath)
+                new_val = dict_convert(val, filepath)
 
-        # Special catch for random variables
-        if 'dist_type' in new_dict:
-            dist_type = new_dict['dist_type'].strip().lower()
-            dist_params = {k: v for k, v in new_dict.items()
-                           if k != 'dist_type'}
-
-            if dist_type == 'cdf':
-                cdf_filename = dist_params['filename']
-                with open(cdf_filename, 'r') as file:
-                    cdf = [[float(s) for s in line.split(',')] for line in
-                           file.readlines()]
-                bin_bnds = [x for x, _ in cdf]
-                bin_cnts = [cdf[i + 1][1] - cdf[i][1] for i in
-                            range(len(cdf) - 1)]
-                return scipy.stats.rv_histogram((bin_cnts, bin_bnds))
-
-            elif dist_type == 'histogram':
-                hist_filename = dist_params['filename']
-                with open(hist_filename, 'r') as file:
-                    hist = [[float(s) for s in line.split(',')] for line in
-                            file.readlines()]
-                return scipy.stats.rv_histogram(tuple(hist))
-
+        elif val is None:
+            new_val = {}
+        
+        # Exception for filepaths
+        elif any([s in key.lower() for s in ('filename', 'directory')]):
+            if not os.path.isabs(val) and filepath:
+                new_val = os.path.abspath(os.path.join(filepath, val))
             else:
-                return scipy.stats.__dict__[dist_type](**dist_params)
+                new_val = val
+
+        elif type(val) is str:
+            new_val = _misc.from_str(val)
+        
         else:
-            return new_dict
+            err_str = 'Cannot parse type for: ' + str(type(raw_in))
+            raise ValueError(err_str)
 
-    elif dict_type is list:
-        new_list = []
-        for elem in raw_in:
-            new_list.append(dict_convert(elem, filepath))
-        return new_list
+        new_dict[key] = new_val
+    return new_dict
 
-    elif dict_type is str:
-        return _misc.from_str(raw_in)
 
-    elif raw_in is None:
-        return {}
+def _dist_convert(dist_dict):
+    """Convert distribution dictionary to distribution"""
+
+    dist_type = dist_dict['dist_type'].strip().lower()
+    params = {k: v for k, v in dist_dict.items() if k != 'dist_type'}
+
+    if dist_type == 'cdf':
+        cdf_filename = params['filename']
+        with open(cdf_filename, 'r') as file:
+            cdf = [[float(s) for s in line.split(',')] for line in file]
+
+        bin_bnds = [x for x, _ in cdf]
+        bin_cnts = [cdf[i + 1][1] - cdf[i][1] for i in range(len(cdf) - 1)]
+        return scipy.stats.rv_histogram(tuple(bin_cnts, bin_bnds))
+
+    elif dist_type == 'histogram':
+        hist_filename = params['filename']
+        with open(hist_filename, 'r') as file:
+            hist = [[float(s) for s in line.split(',')] for line in file]
+        return scipy.stats.rv_histogram(tuple(hist))
 
     else:
-        err_str = 'Cannot parse type for: ' + str(type(raw_in))
-        raise ValueError(err_str)
+        return scipy.stats.__dict__[dist_type](**params)
 
 
 if __name__ == '__main__':
