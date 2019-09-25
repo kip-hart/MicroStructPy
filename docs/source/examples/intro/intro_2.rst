@@ -56,48 +56,25 @@ Note that the edge length control is currently unavailable in 3D.
 Output Files
 ============
 
-.. only:: not latex
+The three plots that this file generates are the seeding, the polygon mesh,
+and the triangular mesh.
+These three plots are shown in :numref:`f_ex_2_quality_seeds` -
+:numref:`f_ex_2_quality_tri`.
 
-    The three plots that this file generates are the seeding, the polygon mesh,
-    and the triangular mesh.
-    These three plots are shown below.
+.. _f_ex_2_quality_seeds:
+.. figure:: ../../../../examples/intro_2_quality/seeds.png
+    :alt: Seed geometries.
 
-    .. figure:: ../../../../examples/intro_2_quality/seeds.png
-        :alt: Seed geometries.
+    Introduction 2 - seed geometries.
+    
+.. _f_ex_2_quality_poly:
+.. figure:: ../../../../examples/intro_2_quality/polymesh.png
+    :alt: Polygonal mesh.
 
-        Seed geometries
-        
-    .. figure:: ../../../../examples/intro_2_quality/polymesh.png
-        :alt: Polygonal mesh.
+    Introduction 2 - polygonal mesh.
+    
+.. _f_ex_2_quality_tri:
+.. figure:: ../../../../examples/intro_2_quality/trimesh.png
+    :alt: Triangular mesh.
 
-        Polygonal mesh
-        
-    .. figure:: ../../../../examples/intro_2_quality/trimesh.png
-        :alt: Triangular mesh.
-
-        Triangular mesh
-
-.. only:: latex
-
-    .. raw:: latex
-
-        The three plots that this file generates are the seeding, the polygon mesh,
-        and the triangular mesh.
-        These three plots are shown in Fig.~\ref{fig:ex_2_quality}.
-
-        \begin{figure}[htbp]
-            \centering
-            \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_2_quality/seeds.png}
-            }
-            ~
-            \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_2_quality/polymesh.png}
-            }
-            ~
-            \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_2_quality/trimesh.png}
-            }
-            \caption{Output plots for mesh quality example.}
-            \label{fig:ex_2_quality}
-        \end{figure}
+    Introduction 2 - triangular mesh.

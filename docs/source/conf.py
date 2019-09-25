@@ -106,6 +106,11 @@ sphinx_gallery_conf = {
     'gallery_dirs': 'auto_examples',
 }
 
+# Numbering figures, tables, listings, etc
+numfig = True
+numfig_secnum_depth = 1
+
+
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -28,26 +28,15 @@ The full text of the script is:
 Read Image
 ==========
 
-.. only:: not latex
+The first section of the script reads the image using matplotlib.
+The brightness of the image is taken as the red channel, since the RGB values
+are equal. That image is shown in :numref:`f_ex_image_in`.
 
-  The first section of the script reads the image using matplotlib.
-  The brightness of the image is taken as the red channel, since the RGB values
-  are equal. That image is shown below.
+.. _f_ex_image_in:
+.. figure:: ../../../../examples/aluminum_micro.png
+  :alt: Micrograph of aluminum.
 
-  .. figure:: ../../../../examples/aluminum_micro.png
-    :alt: Micrograph of aluminum.
-    :align: center
-    :width: 50%
-
-    Micrograph of aluminum.
-
-.. only:: latex
-
-  .. raw:: latex 
-
-    The first section of the script reads the image using matplotlib.
-    The brightness of the image is taken as the red channel, since the RGB values
-    are equal. That image is shown in Fig.~\ref{fig:ex_from_image_inp}.
+  Micrograph of aluminum.
 
 Bin Pixels
 ==========
@@ -83,40 +72,14 @@ The color of each triangle is set by the phase.
 Save Plot and Copy Input File
 =============================
 
-.. only:: not latex
+The final plot is saved to a file, then the input image is copied to the
+same directory for comparison.
+The output PNG file of this script is shown in :numref:`f_ex_image_out`.
 
-  The final plot is saved to a file, then the input image is copied to the
-  same directory for comparison.
-  The output PNG file of this script is shown below.
+.. _f_ex_image_out:
+.. figure:: ../../../../examples/from_image/trimesh.png
+  :alt: Triangular mesh of aluminum microstructure.
 
-  .. figure:: ../../../../examples/from_image/trimesh.png
-    :alt: Triangular mesh of aluminum microstructure.
-    :width: 50%
-
-    Triangular mesh of aluminum microstructure.
-
-.. only:: latex
-
-  .. raw:: latex
-
-    The final plot is saved to a file, then the input image is copied to the
-    same directory for comparison.
-    The output PNG file of this script is shown in
-    Fig~\ref{fig:ex_from_image_out}.
-
-    \begin{figure}[htbp]
-        \centering
-        \subfloat[Input microstructure]{
-            \includegraphics[width=0.48\textwidth]{../../examples/aluminum_micro.png}
-            \label{fig:ex_from_image_inp}
-        }
-        ~
-        \subfloat[Output microstructure]{
-            \includegraphics[width=0.48\textwidth]{../../examples/from_image/trimesh.png}
-            \label{fig:ex_from_image_out}
-        }
-        \caption{Input and output microstructures of aluminum.}
-        \label{fig:ex_from_image}
-    \end{figure}
+  Triangular mesh of aluminum microstructure.
 
 

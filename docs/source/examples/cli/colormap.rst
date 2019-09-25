@@ -57,51 +57,28 @@ A complete listing of available colormaps is available on the matplotlib
 Output Files
 ============
 
-.. only:: not latex
+The three plots that this file generates are the seeding, the polygon mesh,
+and the triangular mesh.
+These three plots are shown in :numref:`f_ex_colormap_seeds` - 
+:numref:`f_ex_colormap_tri`.
 
-    The three plots that this file generates are the seeding, the polygon mesh,
-    and the triangular mesh.
-    These three plots are shown below.
+.. _f_ex_colormap_seeds:
+.. figure:: ../../../../examples/colormap/seeds.png
+    :alt: Seed geometries.
 
-    .. figure:: ../../../../examples/colormap/seeds.png
-        :alt: Seed geometries.
+    Colormap example - seed geometries.
+    
+.. _f_ex_colormap_poly:
+.. figure:: ../../../../examples/colormap/polymesh.png
+    :alt: Polygonal mesh.
 
-        Seed geometries
-        
-    .. figure:: ../../../../examples/colormap/polymesh.png
-        :alt: Polygonal mesh.
+    Colormap example - polygonal mesh.
+    
+.. _f_ex_colormap_tri:
+.. figure:: ../../../../examples/colormap/trimesh.png
+    :alt: Triangular mesh.
 
-        Polygonal mesh
-        
-    .. figure:: ../../../../examples/colormap/trimesh.png
-        :alt: Triangular mesh.
-
-        Triangular mesh
-
-.. only:: latex
-
-    .. raw:: latex
-
-        The three plots that this file generates are the seeding, the polygon mesh,
-        and the triangular mesh.
-        These three plots are shown in Fig.~\ref{fig:ex_colormap}.
-
-        \begin{figure}[htbp]
-            \centering
-            \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/colormap/seeds.png}
-            }
-            ~
-            \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/colormap/polymesh.png}
-            }
-            ~
-            \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/colormap/trimesh.png}
-            }
-            \caption{Output plots for colormap example.}
-            \label{fig:ex_colormap}
-        \end{figure}
+    Colormap example - triangular mesh.
 
 
 .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html

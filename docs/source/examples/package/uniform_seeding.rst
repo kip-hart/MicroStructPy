@@ -40,34 +40,16 @@ A polygon mesh is created from the list of seed points using the
 Plotting
 ========
 
-.. only:: not latex
+The facecolor of each polygon is determined by its area. If it is below the
+standard area (domain area / number of cells), then it is shaded blue. If
+it is above the standard area, it is shaded red. A custom colorbar is added
+to the figure and it is saved as a PNG, shown in :numref:`f_ex_uni_voro`.
 
-  The facecolor of each polygon is determined by its area. If it is below the
-  standard area (domain area / number of cells), then it is shaded blue. If
-  it is above the standard area, it is shaded red. A custom colorbar is added
-  to the figure and it is saved as a PNG, shown below.
-
-  .. figure:: ../../../../examples/uniform_seeding/voronoi_diagram.png
-    :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
-    
-    Uniformly seeded Voronoi diagram with cells colored by area.
-
-.. only:: latex
-
-  .. raw:: latex
-
-    The facecolor of each polygon is determined by its area. If it is below the
-    standard area (domain area / number of cells), then it is shaded blue. If
-    it is above the standard area, it is shaded red. A custom colorbar is added
-    to the figure and it is saved as a PNG, shown in
-    Fig.~\ref{fig:ex_uniform_seeding}.
-
-    \begin{figure}[htbp]
-        \centering
-        \includegraphics[width=0.5\textwidth]{../../examples/uniform_seeding/voronoi_diagram.png}
-        \caption{Uniformly seeded Voronoi diagram with cells colored by area.}
-        \label{fig:ex_uniform_seeding}
-    \end{figure}
+.. _f_ex_uni_voro:
+.. figure:: ../../../../examples/uniform_seeding/voronoi_diagram.png
+  :alt: Voronoi diagram with uniformly-spaced seeds, colored by area.
+  
+  Uniformly seeded Voronoi diagram with cells colored by area.
 
 
 .. [#f1] Mitchell, T.J., "An Algorithm for the Construction of "D-Optimal"

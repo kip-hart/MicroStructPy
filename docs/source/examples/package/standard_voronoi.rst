@@ -41,24 +41,9 @@ script.
 Plotting
 ========
 
-.. only:: not latex
+The output Voronoi diagram is plotted in :numref:`f_ex_voro`.
 
-  The output Voronoi diagram is plotted below.
+.. _f_ex_voro:
+.. figure:: ../../../../examples/standard_voronoi/voronoi_diagram.png
 
-  .. figure:: ../../../../examples/standard_voronoi/voronoi_diagram.png
-
-    Standard Voronoi diagram.
-
-.. only:: latex
-
-  .. raw:: latex
-
-    The output Voronoi diagram is plotted in
-    Fig.~\ref{fig:ex_standard_voronoi}.
-
-    \begin{figure}[htbp]
-        \centering
-        \includegraphics[width=0.5\textwidth]{../../examples/standard_voronoi/voronoi_diagram.png}
-        \caption{Standard Voronoi diagram.}
-        \label{fig:ex_standard_voronoi}
-    \end{figure}
+  Standard Voronoi diagram.

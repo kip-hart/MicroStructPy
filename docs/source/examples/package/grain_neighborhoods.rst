@@ -57,33 +57,13 @@ ratio triangles.
 Plotting
 ========
 
-.. only:: not latex
+The triangular mesh is plotted and saved to a file.
+Each triangle is colored based on its material phase, using the standard
+matplotlib colors: C0, C1, C2, etc.
+The output PNG file is shown in :numref:`f_ex_neighs_tri`.
 
-  The triangular mesh is plotted and saved to a file.
-  Each triangle is colored based on its material phase, using the standard
-  matplotlib colors: C0, C1, C2, etc.
-  The output PNG file is shown below.
+.. _f_ex_neighs_tri:
+.. figure:: ../../../../examples/grain_neighborhoods/trimesh.png
+  :alt: Triangular mesh of microstructure with seed neighborhoods.
 
-  .. figure:: ../../../../examples/grain_neighborhoods/trimesh.png
-    :alt: Triangular mesh of microstructure with seed neighborhoods.
-
-    Triangular mesh of microstructure with seed neighborhoods.
-
-.. only:: latex
-
-  .. raw:: latex
-
-    The triangular mesh is plotted and saved to a file.
-    Each triangle is colored based on its material phase, using the standard
-    matplotlib colors: C0, C1, C2, etc.
-    The output PNG file is shown in Fig.~\ref{fig:ex_grain_neighborhoods}.
-
-    \begin{figure}[htbp]
-        \centering
-        \includegraphics[width=\textwidth]{../../examples/grain_neighborhoods/trimesh.png}
-        \caption{Triangular mesh of microstructure with seed neighborhoods.}
-        \label{fig:ex_grain_neighborhoods}
-    \end{figure}
-
-
-  
+  Triangular mesh of microstructure with seed neighborhoods.

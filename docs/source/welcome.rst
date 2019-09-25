@@ -19,25 +19,15 @@ Features of MicroStructPy include:
 * Output to common file formats
 * Customizable workflow
 
-.. only:: html
+.. figure:: ../../examples/docs_banner/banner.png
+    :alt: Banner image showing the three steps for creating microstructure.
 
-    .. image:: ../../examples/docs_banner/banner.png
-        :alt: Banner image showing the three steps for creating microstructure.
+    The primary steps to create a microstructure.
 
-    *The three major steps to creating a microstructure are:
-    1) seed the domain with particles,
-    2) create a Voronoi power diagram, and
-    3) convert the diagram into an unstructured mesh.*
-
-.. only:: not html
-
-    .. figure:: ../../examples/docs_banner/banner.pdf
-        :alt: Banner image showing the three steps for creating microstructure.
-
-        The three major steps to creating a microstructure are:
-        1) seed the domain with particles,
-        2) create a Voronoi power diagram, and
-        3) convert the diagram into an unstructured mesh.
+The three primary steps for creating a microstructure are:
+1) seed the domain with particles,
+2) create a Voronoi power diagram, and
+3) convert the diagram into an unstructured mesh.
 
 
 Examples
@@ -46,63 +36,10 @@ Examples
 These images were created using MicroStructPy.
 For more examples, see the :ref:`examples_page` section.
 
-.. only:: not latex
+.. figure:: ../../examples/welcome_examples.png
+    :alt: Several examples created using MicroStructPy.
 
-    .. image:: ../../examples/intro_2_quality/trimesh.png
-        :width: 32%
-        :alt: Circular inclusions in a matrix.
-
-    .. image:: ../../examples/minimal/polymesh.png
-        :width: 32%
-        :alt: Minimial polygonal mesh.
-
-    .. image:: ../../examples/basalt_circle/trimesh.png
-        :width: 32%
-        :alt: Unstructured mesh of picritic basalt.
-
-    .. image:: ../../examples/foam/trimesh.png
-        :width: 32%
-        :alt: Unstructured mesh of foam.
-
-    .. image:: ../../examples/two_phase_3D/trimesh.png
-        :width: 32%
-        :alt: Unstructured mesh for 3D two phase composite.
-
-    .. image:: ../../examples/colormap/trimesh.png
-        :width: 32%
-        :alt: Unstructured mesh for 3D colormap example.
-
-.. only:: latex
-
-    .. raw:: latex
-
-        \begin{figure}[htbp]
-            \centering
-            \subfloat[Circular inclusions in a matrix]{
-                \includegraphics[width=0.32\textwidth]{../../examples/intro_2_quality/trimesh.png}
-            }
-            ~
-            \subfloat[Minimial polygonal mesh]{
-                \includegraphics[width=0.32\textwidth]{../../examples/minimal/polymesh.png}
-            }
-            ~
-            \subfloat[Unstructured mesh of picritic basalt]{
-                \includegraphics[width=0.32\textwidth]{../../examples/basalt_circle/trimesh.png}
-            }
-            \\
-            \subfloat[Unstructured mesh of foam]{
-                \includegraphics[width=0.32\textwidth]{../../examples/foam/trimesh.png}
-            }
-            ~
-            \subfloat[3D two phase composite]{
-                \includegraphics[width=0.32\textwidth]{../../examples/two_phase_3D/trimesh.png}
-            }
-            ~
-            \subfloat[3D colormap example]{
-                \includegraphics[width=0.32\textwidth]{../../examples/colormap/trimesh.png}
-            }
-            \caption{MicroStructPy examples.}
-        \end{figure}
+    Examples created using MicroStructPy.
 
 
 Quick Start
@@ -133,43 +70,12 @@ The text files contain all of the data related to the seed geometries and
 meshes.
 The image files contain:
 
-.. only:: not latex
+.. figure:: ../../examples/joined.png
+    :alt: Seed geometries, polygonal mesh, and unstructured mesh for min. expl.
 
-    .. image:: ../../examples/seeds.png
-        :width: 32%
-        :alt: Seed geometries for minimal example.
+    The output plots are:
+    1) seed geometries, 2) polygonal mesh, and 3) triangular mesh.
 
-    .. image:: ../../examples/polymesh.png
-        :width: 32%
-        :alt: Polygonal mesh for minimal example.
-
-    .. image:: ../../examples/trimesh.png
-        :width: 32%
-        :alt: Unstructured mesh for minimal example.
-
-    *1) The seed geometries,
-    2) the polygonal mesh,
-    3) the triangular mesh*
-
-.. only:: latex
-
-    .. raw:: latex
-
-        \begin{figure}[ht]
-            \centering
-            \subfloat[Seed geometries]{
-                \includegraphics[width=0.32\textwidth]{../../examples/seeds.png}
-            }
-            ~
-            \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.32\textwidth]{../../examples/polymesh.png}
-            }
-            ~
-            \subfloat[Triangular mesh]{
-                \includegraphics[width=0.32\textwidth]{../../examples/trimesh.png}
-            }
-            \caption{Output plots for a minimal example.}
-        \end{figure}
 
 The same results can be produced using this script:
 

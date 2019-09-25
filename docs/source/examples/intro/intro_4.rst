@@ -64,48 +64,25 @@ saved in PNG format.
 Output Files
 ============
 
-.. only:: not latex
+The three plots that this file generates are the seeding, the polygon mesh,
+and the triangular mesh.
+These three plots are shown in :numref:`f_ex_4_oriented_seeds` -
+:numref:`f_ex_4_oriented_tri`.
 
-    The three plots that this file generates are the seeding, the polygon mesh,
-    and the triangular mesh.
-    These three plots are shown below.
+.. _f_ex_4_oriented_seeds:
+.. figure:: ../../../../examples/intro_4_oriented/seeds.png
+    :alt: Seed geometries.
 
-    .. figure:: ../../../../examples/intro_4_oriented/seeds.png
-        :alt: Seed geometries.
+    Introduction 4 - seed geometries.
+    
+.. _f_ex_4_oriented_poly:
+.. figure:: ../../../../examples/intro_4_oriented/polymesh.png
+    :alt: Polygonal mesh.
 
-        Seed geometries
-        
-    .. figure:: ../../../../examples/intro_4_oriented/polymesh.png
-        :alt: Polygonal mesh.
+    Introduction 4 - polygonal mesh.
+    
+.. _f_ex_4_oriented_tri:
+.. figure:: ../../../../examples/intro_4_oriented/trimesh.png
+    :alt: Triangular mesh.
 
-        Polygonal mesh
-        
-    .. figure:: ../../../../examples/intro_4_oriented/trimesh.png
-        :alt: Triangular mesh.
-
-        Triangular mesh
-
-.. only:: latex
-
-    .. raw:: latex
-
-        The three plots that this file generates are the seeding, the polygon mesh,
-        and the triangular mesh.
-        These three plots are shown in Fig.~\ref{fig:ex_4_oriented}.
-
-        \begin{figure}[htbp]
-            \centering
-            \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/seeds.png}
-            }
-            ~
-            \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/polymesh.png}
-            }
-            ~
-            \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_4_oriented/trimesh.png}
-            }
-            \caption{Output plots for oriented grains example.}
-            \label{fig:ex_4_oriented}
-        \end{figure}
+    Introduction 4 - triangular mesh.

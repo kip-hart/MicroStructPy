@@ -64,33 +64,14 @@ resolution near the voids.
 Plotting
 ========
 
-.. only:: not latex
+The triangular mesh in this example is plotted in aquamarine, one of
+several named colors in matplotlib.
+Next, the axes are turned off and the limits are set to equal the bounds of
+the domain.
+Finally, the triangular mesh is saved as a PNG and as a PDF, with the
+resulting plot shown in :numref:`f_ex_foam_tri`.
 
-  The triangular mesh in this example is plotted in aquamarine, one of
-  several named colors in matplotlib.
-  Next, the axes are turned off and the limits are set to equal the bounds of
-  the domain.
-  Finally, the triangular mesh is saved as a PNG and as a PDF, with the
-  resulting plot shown below.
-  
-  .. figure:: ../../../../examples/foam/trimesh.png
+.. _f_ex_foam_tri:
+.. figure:: ../../../../examples/foam/trimesh.png
 
-    Triangular mesh of foam.
-
-.. only:: latex
-
-  .. raw:: latex
-
-    The triangular mesh in this example is plotted in aquamarine, one of
-    several named colors in matplotlib.
-    Next, the axes are turned off and the limits are set to equal the bounds
-    of the domain.
-    Finally, the triangular mesh is saved as a PNG and as a PDF, with the
-    resulting plot shown in Fig.~\ref{fig:ex_foam}.
-
-    \begin{figure}[htbp]
-        \centering
-        \includegraphics[width=\textwidth]{../../examples/foam/trimesh.pdf}
-        \caption{Unstructured mesh of foam microstructure.}
-        \label{fig:ex_foam}
-    \end{figure}
+  Foam example - triangular mesh.

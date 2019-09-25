@@ -1,2 +1,4 @@
-sphinx-gallery
+matplotlib
 pybind11
+sphinx
+sphinx-gallery

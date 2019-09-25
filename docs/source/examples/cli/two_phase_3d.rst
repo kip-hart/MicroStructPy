@@ -48,48 +48,25 @@ visible.
 Output Files
 ============
 
-.. only:: not latex
+The three plots that this file generates are the seeding, the polygon mesh,
+and the triangular mesh.
+These three plots are shown in :numref:`f_ex_2p3d_seeds` -
+:numref:`f_ex_2p3d_tri`.
 
-    The three plots that this file generates are the seeding, the polygon mesh,
-    and the triangular mesh.
-    These three plots are shown below.
+.. _f_ex_2p3d_seeds:
+.. figure:: ../../../../examples/two_phase_3D/seeds.png
+    :alt: Seed geometries.
 
-    .. figure:: ../../../../examples/two_phase_3D/seeds.png
-        :alt: Seed geometries.
+    Two phase 3D example - seed geometries.
+    
+.. _f_ex_2p3d_poly:
+.. figure:: ../../../../examples/two_phase_3D/polymesh.png
+    :alt: Polygonal mesh.
 
-        Seed geometries
-        
-    .. figure:: ../../../../examples/two_phase_3D/polymesh.png
-        :alt: Polygonal mesh.
+    Two phase 3D example - polygonal mesh.
+    
+.. _f_ex_2p3d_tri:
+.. figure:: ../../../../examples/two_phase_3D/trimesh.png
+    :alt: Triangular mesh.
 
-        Polygonal mesh
-        
-    .. figure:: ../../../../examples/two_phase_3D/trimesh.png
-        :alt: Triangular mesh.
-
-        Triangular mesh
-
-.. only:: latex
-
-    .. raw:: latex
-
-        The three plots that this file generates are the seeding, the polygon mesh,
-        and the triangular mesh.
-        These three plots are shown in Fig.~\ref{fig:ex_two_phase_3D}.
-
-        \begin{figure}[htbp]
-            \centering
-            \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/two_phase_3D/seeds.png}
-            }
-            ~
-            \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/two_phase_3D/polymesh.png}
-            }
-            ~
-            \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/two_phase_3D/trimesh.png}
-            }
-            \caption{Output plots for example with elliptical grains.}
-            \label{fig:ex_two_phase_3D}
-        \end{figure}
+    Two phase 3D example - triangular mesh.

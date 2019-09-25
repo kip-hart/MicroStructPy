@@ -56,49 +56,25 @@ minimal borders.
 Output Files
 ============
 
-.. only:: not latex
+The three plots that this file generates are the seeding, the polygon mesh,
+and the triangular mesh.
+These three plots are shown in :numref:`f_ex_5_plotting_seeds` -
+:numref:`f_ex_5_plotting_tri`.
 
-    The three plots that this file generates are the seeding, the polygon mesh,
-    and the triangular mesh.
-    These three plots are shown below.
+.. _f_ex_5_plotting_seeds:
+.. figure:: ../../../../examples/intro_5_plotting/seeds.png
+    :alt: Seed geometries.
 
-    .. figure:: ../../../../examples/intro_5_plotting/seeds.png
-        :alt: Seed geometries.
+    Introduction 5 - seed geometries.
+    
+.. _f_ex_5_plotting_poly:
+.. figure:: ../../../../examples/intro_5_plotting/polymesh.png
+    :alt: Polygonal mesh.
 
-        Seed geometries
-        
-    .. figure:: ../../../../examples/intro_5_plotting/polymesh.png
-        :alt: Polygonal mesh.
+    Introduction 5 - polygonal mesh.
+    
+.. _f_ex_5_plotting_tri:
+.. figure:: ../../../../examples/intro_5_plotting/trimesh.png
+    :alt: Triangular mesh.
 
-        Polygonal mesh
-        
-    .. figure:: ../../../../examples/intro_5_plotting/trimesh.png
-        :alt: Triangular mesh.
-
-        Triangular mesh
-
-.. only:: latex
-
-    .. raw:: latex
-
-        The three plots that this file generates are the seeding, the polygon mesh,
-        and the triangular mesh.
-        These three plots are shown in Fig.~\ref{fig:ex_5_plotting}.
-
-        \begin{figure}[htbp]
-            \centering
-            \subfloat[Seed geometries]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_5_plotting/seeds.png}
-            }
-            ~
-            \subfloat[Polygonal mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_5_plotting/polymesh.png}
-            }
-            ~
-            \subfloat[Triangular mesh]{
-                \includegraphics[width=0.3\textwidth]{../../examples/intro_5_plotting/trimesh.png}
-            }
-            \caption{Output plots for plot controls example.}
-            \label{fig:ex_5_plotting}
-        \end{figure}
-
+    Introduction 5 - triangular mesh.

@@ -75,41 +75,19 @@ Finally, the triangular mesh is translated to the right of the polygonal mesh
 and plotted using TriMesh
 :func:`~microstructpy.meshing.TriMesh.plot`.
 
-.. only:: not latex
+Once all three plots have been added to the figure, the axes and
+aspect ratio are adjusted.
+This figure is shown in :numref:`f_ex_process`.
+The PNG and PDF versions of this plot are saved in a folder named
+``docs_banner``, in the current directory (i.e ``./docs_banner``).
 
-    Once all three plots have been added to the figure, the axes and
-    aspect ratio are adjusted.
-    This figure is shown below.
-    The PNG and PDF versions of this plot are saved in a folder named
-    ``docs_banner``, in the current directory (i.e ``./docs_banner``).
+.. _f_ex_process:
+.. figure:: ../../../../examples/docs_banner/banner.png
+    :alt: Microstructure meshing process.
 
-    .. figure:: ../../../../examples/docs_banner/banner.png
-        :alt: Microstructure meshing process.
+    Microstructure meshing process.
 
-        Microstructure meshing process.
-        The three major steps are:
-        1) seed the domain with particles,
-        2) create a Voronoi power diagram, and
-        3) convert the diagram into an unstructured mesh.
-
-.. only:: latex
-
-    .. raw:: latex
-
-        Once all three plots have been added to the figure, the axes and
-        aspect ratio are adjusted.
-        This figure is shown in Fig~\ref{fig:ex_docs_banner}.
-        The PNG and PDF versions of this plot are saved in a folder named
-        {\tt docs\_banner}, in the current directory
-        (i.e {\tt ./docs\_banner}).
-
-        \begin{figure}[htbp]
-            \centering
-            \includegraphics[width=\textwidth]{../../examples/docs_banner/banner.pdf}
-            \caption{Microstructure meshing process.
-                     The three major steps are:
-                     1) seed the domain with particles,
-                     2) create a Voronoi power diagram, and
-                     3) convert the diagram into an unstructured mesh.}
-            \label{fig:ex_docs_banner}
-        \end{figure}
+The three major steps are:
+1) seed the domain with particles,
+2) create a Voronoi power diagram, and
+3) convert the diagram into an unstructured mesh.
