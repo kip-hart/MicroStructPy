@@ -25,7 +25,6 @@ welcome_fnames = ['intro_2_quality/trimesh.png',
                   'colormap/trimesh.png']
 
 def main():
-    '''
     # Copy Supporting Files
     supporting_files = ['aphanitic_cdf.csv', 'olivine_cdf.csv']
     for fname in supporting_files:
@@ -45,7 +44,6 @@ def main():
     # Remove Supporting Files
     for fname in supporting_files:
         os.remove(fname)
-    '''
 
     # Create welcome figure
     create_welcome()
