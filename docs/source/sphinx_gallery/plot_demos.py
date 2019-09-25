@@ -17,7 +17,8 @@ locale.setlocale(locale.LC_NUMERIC, "C")
 example_dir = '../../../examples'
 
 # Copy Supporting Files
-for fname in ['aphanitic_cdf.csv', 'olivine_cdf.csv']:
+supporting_files = ['aphanitic_cdf.csv', 'olivine_cdf.csv']
+for fname in supporting_files:
     filename = os.path.join(example_dir, fname)
     shutil.copy(filename, '.')
 
@@ -30,3 +31,7 @@ for filename in glob.glob(xml_pattern):
 py_pattern = os.path.join(example_dir, '*.py')
 for filename in glob.glob(py_pattern):
     subprocess.call(['python', filename])
+
+# Remove Supporting Files
+for fname in supporting_files:
+    os.remove(fname)
