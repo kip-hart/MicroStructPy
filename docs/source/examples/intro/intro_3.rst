@@ -66,23 +66,23 @@ Output Files
 
 The three plots that this file generates are the seeding, the polygon mesh,
 and the triangular mesh.
-These three plots are shown in :numref:`f_ex_3_shape_size_seeds` -
-:numref:`f_ex_3_shape_size_tri`.
+These three plots are shown in :numref:`f_ex_3_size_shape_seeds` -
+:numref:`f_ex_3_size_shape_tri`.
 
-.. _f_ex_3_shape_size_seeds:
-.. figure:: ../../../../examples/intro_3_shape_size/seeds.png
+.. _f_ex_3_size_shape_seeds:
+.. figure:: ../../../../examples/intro_3_size_shape/seeds.png
     :alt: Seed geometries.
 
     Introduction 3 - seed geometries.
     
-.. _f_ex_3_shape_size_poly:
-.. figure:: ../../../../examples/intro_3_shape_size/polymesh.png
+.. _f_ex_3_size_shape_poly:
+.. figure:: ../../../../examples/intro_3_size_shape/polymesh.png
     :alt: Polygonal mesh.
 
     Introduction 3 - polygonal mesh.
     
-.. _f_ex_3_shape_size_tri:
-.. figure:: ../../../../examples/intro_3_shape_size/trimesh.png
+.. _f_ex_3_size_shape_tri:
+.. figure:: ../../../../examples/intro_3_size_shape/trimesh.png
     :alt: Triangular mesh.
 
     Introduction 3 - triangular mesh.
