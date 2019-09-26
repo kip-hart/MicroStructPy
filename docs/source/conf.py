@@ -53,6 +53,7 @@ extensions = [
 ]
 
 intersphinx_mapping = {
+    'matplotlib': ('https://matplotlib.org/', None),
     'meshpy': ('https://documen.tician.de/meshpy/', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'python': ('https://docs.python.org/3', None),

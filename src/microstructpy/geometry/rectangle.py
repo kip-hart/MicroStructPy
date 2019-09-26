@@ -25,19 +25,21 @@ class Rectangle(NBox):
     This class contains a generic, 2D rectangle. The position and dimensions
     of the box can be specified using any of the parameters below.
 
+    Without parameters, this returns a unit square centered on the origin.
+
     Args:
-        length (float): Length of the rectangle. *(optional)*
-        width (float): Width of the rectangle. *(optional)*
-        side_lengths (list): Side lengths. Defaults to (1, 1). *(optional)*
-        center (list): Center of rectangle. Defaults to (0, 0). *(optional)*
-        corner (list): bottom-left corner. *(optional)*
-        bounds (list): Bounds of rectangle. Expected to be in the
-            format [(xmin, xmax), (ymin, ymax)]. *(optional)*
+        length (float): *(optional)* Length of the rectangle.
+        width (float): *(optional)* Width of the rectangle. *(optional)*
+        side_lengths (list): *(optional)* Side lengths. Defaults to (1, 1).
+        center (list): *(optional)* Center of rectangle. Defaults to (0, 0).
+        corner (list): *(optional)* Bottom-left corner.
+        bounds (list): *(optional)* Bounds of rectangle. Expected to be in the
+            format [(xmin, xmax), (ymin, ymax)].
         limits : Alias for *bounds*.
-        angle (float): The rotation angle, in degrees. *(optional)*
-        angle_deg (float): The rotation angle, in degrees. *(optional)*
-        angle_rad (float): The rotation angle, in radians. *(optional)*
-        matrix (numpy.ndarray): The 2x2 rotation matrix. *(optional)*
+        angle (float): *(optional)* The rotation angle, in degrees.
+        angle_deg (float): *(optional)* The rotation angle, in degrees.
+        angle_rad (float): *(optional)* The rotation angle, in radians.
+        matrix (numpy.ndarray): *(optional)* The 2x2 rotation matrix.
     """
 
     def __init__(self, **kwargs):
@@ -78,8 +80,7 @@ class Rectangle(NBox):
             points (list): List of points to fit.
 
         Returns:
-            :class:`microstructpy.geometry.Rectangle`: an instance of the class
-                that best fits the points.
+            Rectangle: an instance of the class that best fits the points.
         """
         # Unpack the input points
         pts = np.array(points, dtype='float')
@@ -198,6 +199,38 @@ class Rectangle(NBox):
 
     @classmethod
     def area_expectation(cls, **kwargs):
+        """Expected area of rectangle
+
+        This method computes the expected area of a rectangle. There are two
+        main ways to define the size of a rectangle: by the length and width
+        and by the bounds. If the input rectangle is defined by length and
+        width, the expected area is:
+
+        .. math::
+
+            \mathbb{E}[A] = \mathbb{E}[L W] = \mu_L \mu_W
+
+        For the case where it is defined by upper and lower bounds:
+
+        .. math::
+
+            \mathbb{E}[A] = \mathbb{E}[(X_U - X_L) (Y_U - Y_L)]
+
+        .. math::
+            \mathbb{E}[A] =
+            \mu_{X_U}\mu_{Y_U} - \mu_{X_U} \mu_{Y_L} -
+            \mu_{X_L}\mu_{Y_U} + \mu_{X_L}\mu_{Y_L}
+
+        Args:
+            **kwargs: Keyword arguments, same as :class:`.Rectangle` but the
+                inputs can be from the `scipy.stats`_ module.
+
+        Returns:
+            float: Expected/average area of rectangle.
+
+        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
+
+        """
         if 'length' in kwargs or 'width' in kwargs:
             len_dist = kwargs.get('length', 1)
             width_dist = kwargs.get('width', 1)
@@ -303,13 +336,12 @@ class Rectangle(NBox):
     def plot(self, **kwargs):
         """Plot the rectangle.
 
-        This function adds a `matplotlib.patches.Rectangle`_ patch to the
+        This function adds a :class:`matplotlib.patches.Rectangle` patch to the
         current axes. The keyword arguments are passed through to the patch.
 
         Args:
             **kwargs (dict): Keyword arguments for the patch.
 
-        .. _`matplotlib.patches.Rectangle` : https://matplotlib.org/api/_as_gen/matplotlib.patches.Rectangle.html
         """  # NOQA: E501
         pt = self.corner
         w = self.length

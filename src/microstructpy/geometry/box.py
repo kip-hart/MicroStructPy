@@ -31,12 +31,14 @@ class Box(NBox):
     This class contains a generic, 3D box. The position and dimensions of the
     box can be specified using any of the parameters below.
 
+    Without any parameters, this is a unit cube centered on the origin.
+
     Args:
-        side_lengths (list): Side lengths. *(optional)*
-        center (list): Center of box. *(optional)*
-        corner (list): bottom-left corner. *(optional)*
-        limits (list): Bounds of box. *(optional)*
-        bounds (list): Alias for *limits*. *(optional)*
+        side_lengths (list): *(optional)* Side lengths.
+        center (list): *(optional)* Center of box.
+        corner (list): *(optional)* Bottom-left corner.
+        limits (list): *(optional)* Bounds of box.
+        bounds (list): *(optional)* Alias for ``limits``.
 
     """
     def __init__(self, **kwargs):
@@ -83,14 +85,12 @@ class Box(NBox):
     def plot(self, **kwargs):
         """Plot the box.
 
-        This function adds an `mpl_toolkits.mplot3d.art3d.Poly3DCollection`_
-        to the current axes. The keyword arguments are passed through to
-        the Poly3DCollection.
+        This function adds an
+        :class:`mpl_toolkits.mplot3d.art3d.Poly3DCollection` to the current
+        axes. The keyword arguments are passed through to the Poly3DCollection.
 
         Args:
             **kwargs (dict): Keyword arguments for Poly3DCollection.
-
-        .. _`mpl_toolkits.mplot3d.art3d.Poly3DCollection` : https://matplotlib.org/api/_as_gen/mpl_toolkits.mplot3d.art3d.Poly3DCollection.html
 
         """  # NOQA: E501
         if len(plt.gcf().axes) == 0:
@@ -129,13 +129,15 @@ class Cube(Box):
     """A cube.
 
     This class contains a generic, 3D cube. It is derived from the
-    Box and contains the ``side_length`` property, rather than
+    :class:`.Box` and contains the ``side_length`` property, rather than
     multiple side lengths.
 
+    Without any parameters, this is a unit cube centered on the origin.
+
     Args:
-        side_length (float): Side length. *(optional)*
-        center (list, tuple, numpy.ndarray): Center of box. *(optional)*
-        corner (list, tuple, numpy.ndarray): bottom-left corner. *(optional)*
+        side_length (float): *(optional)* Side length.
+        center (list, tuple, numpy.ndarray): *(optional)* Center of box.
+        corner (list, tuple, numpy.ndarray): *(optional)* Bottom-left corner.
     """
     def __init__(self, **kwargs):
         if 'side_length' in kwargs:

@@ -26,13 +26,13 @@ class NBox(object):
     This class contains a generic, n-dimensinoal box.
 
     Args:
-        side_lengths (list): Side lengths. *(optional)*
-        center (list): Center of box. *(optional)*
-        corner (list): Bottom-left corner. *(optional)*
-        bounds (list): Bounds of box. Expected in the form
-            [(xmin, xmax), (ymin, ymax), ...]. *(optional)*
+        side_lengths (list): *(optional)* Side lengths.
+        center (list): *(optional)* Center of box.
+        corner (list): *(optional)* Bottom-left corner.
+        bounds (list): *(optional)* Bounds of box. Expected in the form
+            [(xmin, xmax), (ymin, ymax), ...].
         limits : Alias for *bounds*.
-        matrix (list, numpy.ndarray): Rotation matrix, nxn *(optional)*
+        matrix (list, numpy.ndarray): *(optional)* Rotation matrix, nxn
     """
 
     def __init__(self, **kwargs):
@@ -141,7 +141,7 @@ class NBox(object):
 
     @property
     def bounds(self):
-        """float: (lower, upper) bounds of the box"""
+        """list: (lower, upper) bounds of the box"""
         return self.limits
 
     # ----------------------------------------------------------------------- #
@@ -175,7 +175,7 @@ class NBox(object):
         indicate which points are within the n-box.
 
         Args:
-            points (list): Point or list of points.
+            points (list or numpy.ndarray): Point or list of points.
 
         Returns:
             bool or numpy.ndarray: Flags set to True for points in geometry.

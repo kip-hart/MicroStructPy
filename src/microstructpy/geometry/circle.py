@@ -108,7 +108,7 @@ class Circle(NSphere):
             6.283185307179586
 
         Args:
-            **kwargs: Keyword arguments, see :class:`microstructpy.geometry.Circle`.
+            **kwargs: Keyword arguments, see `.Circle`.
 
         Returns:
             float: Expected value of the area of the circle.
