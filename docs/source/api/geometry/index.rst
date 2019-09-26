@@ -41,8 +41,8 @@ To assist with creating geometries, a factory method is included in the module:
 .. toctree::
 
     box
-    cube
     circle
+    cube
     ellipse
     ellipsoid
     n_box
