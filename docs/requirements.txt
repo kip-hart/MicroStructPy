@@ -1,4 +1,5 @@
 matplotlib
+numpy
 pybind11
 sphinx
 sphinx-gallery

@@ -103,8 +103,14 @@ autodoc_mock_imports = [
 autodoc_member_order = 'groupwise'
 
 sphinx_gallery_conf = {
-    'examples_dirs': 'sphinx_gallery',
-    'gallery_dirs': 'auto_examples',
+    'examples_dirs': [
+        'sphinx_gallery',
+        'sphinx_gallery/geometry',
+        ],
+    'gallery_dirs': [
+        'auto_examples/demos',
+        'auto_examples/geometry',
+        ],
 }
 
 # Numbering figures, tables, listings, etc

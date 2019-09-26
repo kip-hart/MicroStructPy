@@ -186,7 +186,7 @@ class Rectangle(NBox):
     # ----------------------------------------------------------------------- #
     @property
     def n_dim(self):
-        """int: number of dimensions, 2"""
+        """int: Number of dimensions, 2"""
         return 2
 
     # ----------------------------------------------------------------------- #
@@ -194,7 +194,7 @@ class Rectangle(NBox):
     # ----------------------------------------------------------------------- #
     @property
     def area(self):
-        """float: area of rectangle"""
+        """float: Area of rectangle"""
         return self.n_vol
 
     @classmethod
@@ -220,6 +220,16 @@ class Rectangle(NBox):
             \mathbb{E}[A] =
             \mu_{X_U}\mu_{Y_U} - \mu_{X_U} \mu_{Y_L} -
             \mu_{X_L}\mu_{Y_U} + \mu_{X_L}\mu_{Y_L}
+
+        Example:
+            >>> import scipy.stats
+            >>> import microstructpy as msp
+            >>> L = scipy.stats.uniform(loc=1, scale=2)
+            >>> W = scipy.stats.norm(loc=3.2, scale=5.1)
+            >>> L.mean() * W.mean()
+            6.4
+            >>> msp.geometry.Rectangle.area_expectation(length=L, width=W)
+            6.4
 
         Args:
             **kwargs: Keyword arguments, same as :class:`.Rectangle` but the
@@ -258,28 +268,60 @@ class Rectangle(NBox):
     # ----------------------------------------------------------------------- #
     @property
     def length(self):
+        """float: Length of rectangle, side length along 1st axis"""
         return self.side_lengths[0]
 
     @property
     def width(self):
+        """float: Width of rectangle, side length along 2nd axis"""
         return self.side_lengths[1]
 
     @property
     def angle(self):
+        """float: Rotation angle of rectangle - degrees"""
         return self.angle_deg
 
     @property
     def angle_deg(self):
+        """float: Rotation angle of rectangle - degrees"""
         return 180 * self.angle_rad / np.pi
 
     @property
     def angle_rad(self):
+        """float: Rotation angle of rectangle - radians"""
         return np.arctan2(self.matrix[1][0], self.matrix[0][0])
 
     # ----------------------------------------------------------------------- #
     # Circle Approximation                                                    #
     # ----------------------------------------------------------------------- #
     def approximate(self, x1=None):
+        """Approximate rectangle with a set of circles.
+
+        This method approximates a rectangle with a set of circles.
+        These circles are spaced uniformly along the long axis of the
+        rectangle with distance ``x1`` between them.
+        
+        Example
+        -------
+
+        For a rectangle with length=2.5, width=1, and x1=0.3,
+        the approximation would look like :numref:`f_api_rectangle_approx`.
+
+        .. _f_api_rectangle_approx:
+        .. figure:: ../../auto_examples/geometry/images/sphx_glr_plot_rectangle_001.png
+
+            Circular approximation of rectangle.
+
+        Args:
+            x1 (float or None): *(optional)* Spacing between the circles.
+                If not specified, the spacing is 0.25x the length of the
+                shortest side.
+        
+        Returns:
+            numpy.ndarray: An Nx3 array, where each row is a circle and the
+            columns are x, y, and r.
+            
+        """  # NOQA: E501
         if x1 is None:
             x1 = 0.25 * min(self.side_lengths)
 
@@ -307,12 +349,21 @@ class Rectangle(NBox):
                 xc = half_len - r
             else:
                 xc = xc + x1
-
+                
         # Corner circle
-        r -= x1
         while r > 0:
-            circs.append([half_len - r, 0.5 * width - r, r])
-            r -= x1
+            x_init = circs[-1][0]
+            y_init = circs[-1][1]
+            x = x_init + x1
+            y = y_init + x1
+
+            dx = half_len - x
+            dy = 0.5 * width - y
+            r = min(dx, dy)
+            if r <= 0:
+                break
+            else:
+                circs.append([x, y, r])
 
         # Reflect circles
         circs = np.array(circs)
@@ -375,9 +426,9 @@ class Square(Rectangle):
     ``side_length`` property, rather than multiple side lengths.
 
     Args:
-        side_length (float): Side length. Defaults to 1. *(optional)*
-        center (list): Center of rectangle. Defaults to (0, 0). *(optional)*
-        corner (list): bottom-left corner. *(optional)*
+        side_length (float): *(optional)* Side length. Defaults to 1.
+        center (list): *(optional)* Center of rectangle. Defaults to (0, 0).
+        corner (list): *(optional)* Bottom-left corner.
     """
 
     def __init__(self, **kwargs):
@@ -399,6 +450,35 @@ class Square(Rectangle):
     # ----------------------------------------------------------------------- #
     @classmethod
     def area_expectation(cls, **kwargs):
+        """Expected area of square
+
+        This method computes the expected area of a square with distributed
+        side length.
+        The expectation is:
+
+        .. math::
+
+            \mathbb{E}[A] = \mathbb{E}[S^2] = \mu_S^2 + \sigma_S^2
+
+        Example:
+            >>> import scipy.stats
+            >>> import microstructpy as msp
+            >>> S = scipy.stats.expon(scale=2)
+            >>> S.mean()^2 + S.var()
+            8.0
+            >>> msp.geometry.Square.area_expectation(side_length=S)
+            8.0
+
+        Args:
+            **kwargs: Keyword arguments, same as :class:`.Square` but the
+                inputs can be from the `scipy.stats`_ module.
+
+        Returns:
+            float: Expected/average area of the square.
+
+        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
+
+        """
         if 'side_length' in kwargs:
             len_dist = kwargs['side_length']
 
@@ -409,3 +489,35 @@ class Square(Rectangle):
             return area_exp
 
         Rectangle.area_expectation(**kwargs)
+
+    # ----------------------------------------------------------------------- #
+    # Circle Approximation                                                    #
+    # ----------------------------------------------------------------------- #
+    def approximate(self, x1=None):
+        """Approximate square with a set of circles
+
+        This method approximates a square with a set of circles.
+        These circles are spaced uniformly along the edges of the square
+        with distance ``x1`` between them.
+
+        Example
+        -------
+
+        For a square with side_length=1, and x1=0.2,
+        the approximation would look like :numref:`f_api_square_approx`.
+
+        .. _f_api_square_approx:
+        .. figure:: ../../auto_examples/geometry/images/sphx_glr_plot_rectangle_002.png
+
+            Circular approximation of square.
+
+        Args:
+            x1 (float or None): *(optional)* Spacing between the circles.
+                If not specified, the spacing is 0.25x the side length.
+        
+        Returns:
+            numpy.ndarray: An Nx3 array, where each row is a circle and the
+            columns are x, y, and r.
+
+        """
+        return Rectangle.approximate(self, x1)
