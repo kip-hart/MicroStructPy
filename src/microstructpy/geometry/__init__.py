@@ -17,8 +17,14 @@ def factory(name, **kwargs):
     This function returns a geometry based on a string containing the
     name of the geometry and keyword arguments defining the geometry.
 
+    .. note::
+
+        The function call is ``factory(name, **kwargs)``. Sphinx autodocs
+        has dropped the first parameter.
+
     Args:
-        name (str): Name of geometry.
+        name (str): {'box' | 'cube' | 'ellipse' | 'ellipsoid' | 'circle' | 
+            'rectangle' | 'square' | 'sphere'} Name of geometry.
         **kwargs (dict): Arguments defining the geometry.
 
     """
