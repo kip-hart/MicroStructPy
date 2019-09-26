@@ -7,5 +7,6 @@ microstructpy.geometry.Box
 
 .. autoclass:: Box
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:

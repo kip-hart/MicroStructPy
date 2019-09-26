@@ -7,5 +7,6 @@ microstructpy.geometry.Circle
 
 .. autoclass:: Circle
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:

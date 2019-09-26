@@ -7,5 +7,6 @@ microstructpy.geometry.Rectangle
 
 .. autoclass:: Rectangle
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:

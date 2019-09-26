@@ -7,4 +7,5 @@ microstructpy.geometry.Square
 
 .. autoclass:: Square
     :members:
+    :undoc-members:
     :inherited-members:

@@ -7,5 +7,6 @@ microstructpy.geometry.Sphere
 
 .. autoclass:: Sphere
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:

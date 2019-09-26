@@ -7,5 +7,6 @@ microstructpy.geometry.n_box.NBox
 
 .. autoclass:: NBox
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:

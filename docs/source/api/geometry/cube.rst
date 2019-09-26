@@ -7,4 +7,5 @@ microstructpy.geometry.Cube
 
 .. autoclass:: Cube
     :members:
+    :undoc-members:
     :inherited-members:

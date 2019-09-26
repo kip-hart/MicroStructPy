@@ -7,5 +7,6 @@ microstructpy.geometry.Ellipse
 
 .. autoclass:: Ellipse
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:
