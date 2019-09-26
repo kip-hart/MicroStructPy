@@ -7,5 +7,6 @@ microstructpy.meshing.PolyMesh
 
 .. autoclass:: PolyMesh
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:

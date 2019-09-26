@@ -7,5 +7,6 @@ microstructpy.seeding.Seed
 
 .. autoclass:: Seed
     :members:
+    :undoc-members:
     :inherited-members:
     :show-inheritance:
