@@ -29,15 +29,20 @@ class Sphere(NSphere):
     This class represents a three-dimensional circle. It is defined by
     a center point and size parameter, which can be either radius or diameter.
 
-    Args:
-        r (float): The radius of the sphere. *(optional)*
-        radius (float): The radius of the sphere. *(optional)*
-        d (float): The diameter of the sphere. *(optional)*
-        diameter (float): The diameter of the sphere. *(optional)*
-        size (float): The size of the sphere. *(optional)*
-        center (list, float, numpy.ndarray): The coordinates of the center.
-        position (list, float, numpy.ndarray): The coordinates of the center.
+    Without input parameters, this defaults to a unit sphere centered at
+    the origin.
 
+    Args:
+        r (float): *(optional)* The radius of the sphere. 
+            Defaults to 1.
+        radius (float): *(optional)* Same as ``r``.
+        d (float): *(optional)* Alias for ``2*r``.
+        diameter (float): *(optional)* Alias for ``2*r``.
+        size (float): *(optional)* Alias for ``2*r``.
+        center (list, float, numpy.ndarray): *(optional)* The coordinates of
+            the center. Defaults to ``[0, 0, 0]``.
+        position (list, float, numpy.ndarray): *(optional)*
+            Alias for ``center``.
     """
     # ----------------------------------------------------------------------- #
     # Constructor                                                             #
@@ -83,9 +88,9 @@ class Sphere(NSphere):
         r"""Expected value of volume.
 
         This function computes the expected value for the volume of a sphere.
-        The keyword arguments are identical to the __init__ function. The
-        values for these keywords can be either constants or scip.stats
-        distributions.
+        The keyword arguments are identical to the :class:`.Sphere` function.
+        The values for these keywords can be either constants or
+        :mod:`scipy.stats` distributions.
 
         The expected value is computed by the following formula:
 
@@ -146,14 +151,13 @@ class Sphere(NSphere):
     def plot(self, **kwargs):
         """Plot the sphere.
 
-        This function uses the `Axes3D.plot_surface`_ method to
-        add the sphere to the current axes. The keyword arguments
+        This function uses the :meth:`mpl_toolkits.mplot3d.Axes3D.plot_surface`
+        method to add the sphere to the current axes. The keyword arguments
         are passed through to plot_surface.
 
         Args:
             **kwargs (dict): Keyword arguments for plot_surface.
 
-        .. _`Axes3D.plot_surface` : https://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#mpl_toolkits.mplot3d.Axes3D.plot_surface
         """  # NOQA: E501
         if len(plt.gcf().axes) == 0:
             ax = plt.axes(projection=Axes3D.name)

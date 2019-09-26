@@ -276,7 +276,6 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             :meth:`.TriMesh.plot`.
 
     .. _`Specifying Colors`: https://matplotlib.org/users/colors.html
-    .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
     .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/tutorials/colors/colormaps.html
     .. _`uint32`: https://docs.scipy.org/doc/numpy-1.13.0/user/basics.types.html
     """  # NOQA: E501

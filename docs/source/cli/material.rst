@@ -140,8 +140,8 @@ follows:
     </input>
 
 In all three materials, the ``size`` field contains a ``dist_type``.
-This type can match the name of one of `SciPy's statistical functions`_, or be
-either "pdf" or "cdf".
+This type can match the name of a statistical distribution in the SciPy
+:mod:`scipy.stats` module, or be either "pdf" or "cdf".
 If it is a SciPy distribution name, then the remaining parameters must match
 the inputs for that function.
 The first material has size distribution :math:`S\sim U(1, 2)` and the second
@@ -503,7 +503,7 @@ domain.
 Grains can be non-uniformly distributed by adding a position distribution.
 The x, y, and z can be independently distributed or coupled.
 The coupled distributions can be any of the multivariate distributions listed
-on `SciPy's statistical functions`_ page.
+in the SciPy :mod:`scipy.stats` module.
 
 
 In the example below, the first material has independently distributed
@@ -588,5 +588,4 @@ For example:
     </input>
 
 
-.. _`SciPy's statistical functions`: https://docs.scipy.org/doc/scipy/reference/stats.html
 .. _`Specifying Colors`: https://matplotlib.org/3.1.0/tutorials/colors/colors.html

@@ -23,24 +23,25 @@ class Ellipse(object):
     This class contains a 2-D ellipse. It is defined by a center point, axes
     and an orientation.
 
+    Without any parameters, the ellipse defaults to a unit circle.
+
     Args:
-        center (list): The ellipse center.
-            Defaults to (0, 0). *(optional)*
-        axes (list): A 2-element list of semi-axes.
-            Defaults to [1, 1]. *(optional)*
-        size (float): The diameter of a circle with equivalent area.
-            Defaults to 1. *(optional)*
-        aspect_ratio (float): The ratio of x-axis to y-axis length
-            Defaults to 1. *(optional)*
-        angle (float): The rotation angle, in degrees. *(optional)*
-        angle_deg (float): The rotation angle, in degrees. *(optional)*
-        angle_rad (float): The rotation angle, in radians. *(optional)*
-        matrix (numpy.ndarray): The 2x2 rotation matrix. *(optional)*
-        a : Alias for *axes[0]*.
-        b : Alias for *axes[1]*.
-        angle_deg: Alias for *angle*.
-        angel_rad: Alias for *pi \* angle / 180*.
-        orientation: Alias for *matrix*.
+        a (float): *(optional)* Semi-major axis of ellipse. Defaults to 1.
+        b (float): *(optional)* Semi-minor axis of ellipse. Defaults to 1.
+        center (list): *(optional)* The ellipse center.
+            Defaults to (0, 0). 
+        axes (list): *(optional)* A 2-element list of semi-axes, equivalent
+            to ``[a, b]``. Defaults to [1, 1].
+        size (float): *(optional)* The diameter of a circle with equivalent
+            area. Defaults to 1.
+        aspect_ratio (float): *(optional)* The ratio of x-axis to y-axis
+            length. Defaults to 1. 
+        angle (float): *(optional)* The counterclockwise rotation angle,
+            in degrees, measured from the +x axis.
+        angle_deg (float): *(optional)* The rotation angle, in degrees.
+        angle_rad (float): *(optional)* The rotation angle, in radians.
+        matrix (numpy.ndarray): *(optional)* The 2x2 rotation matrix.
+        orientation (numpy.ndarray): *(optional)* Alias for ``matrix``.
     """
     # ----------------------------------------------------------------------- #
     # Constructor                                                             #
@@ -159,7 +160,7 @@ class Ellipse(object):
         is used to choose from the multiple parameter sets.
 
         Args:
-            points (list): List of points to fit.
+            points (list or numpy.ndarray): An Nx2 list of points to fit.
 
         Returns:
             .Ellipse: An instance of the class that best fits the points.
@@ -288,39 +289,39 @@ class Ellipse(object):
     # ----------------------------------------------------------------------- #
     @property
     def size(self):
-        """float: diameter of equivalent area circle"""
+        """float: Diameter of equivalent area circle"""
         return 2 * np.sqrt(self.a * self.b)
 
     @property
     def aspect_ratio(self):
-        """float: ratio of x-axis length to y-axis length"""
+        """float: Ratio of x-axis length to y-axis length"""
         return self.a / self.b
 
     @property
     def axes(self):
-        """ tuple: list of semi-axes."""
+        """ tuple: List of semi-axes."""
         return self.a, self.b
 
     @property
     def angle_deg(self):
-        """float: rotation angle, in degrees"""
+        """float: Rotation angle, in degrees"""
         return self.angle
 
     @property
     def angle_rad(self):
-        """float: rotation angle, in radians"""
+        """float: Rotation angle, in radians"""
         return self.angle * np.pi / 180
 
     @property
     def matrix(self):
-        """numpy.ndarray: rotation matrix"""
+        """numpy.ndarray: Rotation matrix"""
         ct = np.cos(self.angle_rad)
         st = np.sin(self.angle_rad)
         return np.array([[ct, -st], [st, ct]])
 
     @property
     def orientation(self):
-        """numpy.ndarray: rotation matrix"""
+        """numpy.ndarray: Rotation matrix"""
         return self.matrix
 
     # ----------------------------------------------------------------------- #
@@ -328,7 +329,7 @@ class Ellipse(object):
     # ----------------------------------------------------------------------- #
     @property
     def n_dim(self):
-        """int: number of dimensions, 2"""
+        """int: Number of dimensions, 2"""
         return 2
 
     # ----------------------------------------------------------------------- #
@@ -336,12 +337,12 @@ class Ellipse(object):
     # ----------------------------------------------------------------------- #
     @property
     def area(self):
-        r""" float: area of ellipse, :math:`A = \pi a b`"""
+        r""" float: Area of ellipse, :math:`A = \pi a b`"""
         return np.pi * self.a * self.b
 
     @property
     def volume(self):
-        r""" float: alias for area"""
+        r""" float: Same as :any:`microstructpy.geometry.Ellipse.area`"""
         return self.area
 
     # ----------------------------------------------------------------------- #
@@ -354,7 +355,7 @@ class Ellipse(object):
         This function computes the expected value for the area of an ellipse.
         The keyword arguments are the same as the input parameters of the
         class. The keyword values can be either constants (ints or floats) or
-        `scipy.stats`_ distributions.
+        distributions from the SciPy :mod:`scipy.stats` module.
 
         If an ellipse is specified by size, the expected value is computed
         as follows.
@@ -369,14 +370,14 @@ class Ellipse(object):
 
         .. math::
 
-            \mathbb{E}[A] = \pi \mathbb{E}[A B] = \pi \mu_A \mu_B
+            \mathbb{E}[A] = \pi\, \mathbb{E}[A B] = \pi \mu_A \mu_B
 
         If the ellipse is specified by the second semi-axis and the aspect
         ratio, the expected value is computed by:
 
         .. math::
 
-            \mathbb{E}[A] &= \pi \mathbb{E}[K B^2] \\
+            \mathbb{E}[A] &= \pi\, \mathbb{E}[K B^2] \\
                           &= \pi \mu_K (\mu_B^2 + \sigma_B^2)
 
         Finally, if the ellipse is specified by the first semi-axis and the
@@ -384,7 +385,7 @@ class Ellipse(object):
 
         .. math::
 
-            \mathbb{E}[A] &= \pi \mathbb{E}\left[\frac{A^2}{K}\right] \\
+            \mathbb{E}[A] &= \pi\, \mathbb{E}\left[\frac{A^2}{K}\right] \\
                           &\approx \frac{\pi}{n} \sum_{i=1}^n \frac{A_i}{K_i}
 
         where :math:`n=1000`.
@@ -396,7 +397,6 @@ class Ellipse(object):
         Returns:
             float: Expected value of the area of the ellipse.
 
-        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
         """  # NOQA: E501
         if 'size' in kwargs:
             s_dist = kwargs['size']
@@ -450,13 +450,13 @@ class Ellipse(object):
     # ----------------------------------------------------------------------- #
     @property
     def bound_max(self):
-        """tuple: maximum bounding circle of ellipse, (x, y, r)"""
+        """tuple: Maximum bounding circle of ellipse, (x, y, r)"""
         r = max(self.a, self.b)
         return tuple(list(self.center) + [r])
 
     @property
     def bound_min(self):
-        """tuple: minimum interior circle of ellipse, (x, y, r)"""
+        """tuple: Minimum interior circle of ellipse, (x, y, r)"""
         r = min(self.a, self.b)
         return tuple(list(self.center) + [r])
 
@@ -467,10 +467,48 @@ class Ellipse(object):
         """Approximate ellipse with a set of circles.
 
         This function converts an ellipse into a set of circles.
-        It implements a published algorithm. [#ilin]_
+        It implements a published algorithm by Ilin and Bernacki. [#ilin]_
+
+        Example:
+            >>> import matplotlib.pyplot as plt
+            >>> import microstructpy as msp
+            >>> import numpy as np
+            >>> ellipse = msp.geometry.Ellipse(a=3, b=1)
+            >>> approx = ellipse.approximate(0.7)
+            >>> approx
+            array([[ 0.        ,  0.        ,  1.        ],
+                   [ 0.7       ,  0.        ,  0.96889112],
+                   [ 1.38067777,  0.        ,  0.87276349],
+                   [ 2.00213905,  0.        ,  0.7063497 ],
+                   [ 2.5234414 ,  0.        ,  0.45169729],
+                   [ 2.66666667,  0.        ,  0.33333333],
+                   [-0.7       ,  0.        ,  0.96889112],
+                   [-1.38067777,  0.        ,  0.87276349],
+                   [-2.00213905,  0.        ,  0.7063497 ],
+                   [-2.5234414 ,  0.        ,  0.45169729],
+                   [-2.66666667,  0.        ,  0.33333333]])
+            >>> ellipse.plot(edgecolor='k', facecolor='none', lw=3)
+            >>> t = np.linspace(0, 2 * np.pi)
+            >>> for x, y, r in approx:
+            ...     plt.plot(x + r * np.cos(t), y + r * np.sin(t), 'b')
+            >>> plt.xticks(np.unique(np.concatenate((approx[:, 0], (-3, 3)))))
+            >>> plt.yticks(np.unique(np.concatenate((approx[:, 1], (-1, 1)))))
+            >>> plt.axis('scaled')
+            >>> plt.grid(True, linestyle=':')
+            >>> plt.show()
+
+        Executing the code above produces :numref:`f_api_ellipse_approx`.
+
+        .. _f_api_ellipse_approx:
+        .. figure:: ../../auto_examples/geometry/images/sphx_glr_plot_ellipse_001.png
+
+            Circular approximation of ellipse, after Ilin and Bernacki.
+
+        
 
         Args:
-            x1 (float): Center position of first circle.
+            x1 (float or None): *(optional)* Position of the first circle
+                along the +x axis. Defaults to 0.5x the shortest semi-axis.
 
         Returns:
             numpy.ndarray: An Nx3 list of the (x, y, r) data of each circle
@@ -547,14 +585,12 @@ class Ellipse(object):
     def plot(self, **kwargs):
         """Plot the ellipse.
 
-        This function adds a `matplotlib.patches.Ellipse`_ patch to the
+        This function adds a :class:`matplotlib.patches.Ellipse` patch to the
         current axes using matplotlib. The keyword arguments are passed to
         the patch.
 
         Args:
             **kwargs (dict): Keyword arguments for matplotlib.
-
-        .. _`matplotlib.patches.Ellipse`: https://matplotlib.org/api/_as_gen/matplotlib.patches.Ellipse.html
 
         """  # NOQA: E501
         p = patches.Ellipse(self.center, 2 * self.a, 2 * self.b,
@@ -566,7 +602,7 @@ class Ellipse(object):
     # ----------------------------------------------------------------------- #
     @property
     def limits(self):
-        """list: list of (lower, upper) bounds for the bounding box"""
+        """list: List of (lower, upper) bounds for the bounding box"""
         theta = self.angle_rad
         tan_t = np.tan(theta)
 
@@ -607,7 +643,7 @@ class Ellipse(object):
 
     @property
     def sample_limits(self):
-        """list: list of (lower, upper) bounds for the sampling region"""
+        """list: List of (lower, upper) bounds for the sampling region"""
         return self.limits
 
     # ----------------------------------------------------------------------- #
@@ -621,7 +657,7 @@ class Ellipse(object):
         indicate which points are within the ellipse.
 
         Args:
-            points (list): Point or list of points.
+            points (list or numpy.ndarray): Point or list of points.
 
         Returns:
             bool or numpy.ndarray: Set to True for points in ellipse.
@@ -655,7 +691,7 @@ class Ellipse(object):
         reflected.
 
         Args:
-            points (list): Points to reflect.
+            points (list or numpy.ndarray): Nx2 list of points to reflect.
 
         Returns:
             numpy.ndarray: Reflected points.

@@ -88,8 +88,8 @@ class Circle(NSphere):
 
         This function computes the expected value for the area of a circle.
         The keyword arguments are the same as the class parameters.
-        The values can be constants (ints or floats), or
-        `scipy.stats`_ distributions.
+        The values can be constants (ints or floats), or a distribution from
+        the SciPy :mod:`scipy.stats` module.
 
         The expected value is computed by the following formula:
 
@@ -113,7 +113,6 @@ class Circle(NSphere):
         Returns:
             float: Expected value of the area of the circle.
 
-        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
         """  # NOQA: E501
         # Check for radius distribution
         r_dist = None
@@ -164,13 +163,12 @@ class Circle(NSphere):
     def plot(self, **kwargs):
         """Plot the circle.
 
-        This function adds a `matplotlib.patches.Circle`_ to the current axes.
-        The keyword arguments are passed through to the circle patch.
+        This function adds a :class:`matplotlib.patches.Circle` to the
+        current axes. The keyword arguments are passed through to the
+        circle patch.
 
         Args:
             **kwargs (dict): Keyword arguments for matplotlib.
-
-        .. _`matplotlib.patches.Circle` : https://matplotlib.org/api/_as_gen/matplotlib.patches.Circle.html
 
         """  # NOQA: E501
         c = patches.Circle(self.center, self.r, **kwargs)

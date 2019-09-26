@@ -34,38 +34,36 @@ class Ellipsoid(object):
     is no guarantee for which keywords are used.
 
     Args:
-        center (list): The ellipsoid center.
-            Defaults to (0, 0, 0). *(optional)*
-        axes (list): List of 3 semi-axes.
-            Defaults to (1, 1, 1). *(optional)*
-        size (float): The diameter of a sphere with equal volume.
-            Defaults to 2. *(optional)*
-        ratio_ab (float): The ratio of a to b. *(optional)*
-        ratio_ac (float): The ratio of a to c. *(optional)*
-        ratio_bc (float): The ratio of b to c. *(optional)*
-        ratio_ba (float): The ratio of b to a. *(optional)*
-        ratio_ca (float): The ratio of c to a. *(optional)*
-        ratio_cb (float): The ratio of c to b. *(optional)*
-        rot_seq (list): List of rotations (deg). Each element of
+        a (float): *(optional)* First semi-axis of ellipsoid. Default is 1.
+        b (float): *(optional)* Second semi-axis of ellipsoid. Default is 1.
+        c (float): *(optional)* Third semi-axis of ellipsoid. Default is 1.
+        center (list): *(optional)* The ellipsoid center.
+            Defaults to (0, 0, 0).
+        axes (list): *(optional)* List of 3 semi-axes.
+            Defaults to (1, 1, 1).
+        size (float): *(optional)* The diameter of a sphere with equal volume.
+            Defaults to 2.
+        ratio_ab (float): *(optional)* The ratio of a to b.
+        ratio_ac (float): *(optional)* The ratio of a to c.
+        ratio_bc (float): *(optional)* The ratio of b to c.
+        ratio_ba (float): *(optional)* The ratio of b to a.
+        ratio_ca (float): *(optional)* The ratio of c to a.
+        ratio_cb (float): *(optional)* The ratio of c to b.
+        rot_seq (list): *(optional)* List of rotations (deg). Each element of
             the list should be an (axis, angle) tuple. The options for the
             axis are: 'x', 'y', 'z', 1, 2, or 3.
             For example::
 
                 rot_seq = [('x', 10), (2, -20), ('z', 85), ('x', 21)]
 
-             *(optional)*
-
-        rot_seq_deg (list): Alias for *rot_seq*, with degrees stated
-            explicitly. *(optional)*
-        rot_seq_rad (list): Same format as *rot_seq*, except the
-            angles are expressed in radians. *(optional)*
-        matrix (numpy.ndarray): A 3x3 rotation matrix expressing
+        rot_seq_deg (list): *(optional)* Alias for ``rot_seq``, with degrees
+            stated explicitly.
+        rot_seq_rad (list): *(optional)* Same format as ``rot_seq``, except the
+            angles are expressed in radians.
+        matrix (numpy.ndarray): *(optional)* A 3x3 rotation matrix expressing
             the orientation of the ellipsoid. Defaults to the identity.
-        position : Alias for *center*. *(optional)*
-        a : Alias for *axes[0]*.
-        b : Alias for *axes[1]*.
-        c : Alias for *axes[2]*.
-        orientation: Alias for *matrix*.
+        position : *(optional)* Alias for ``center``.
+        orientation: *(optional)* Alias for ``matrix``.
     """
     def __init__(self, **kwargs):
         # Position
@@ -477,8 +475,8 @@ class Ellipsoid(object):
         This function computes the expected value for the volume of an
         ellipsoid. The keyword arguments are the same as the input parameters
         for the class, :class:`microstructpy.geometry.Ellipsoid`. The
-        values for these keywords can be either constants or
-        `scipy.stats`_ distributions.
+        values for these keywords can be either constants or distributions from
+        the SciPy :mod:`scipy.stats` module.
 
         The expected value is computed by the following formula:
 
@@ -512,7 +510,6 @@ class Ellipsoid(object):
         Returns:
             float: Expected value of the volume of the sphere.
 
-        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
         """  # NOQA: E501
         # Check for size distribution
         if 'size' in kwargs:
@@ -581,7 +578,8 @@ class Ellipsoid(object):
         :meth:`microstructpy.geometry.Ellipse.approximate` for more details.
 
         Args:
-            x1 (float): Center position of the first sphere.
+            x1 (float): *(optional)* Center position of the first sphere.
+                Default is 0.75x the minimum semi-axis.
 
         Returns:
             numpy.ndarray: An Nx4 list of the (x, y, z, r) data of the spheres
@@ -696,14 +694,13 @@ class Ellipsoid(object):
     def plot(self, **kwargs):
         """Plot the ellipsoid.
 
-        This function uses the `Axes3D.plot_surface`_ method to add an
-        ellipsoid to the current axes. The keyword arguments are passed
-        through to the plot_surface function.
+        This function uses the :meth:`mpl_toolkits.mplot3d.Axes3D.plot_surface`
+        method to add an ellipsoid to the current axes. The keyword arguments
+        are passes through to the plot_surface function.
 
         Args:
             **kwargs (dict): Keyword arguments for matplotlib.
 
-        .. _`Axes3D.plot_surface` : https://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#mpl_toolkits.mplot3d.Axes3D.plot_surface
         """  # NOQA: E501
         if len(plt.gcf().axes) == 0:
             ax = plt.axes(projection=Axes3D.name)
@@ -751,7 +748,7 @@ class Ellipsoid(object):
     # ----------------------------------------------------------------------- #
     @property
     def limits(self):
-        """list: list of (lower, upper) bounds for the bounding box"""
+        """list: List of (lower, upper) bounds for the bounding box"""
         if np.all(np.isclose(self.matrix, np.eye(3))):
             ax = np.array(self.axes)
             cen = np.array(self.center)
@@ -775,7 +772,7 @@ class Ellipsoid(object):
 
     @property
     def sample_limits(self):
-        """list: list of (lower, upper) bounds for the sampling region"""
+        """list: List of (lower, upper) bounds for the sampling region"""
         return self.limits
 
     # ----------------------------------------------------------------------- #
@@ -789,7 +786,7 @@ class Ellipsoid(object):
         indicate which points are within the ellipsoid.
 
         Args:
-            points (list): Point or list of points.
+            points (list or numpy.ndarray): Point or list of points.
 
         Returns:
             bool or numpy.ndarray: Set to True for points in geometry.
@@ -823,7 +820,7 @@ class Ellipsoid(object):
         reflected.
 
         Args:
-            points (list): Points to reflect.
+            points (list or numpy.ndarray): Points to reflect.
 
         Returns:
             numpy.ndarray: Reflected points.

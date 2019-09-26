@@ -275,7 +275,7 @@ The keywords ``size`` and ``aspect_ratio`` are keyword arguments for defining
 an :class:`.Ellipse`, so those are passed through to the Ellipse class when
 creating the seeds.
 For a non-uniform size (or aspect ratio) distribution, replace the constant
-value with a `SciPy statistical distribution`_.
+value with a distribution from the SciPy :mod:`scipy.stats` module.
 For example:
 
 .. code-block:: python
@@ -291,7 +291,6 @@ phase-specific.
 .. _`MeshPy`: https://mathema.tician.de/software/meshpy/
 .. _`Power Diagram`: https://en.wikipedia.org/wiki/Power_diagram
 .. _`pyvoro`: https://github.com/mmalahe/pyvoro
-.. _`SciPy statistical distribution`: https://docs.scipy.org/doc/scipy/reference/stats.html
 .. _`TetGen`: http://wias-berlin.de/software/tetgen/
 .. _`Triangle`: https://www.cs.cmu.edu/~quake/triangle.html
 .. _`Voro++`: http://math.lbl.gov/voro++/

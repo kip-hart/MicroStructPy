@@ -233,12 +233,10 @@ class Rectangle(NBox):
 
         Args:
             **kwargs: Keyword arguments, same as :class:`.Rectangle` but the
-                inputs can be from the `scipy.stats`_ module.
+                inputs can be from the :mod:`scipy.stats` module.
 
         Returns:
             float: Expected/average area of rectangle.
-
-        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
 
         """
         if 'length' in kwargs or 'width' in kwargs:
@@ -471,12 +469,10 @@ class Square(Rectangle):
 
         Args:
             **kwargs: Keyword arguments, same as :class:`.Square` but the
-                inputs can be from the `scipy.stats`_ module.
+                inputs can be from the :mod:`scipy.stats` module.
 
         Returns:
             float: Expected/average area of the square.
-
-        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
 
         """
         if 'side_length' in kwargs:

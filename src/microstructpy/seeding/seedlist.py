@@ -570,8 +570,8 @@ class SeedList(object):
         Here, phases 0 and 1 have the default distribution, phase 2 has a
         bivariate normal position distribution, and phase 3 is uniform in the
         x and normally distributed in the y. Multivariate distributions are
-        described on the `scipy.stats`_ website, in the multivariate
-        distributions section.
+        described in the multivariate section of the :mod:`scipy.stats` 
+        documentation.
 
         The position of certain seeds can be held fixed during the positioning
         process using the "hold" input. This should be a list of booleans,
@@ -603,8 +603,6 @@ class SeedList(object):
                 the mean and standard deviation in seed volumes.
             verbose (bool): This option will print a running counter of how
                 many seeds have been positioned.
-
-        .. _`scipy.stats`: https://docs.scipy.org/doc/scipy/reference/stats.html
 
         """  # NOQA: E501
         if len(hold) == 0:

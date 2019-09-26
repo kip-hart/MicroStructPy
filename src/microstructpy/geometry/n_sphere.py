@@ -25,14 +25,15 @@ class NSphere(object):
     whhich keywords are used to create the geometry.
 
     Args:
-        r (float): The radius of the n-sphere. Defaults to 1. *(optional)*
-        center (list): The coordinates of the center. Defaults to [].
-            *(optional)*
-        radius : Alias for *r*.
-        d : Alias for *2r*.
-        diameter : Alias for *2r*.
-        size : Alias for *2r*.
-        position : Alias for *center*.
+        r (float): *(optional)* The radius of the n-sphere.
+            Defaults to 1.
+        center (list): *(optional)* The coordinates of the center.
+            Defaults to [].
+        radius : Alias for ``r``.
+        d : Alias for ``2*r```.
+        diameter : Alias for ``2*r``.
+        size : Alias for ``2*r``.
+        position : Alias for ``center``.
 
     """
     # ----------------------------------------------------------------------- #
@@ -68,7 +69,7 @@ class NSphere(object):
         a published writeup, which was extended from 2D to ND. [#bullock]_
 
         Args:
-            points (list): List of points to fit.
+            points (list, numpy.ndarray): List of points to fit.
 
         Returns:
             NSphere: An instance of the class that fits the points.
@@ -233,7 +234,7 @@ class NSphere(object):
         indicate which points are within the n-sphere.
 
         Args:
-            points (list): Point or list of points.
+            points (list or numpy.ndarray): Point or list of points.
 
         Returns:
             bool or numpy.ndarray: Set to True for points in geometry.
@@ -263,7 +264,7 @@ class NSphere(object):
         reflected.
 
         Args:
-            points (list): Points to reflect.
+            points (list or np.ndarray): Points to reflect.
 
         Returns:
             numpy.ndarray: Reflected points.
