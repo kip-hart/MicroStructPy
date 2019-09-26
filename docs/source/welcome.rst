@@ -23,11 +23,9 @@ Features of MicroStructPy include:
     :alt: Banner image showing the three steps for creating microstructure.
 
     The primary steps to create a microstructure.
-
-The three primary steps for creating a microstructure are:
-1) seed the domain with particles,
-2) create a Voronoi power diagram, and
-3) convert the diagram into an unstructured mesh.
+    1) seed the domain with particles,
+    2) create a Voronoi power diagram, and
+    3) convert the diagram into an unstructured mesh.
 
 
 Examples
