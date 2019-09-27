@@ -18,15 +18,15 @@ Added
 
 Changed
 '''''''
-- Project documentation
+- Project documentation.
 
 `1.0.1`_ - 2019-09-07
 ---------------------
 
 Changed
 '''''''
-- Project documentation
-- Made project name lowercase in PyPI
+- Project documentation.
+- Made project name lowercase in PyPI.
 
 
 `1.0`_ - 2019-09-07
@@ -34,7 +34,7 @@ Changed
 
 Added
 '''''
-- Project added to GitHub
+- Project added to GitHub.
 
 
 
