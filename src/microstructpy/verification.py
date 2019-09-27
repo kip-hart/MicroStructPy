@@ -49,7 +49,7 @@ def volume_fractions(poly_mesh, n_phases):
     mesh.
 
     Args:
-        poly_mesh (.PolyMesh): The polygonal/polyhedral mesh.
+        poly_mesh (PolyMesh): The polygonal/polyhedral mesh.
         n_phases (int): Number of phases.
 
     Returns:
@@ -87,8 +87,8 @@ def write_volume_fractions(vol_fracs, phases, filename='volume_fractions.txt'):
     Args:
         vol_fracs (list or numpy.ndarray): Volume fractions of the output mesh.
         phases (list): List of phase dictionaries.
-        filename (str): Name of file to write, defaults to
-            `volume_fractions.txt`.
+        filename (str): *(optional)* Name of file to write.
+            Defaults to ``volume_fractions.txt``.
 
     Returns:
         none, prints formatted volume fraction verification table to file
@@ -159,8 +159,8 @@ def plot_volume_fractions(vol_fracs, phases, filename='volume_fractions.png'):
     Args:
         vol_fracs (list or numpy.ndarray): Output volume fractions.
         phases (list): List of phase dictionaries
-        filename (str or list): Filename(s) to save the plot. Defaults
-            to `volume_fractions.png`.
+        filename (str or list): *(optional)* Filename(s) to save the plot.
+            Defaults to ``volume_fractions.png``.
 
     Returns:
         none, writes plot to file.
@@ -235,6 +235,24 @@ def plot_volume_fractions(vol_fracs, phases, filename='volume_fractions.png'):
 #                                                                             #
 # --------------------------------------------------------------------------- #
 def seeds_of_best_fit(seeds, phases, pmesh, tmesh):
+    """Calculate seed geometries of best fit
+
+    This function computes the seeds of best fit for the resultant polygonal
+    and triangular meshes. It calls the the ``best_fit`` function of each
+    seed's geometry, then copies the other seed attributes to create a new
+    :class:`.SeedList`.
+
+    The points on the faces of the grains are used to determine a fit geometry.
+    Points on the exterior of the domain are not used since they would alter
+    the shape of the best fit seed.
+
+    Args:
+        seeds (SeedList): List of seed geometries.
+        phases (list): List of material phases. See :ref:`phase_dict_guide`
+            for more information on formatting.
+        pmesh (PolyMesh): Resultant polygonal/polyhedral mesh.
+        tmesh (TriMesh): Resultant triangular/tetrahedral mesh.
+    """
     poly_pts = np.array(pmesh.points, dtype='float')
     poly_neighs = np.array(pmesh.facet_neighbors, dtype='int')
     tri_parents = np.array(tmesh.facet_attributes, dtype='int')
@@ -307,12 +325,14 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
     This function creates both PDF and CDF plots.
 
     Args:
-        seeds (.SeedList): List of seeds to compare.
+        seeds (SeedList): List of seeds to compare.
         phases (list): List of phase dictionaries.
-        dirname (str): Plot output directory. Defaults to `.`.
-        ext (str or list): File extension(s) of the output plots.
-        poly_mesh (.PolyMesh): Polygonal mesh, useful for phases with an area
-            or volume distribution.
+        dirname (str): *(optional)* Plot output directory.
+            Defaults to ``.``.
+        ext (str or list): *(optional)* File extension(s) of the output plots.
+            Defaults to ``'png'``.
+        poly_mesh (PolyMesh): *(optional)* Polygonal mesh, useful for phases
+            with an area or volume distribution.
 
     Returns:
         none, creates plot files.
@@ -656,10 +676,19 @@ def mle_phases(seeds, phases, poly_mesh=None, verif_mask=None):
     Also note that SciPy currently does not support MLEs for discrete random
     variables. Any discrete distributions will be given a histogram output.
 
+    .. note::
+
+        Directional statistics are not used and as such the results for
+        orientation angles and matrices are unreliable. The only exception
+        is normally distributed orientation angles.
+
     Args:
-        seeds (.SeedList): List of seeds.
+        seeds (SeedList): List of seeds.
         phases (list): List of input phase dictionaries.
-        poly_mesh (.PolyMesh): Polygonal/polyhedral mesh.
+        poly_mesh (PolyMesh): *(optional)* Polygonal/polyhedral mesh.
+        verif_mask (list or numpy.ndarray): *(optional)* Mask for which
+            seeds to include in the MLE parameter calculation. Default is
+            True for all seeds.
     """
     circ_highs = {'angle': 360, 'angle_deg': 360, 'angle_rad': 2 * np.pi}
 
@@ -701,7 +730,8 @@ def write_mle_phases(inp_phases, out_phases, filename='mles.txt'):
     Args:
         inp_phases (list): List of input phase dictionaries.
         out_phases (list): List of output phase dictionaries.
-        filename (str): Filename of the output table.
+        filename (str): *(optional)* Filename of the output table.
+            Defaults to ``mles.txt``.
 
     Returns:
         none, writes file.
@@ -815,14 +845,16 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
     input distributions in the phases.
 
     Args:
-        fit_seeds (.SeedList): List of seeds of best fit.
-        seeds (.SeedList): List of seeds.
+        fit_seeds (SeedList): List of seeds of best fit.
+        seeds (SeedList): List of seeds.
         phases (list): List of input phase dictionaries.
-        poly_mesh (.PolyMesh): Polygonal/polyhedral mesh.
+        poly_mesh (PolyMesh): *(optional)* Polygonal/polyhedral mesh.
+        verif_mask (list or numpy.ndarray): *(optional)* Mask for seeds to
+            be included in the analysis. Defaults to all True.
 
     Returns:
-        list, same size and dictionary keywords as phases, but with error
-            statistics dictionaries in each entry.
+        list: List with the same size and dictionary keywords as phases,
+        but with error statistics dictionaries in each entry.
 
     """
 
@@ -932,7 +964,19 @@ def _kw_stats(dist_exp, y_act):
 
 
 def write_error_stats(errs, phases, filename='error_stats.txt'):
-    """Write error statistics to file"""
+    """Write error statistics to file
+
+    This function takes previously computed error statistics and writes them
+    to a human-readable text file.
+
+    Args:
+        errs (list): List of error statistics for each input phase parameter.
+            Organized the same as ``phases``.
+        phases (list): List of input phases. See :ref:`phase_dict_guide` for
+            more details.
+        filename (str): *(optional)* The name of the file to contain the
+            error statistics. Defaults to ``error_stats.txt``. 
+    """
     # Create table rows as dictionaries
     rows_dict = []
 
