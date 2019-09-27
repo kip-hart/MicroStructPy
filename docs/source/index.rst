@@ -5,6 +5,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
 
 |s-travis|
 |s-license|
+|s-doi|
 
 |l-github| `Repository`_
 |l-rtd| `Documentation`_
@@ -53,3 +54,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
 .. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
+
+.. |s-doi| image:: https://zenodo.org/badge/206468500.svg
+   :target: https://zenodo.org/badge/latestdoi/206468500
+   :alt: DOI
