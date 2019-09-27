@@ -283,6 +283,19 @@ class SeedList(object):
                     self.seeds[int(i_val)] = s[ind]
 
     def __add__(self, seedlist):
+        """Add seed lists together
+
+        This function overloads the + operator, similar to
+        :meth:`list.__add__`.
+
+        Args:
+            seedlist (SeedList, list): List of seeds to add.
+
+        Returns:
+            SeedList: Instance that joins the two seed lists.
+
+        .. versionadded:: 1.1
+        """
         if type(self) == type(seedlist):
             return SeedList(self.seeds + seedlist.seeds)
         else:
