@@ -25,15 +25,17 @@ class Circle(NSphere):
     This class represents a two-dimensional circle. It is defined by
     a center point and size parameter, which can be either radius or diameter.
 
+    Without parameters, this returns a unit circle centered on the origin.
+
     Args:
-        r (float): The radius of the circle. Defaults to 1. *(optional)*
-        center (list): The coordinates of the center. *(optional)*
+        r (float): *(optional)* The radius of the circle. Defaults to 1.
+        center (list): *(optional)* The coordinates of the center.
             Defaults to (0, 0).
-        diameter : Alias for 2x *r*.
-        radius : Alias for *r*.
-        d : Alias for 2x *r*.
-        size : Alias for 2x *r*.
-        position : Alias for *center*.
+        diameter : *(optional)* Alias for ``2*r``.
+        radius : *(optional)* Alias for ``r``.
+        d : *(optional)* Alias for ``2*r``.
+        size : *(optional)* Alias for ``2*r``.
+        position : *(optional)* Alias for ``center``.
     """
     # ----------------------------------------------------------------------- #
     # Constructor                                                             #
