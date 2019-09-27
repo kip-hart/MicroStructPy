@@ -346,7 +346,7 @@ class SeedList(object):
         """Write seed list to a text file
 
         This function writes out the seed list to a file. The content of this
-        file is human-readable and can be read by the 
+        file is human-readable and can be read by the
         :func:`SeedList.from_file` method.
 
         Args:
@@ -590,7 +590,7 @@ class SeedList(object):
         Here, phases 0 and 1 have the default distribution, phase 2 has a
         bivariate normal position distribution, and phase 3 is uniform in the
         x and normally distributed in the y. Multivariate distributions are
-        described in the multivariate section of the :mod:`scipy.stats` 
+        described in the multivariate section of the :mod:`scipy.stats`
         documentation.
 
         The position of certain seeds can be held fixed during the positioning

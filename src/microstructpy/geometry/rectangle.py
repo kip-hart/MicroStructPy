@@ -199,7 +199,7 @@ class Rectangle(NBox):
 
     @classmethod
     def area_expectation(cls, **kwargs):
-        """Expected area of rectangle
+        r"""Expected area of rectangle
 
         This method computes the expected area of a rectangle. There are two
         main ways to define the size of a rectangle: by the length and width
@@ -298,7 +298,7 @@ class Rectangle(NBox):
         This method approximates a rectangle with a set of circles.
         These circles are spaced uniformly along the long axis of the
         rectangle with distance ``x1`` between them.
-        
+
         Example
         -------
 
@@ -314,11 +314,11 @@ class Rectangle(NBox):
             x1 (float or None): *(optional)* Spacing between the circles.
                 If not specified, the spacing is 0.25x the length of the
                 shortest side.
-        
+
         Returns:
             numpy.ndarray: An Nx3 array, where each row is a circle and the
             columns are x, y, and r.
-            
+
         """  # NOQA: E501
         if x1 is None:
             x1 = 0.25 * min(self.side_lengths)
@@ -347,7 +347,7 @@ class Rectangle(NBox):
                 xc = half_len - r
             else:
                 xc = xc + x1
-                
+
         # Corner circle
         while r > 0:
             x_init = circs[-1][0]
@@ -448,7 +448,7 @@ class Square(Rectangle):
     # ----------------------------------------------------------------------- #
     @classmethod
     def area_expectation(cls, **kwargs):
-        """Expected area of square
+        r"""Expected area of square
 
         This method computes the expected area of a square with distributed
         side length.
@@ -510,10 +510,10 @@ class Square(Rectangle):
         Args:
             x1 (float or None): *(optional)* Spacing between the circles.
                 If not specified, the spacing is 0.25x the side length.
-        
+
         Returns:
             numpy.ndarray: An Nx3 array, where each row is a circle and the
             columns are x, y, and r.
 
-        """
+        """  # NOQA: E501
         return Rectangle.approximate(self, x1)

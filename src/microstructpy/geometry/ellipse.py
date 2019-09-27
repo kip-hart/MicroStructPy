@@ -29,13 +29,13 @@ class Ellipse(object):
         a (float): *(optional)* Semi-major axis of ellipse. Defaults to 1.
         b (float): *(optional)* Semi-minor axis of ellipse. Defaults to 1.
         center (list): *(optional)* The ellipse center.
-            Defaults to (0, 0). 
+            Defaults to (0, 0).
         axes (list): *(optional)* A 2-element list of semi-axes, equivalent
             to ``[a, b]``. Defaults to [1, 1].
         size (float): *(optional)* The diameter of a circle with equivalent
             area. Defaults to 1.
         aspect_ratio (float): *(optional)* The ratio of x-axis to y-axis
-            length. Defaults to 1. 
+            length. Defaults to 1.
         angle (float): *(optional)* The counterclockwise rotation angle,
             in degrees, measured from the +x axis.
         angle_deg (float): *(optional)* The rotation angle, in degrees.
@@ -504,8 +504,6 @@ class Ellipse(object):
 
             Circular approximation of ellipse, after Ilin and Bernacki.
 
-        
-
         Args:
             x1 (float or None): *(optional)* Position of the first circle
                 along the +x axis. Defaults to 0.5x the shortest semi-axis.
@@ -521,7 +519,7 @@ class Ellipse(object):
             of Dense Ellipse Packing for Generating Statistically Equivalent
             Polygonal Structures," Granular Matter, vol. 18(3), pp. 43, 2016.
 
-        """
+        """  # NOQA: E501
         if x1 is None:
             x1 = 0.5 * min(self.a, self.b)
 

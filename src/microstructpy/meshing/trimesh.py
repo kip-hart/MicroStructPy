@@ -52,7 +52,7 @@ class TriMesh(object):
             Nx4 in 3D.
         element_attributes (list, numpy.ndarray): *(optional)* A number
             associated with each element.
-            Defaults to None. 
+            Defaults to None.
         facets (list, numpy.ndarray): *(optional)* A list of facets in the
             mesh. The shape should be Nx2 in 2D or Nx3 in 3D.
             Defaults to None.

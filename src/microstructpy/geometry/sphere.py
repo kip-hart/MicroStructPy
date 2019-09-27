@@ -33,7 +33,7 @@ class Sphere(NSphere):
     the origin.
 
     Args:
-        r (float): *(optional)* The radius of the sphere. 
+        r (float): *(optional)* The radius of the sphere.
             Defaults to 1.
         radius (float): *(optional)* Same as ``r``.
         d (float): *(optional)* Alias for ``2*r``.

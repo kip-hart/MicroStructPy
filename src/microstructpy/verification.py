@@ -975,7 +975,7 @@ def write_error_stats(errs, phases, filename='error_stats.txt'):
         phases (list): List of input phases. See :ref:`phase_dict_guide` for
             more details.
         filename (str): *(optional)* The name of the file to contain the
-            error statistics. Defaults to ``error_stats.txt``. 
+            error statistics. Defaults to ``error_stats.txt``.
     """
     # Create table rows as dictionaries
     rows_dict = []

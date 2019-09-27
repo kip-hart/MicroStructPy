@@ -1028,7 +1028,7 @@ def dict_convert(dictionary, filepath='.'):
 
     if type(dictionary) is list:
         return [dict_convert(d) for d in dictionary]
-    
+
     new_dict = collections.OrderedDict()
     for key in dictionary:
         val = dictionary[key]
@@ -1038,7 +1038,7 @@ def dict_convert(dictionary, filepath='.'):
             # Exception for scipy.stats distributions
             if 'dist_type' in val:
                 new_val = _dist_convert(new_val)
-                
+
         elif type(val) is list:
             if type(val[0]) is str:
                 new_val = [_misc.from_str(v) for v in val]
@@ -1047,7 +1047,7 @@ def dict_convert(dictionary, filepath='.'):
 
         elif val is None:
             new_val = {}
-        
+
         # Exception for filepaths
         elif any([s in key.lower() for s in ('filename', 'directory')]):
             if not os.path.isabs(val) and filepath:
@@ -1057,9 +1057,9 @@ def dict_convert(dictionary, filepath='.'):
 
         elif type(val) is str:
             new_val = _misc.from_str(val)
-        
+
         else:
-            err_str = 'Cannot parse type for: ' + str(type(raw_in))
+            err_str = 'Cannot parse type for: ' + str(type(val))
             raise ValueError(err_str)
 
         new_dict[key] = new_val
