@@ -264,7 +264,7 @@ class NSphere(object):
         reflected.
 
         Args:
-            points (list or np.ndarray): Points to reflect.
+            points (list or numpy.ndarray): Points to reflect.
 
         Returns:
             numpy.ndarray: Reflected points.

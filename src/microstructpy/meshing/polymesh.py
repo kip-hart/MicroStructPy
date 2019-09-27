@@ -67,20 +67,27 @@ class PolyMesh(object):
     attributes, which have the same length as the regions list.
 
     Args:
-        points (numpy.ndarray): An Nx2 or Nx3 array of coordinates in the mesh.
+        points (list or numpy.ndarray): An Nx2 or Nx3 array of coordinates
+            in the mesh.
         facets (list): List of facets between regions. In 2D, this is a list
             of edges (Nx2). In 3D, this is a list of 3D polygons.
         regions (list): A list of polygons (2D) or polyhedra (3D), with each
             element of the list being a list of facet indices.
-        seed_numbers (list): The seed number associated with each
-            region. *(optional)*
-        phase_numbers (list): The phase number associated with each
-            region. *(optional)*
-        facet_neighbors (list): The region numbers on either side of
-            each facet *(optional)*
-        volumes (list): The area/volume of each region. *(optional)*
+        seed_numbers (list or numpy.ndarray): *(optional)* The seed number
+            associated with each region.
+            Defaults to 0 for all regions.
+        phase_numbers (list or numpy.ndarray): *(optional)* The phase number
+            associated with each region.
+            Defaults to 0 for all regions.
+        facet_neighbors (list or numpy.ndarray): *(optional)* The region
+            numbers on either side of each facet.
+            If not givien, a neighbor list is computed from ``regions``.
+        volumes (list or numpy.ndarray): *(optional)* The area/volume of each
+            region.
+            If not given, region volumes are calculated based on ``points``,
+            ``facets``, and ``regions``.
 
-    """  # NOQA: E501
+    """
 
     # ----------------------------------------------------------------------- #
     # Constructors                                                            #
@@ -224,114 +231,19 @@ class PolyMesh(object):
     # Read and Write Functions                                                #
     # ----------------------------------------------------------------------- #
     def write(self, filename, format='txt'):
-        """Write the mesh to a fileself.
+        """Write the mesh to a file.
 
         This function writes the polygon/polyhedron mesh to a file.
-        The format of the file can be specified, with the options described
-        in the table below.
-
-        .. table:: PolyMesh Write Formats
-            :align: center
-
-            +-------------+------------+----+---------------------------------+
-            | Format      | ``format`` | kD | Description                     |
-            +=============+============+====+=================================+
-            | Text String | ``txt``    | ND |   The Python string             |
-            |             |            |    |   representation of the mesh.   |
-            |             |            |    |   Human readable, but not in a  |
-            |             |            |    |   standard file format.         |
-            +-------------+------------+----+---------------------------------+
-            | POLY File   | ``poly``   | 2D |   A poly file that contains a   |
-            |             |            |    |   planar straight line graph    |
-            |             |            |    |   (PSLG). This file can be read |
-            |             |            |    |   by the Triangle program from  |
-            |             |            |    |   J. Shewchuk.                  |
-            +-------------+------------+----+---------------------------------+
-            | PLY File    | ``ply``    | ND |   A PLY file containing the     |
-            |             |            |    |   mesh facets.                  |
-            +-------------+------------+----+---------------------------------+
-            | VTK Legacy  | ``vtk``    | 3D |   A VTK file containing the     |
-            |             |            |    |   mesh as a POLYDATA dataset.   |
-            |             |            |    |   Note: seed number and phase   |
-            |             |            |    |   number information are not    |
-            |             |            |    |   written to the VTK file.      |
-            +-------------+------------+----+---------------------------------+
-
-        The text string output file is meant solely for saving the polygon/
-        polyhedron mesh as an intermediate step in the meshing process. The
-        other file types lists are meant for processing and interpretation by
-        other programs. The format for the text string file is::
-
-            Mesh Points: <numPoints>
-                x1, y1(, z1)      <- tab character at line start
-                x2, y2(, z2)
-                ...
-                xn, yn(, zn)
-            Mesh Facets: <numFacets>
-                f1_1, f1_2, f1_3, ...
-                f2_1, f2_2, f2_3, ...
-                ...
-                fn_1, fn_2, fn_3, ...
-            Mesh Regions: <numRegions>
-                r1_1, r1_2, r1_3, ...
-                r2_1, r2_2, r2_3, ...
-                ...
-                rn_1, rn_2, rn_3, ...
-            Seed Numbers: <numRegions>
-                s1
-                s2
-                ...
-                sn
-            Phase Numbers: <numRegions>
-                p1
-                p2
-                ...
-                pn
-
-        For example::
-
-            Mesh Points: 4
-                0.0, 0.0
-                1.0, 0.0
-                3.0, 2.0
-                2.0, 2.0
-            Mesh Facets: 5
-                0, 1
-                1, 2
-                2, 3
-                3, 0
-                1, 3
-            Mesh Regions: 2
-                0, 4, 3
-                1, 2, 4
-            Seed Numbers: 2
-                0
-                1
-            Phase Numbers: 2
-                0
-                0
-
-        Note that everything is indexed from 0 since this is produced in
-        Python. In this example, the polygon mesh contains a parallelogram
-        that has been divided into two triangles. In general, the regions do
-        not need to have the same number of facets.
-
-        .. seealso::
-
-            | `.poly files <https://www.cs.cmu.edu/~quake/triangle.poly.html>`_
-              Description and examples of poly files.
-
-            | `PLY - Polygon File Format <http://paulbourke.net/dataformats/ply/>`_
-              Description and examples of ply files.
-
-            | `File Formats for VTK Version 4.2 <https://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf>`_
-              PDF guide for VTK legacy format.
+        See the :ref:`s_poly_file_io` section of the
+        :ref:`c_file_formats` guide for more information about the available
+        output file formats.
 
         Args:
             filename (str): Name of the file to be written.
-            format (str): Format of the data in the file.
+            format (str): *(optional)* {'txt' | 'poly' | 'ply' | 'vtk' }
+                Format of the data in the file. Defaults to ``'txt'``.
 
-        """  # NOQA: E501
+        """
         if format in ('str', 'txt'):
             with open(filename, 'w') as f:
                 f.write(str(self) + '\n')
@@ -420,7 +332,7 @@ class PolyMesh(object):
 
         This function reads in a polygon mesh from a file and creates an
         instance from that file. Currently the only supported file type
-        is the output from :meth:`.write` with the ``format='str'`` option.
+        is the output from :meth:`.write` with the ``format='txt'`` option.
 
         Args:
             filename (str): Name of file to read from.
@@ -512,11 +424,11 @@ class PolyMesh(object):
 
         Args:
             seedlist (SeedList): A list of seeds in the microstructure.
-            domain : The domain to be filled by the seed. From
-                :mod:`microstructpy.geometry`.
+            domain (from :mod:`microstructpy.geometry`): The domain to be
+                filled by the seed.
 
         Returns:
-            :class:`.PolyMesh`: A polygon/polyhedron mesh.
+            PolyMesh: A polygon/polyhedron mesh.
 
         .. _`Voro++`: http://math.lbl.gov/voro++/
 
@@ -726,8 +638,13 @@ class PolyMesh(object):
     def plot(self, **kwargs):
         """Plot the mesh.
 
-        This function plots the polygon mesh. The keyword arguments are passed
-        though to matplotlib.
+        This function plots the polygon mesh.
+        In 2D, this creates a class:`matplotlib.collections.PolyCollection`
+        and adds it to the current axes.
+        In 3D, it creates a
+        :class:`mpl_toolkits.mplot3d.art3d.Poly3DCollection` and
+        adds it to the current axes.
+        The keyword arguments are passed though to matplotlib.
 
         Args:
             **kwargs: Keyword arguments for matplotlib.
@@ -763,6 +680,12 @@ class PolyMesh(object):
 
         This function plots the facets of the polygon mesh, rather than the
         regions.
+        In 2D, it adds a :class:`matplotlib.collections.LineCollection` to the
+        current axes.
+        In 3D, it adds a
+        :class:`mpl_toolkits.mplot3d.art3d.Poly3DCollection`
+        with ``facecolors='none'``.
+        The keyword arguments are passed though to matplotlib.
 
         Args:
             **kwargs (dict): Keyword arguments for matplotlib.

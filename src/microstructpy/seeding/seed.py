@@ -33,15 +33,16 @@ class Seed(object):
     """Seed particle
 
     The Seed class contains the information about a single seed in the mesh.
-    These seeds have a geometry (:mod:`microstructpy.geometry`), phase number,
-    breakdown, and position.
+    These seeds have a geometry (from :mod:`microstructpy.geometry`),
+    a phase number, a breakdown, and a position.
 
     Args:
         seed_geometry (from :mod:`microstructpy.geometry`) : The geometry of
             the seed.
-        phase (int) : The phase number of the seed.
-        breakdown (list or numpy.ndarray) : The circle/sphere approximation
-            of this geometry. The format for this input is::
+        phase (int) : *(optional)* The phase number of the seed.
+            Defaults to 0.
+        breakdown (list or numpy.ndarray) : *(optional)* The circle/sphere
+            approximation of this grain. The format for this input is::
 
                 #                 x   y  r
                 breakdown_2D = [( 2,  3, 1),
@@ -54,8 +55,9 @@ class Seed(object):
 
             The default behavior is to call the ``approximate()`` function
             of the geometry.
-        position (list or numpy.ndarray) : The coordinates of the seed.
-            See :attr:`position` for more details.
+        position (list or numpy.ndarray) : *(optional)* The coordinates of the
+            seed. See :attr:`position` for more details.
+            Defaults to the origin.
     """
     # ----------------------------------------------------------------------- #
     # Initializer                                                             #
@@ -97,24 +99,24 @@ class Seed(object):
 
         Args:
             seed_type (str): type of seed, from list above.
-            phase (int): Material phase number of seed. *(optional)*
-            breakdown (list): List of circles or spheres
-                that approximate the geometry. The list should be formatted as
-                follows::
+            phase (int): *(optional)* Material phase number of seed.
+                Defaults to 0.
+            breakdown (list or numpy.ndarray): *(optional)* List of circles or
+                spheres that approximate the geometry. The list should be
+                formatted as follows::
 
                     breakdown = [(x1, y1, z1, r1),
                                  (x2, y2, z2, r2),
                                  ...]
 
                 The breakdown will be automatically generated if not provided.
-                *(optional)*
-            position (list): The coordinates of the seed. Default is
-                the origin. *(optional)*
+            position (list or numpy.ndarray): *(optional)* The coordinates of
+                the seed. Default is the origin.
             **kwargs: Keyword arguments that define the size, shape, etc of the
                 seed geometry.
 
         Returns:
-            .Seed: An instance of the class.
+            Seed: An instance of the class.
         """
         assert type(seed_type) is str
         seed_type = seed_type.strip().lower()
@@ -154,7 +156,7 @@ class Seed(object):
             seed_str (str): String representation of the seed.
 
         Returns:
-            An instance of a Seed derived class.
+            Seed: An instance of a Seed derived class.
 
         """
         # Convert to dictionary
@@ -335,7 +337,8 @@ class Seed(object):
         """Plot breakdown of seed
 
         This function plots the circle/sphere breakdown of the seed. In 2D,
-        this adds a PatchCollection to the current axes.
+        this adds a :class:`matplotlib.collections.PatchCollection`
+        to the current axes.
 
         Args:
             **kwargs: Matplotlib keyword arguments.

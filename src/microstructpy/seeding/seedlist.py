@@ -44,7 +44,7 @@ class SeedList(object):
     of a cache text file.
 
     Args:
-        seeds (list): List of :class:`.Seed` instances.
+        seeds (list): *(optional)* List of :class:`.Seed` instances.
 
     """
     # ----------------------------------------------------------------------- #
@@ -106,8 +106,14 @@ class SeedList(object):
             phases (dict): Dictionary of phase information, see
                 :ref:`phase_dict_guide` for a guide.
             volume (float): The total area/volume of the seeds in the list.
-            rng_seeds (dict): Dictionary of RNG seeds for each step in the
-                seeding process.
+            rng_seeds (dict): *(optional)* Dictionary of RNG seeds for each
+                step in the seeding process. The dictionary keys should match
+                shape parameters in ``phases``. For example::
+
+                    rng_seeds = {
+                        'size': 0,
+                        'angle': 3,
+                    }
 
         Returns:
             SeedList: An instance of the class containing seeds prescribed by
@@ -327,7 +333,8 @@ class SeedList(object):
         """Write seed list to a text file
 
         This function writes out the seed list to a file. The content of this
-        file is human-readable and can be read by the from_file method.
+        file is human-readable and can be read by the 
+        :func:`SeedList.from_file` method.
 
         Args:
             filename (str): File to write the seed list.
@@ -586,23 +593,27 @@ class SeedList(object):
         1 based on the ratio of standard deviation to mean in grain volumes.
 
         Args:
-            domain: The domain of the microstructure.
-                (from the :mod:`microstructpy.geometry` module)
-            pos_dists (dict): Position distributions for each phase,
-                formatted like the example above. *(optional)*
-            rng_seed (int): Random number generator (RNG) seed for
-                positioning the seeds. Should be a non-negative integer.
-                *(optional)*
-            hold (list): List of booleans for holding the positions
-                of seeds. *(optional)*
-            max_attempts (int): Number of random trials before
-                removing a seed from the list. *(optional)*
-            rtol (str or float): The relative overlap tolerance between
-                seeds. This parameter should be between 0 and 1. Using the
-                'fit' option, the function will pick a value for rtol based on
-                the mean and standard deviation in seed volumes.
-            verbose (bool): This option will print a running counter of how
-                many seeds have been positioned.
+            domain (from :mod:`microstructpy.geometry`): The domain of the
+                microstructure.
+            pos_dists (dict): *(optional)* Position distributions for each
+                phase, formatted like the example above.
+                Defaults to uniform random throughout the domain.
+            rng_seed (int): *(optional)* Random number generator (RNG) seed
+                for positioning the seeds. Should be a non-negative integer.
+            hold (list or numpy.ndarray): *(optional)* List of booleans for
+                holding the positions of seeds.
+                Defaults to False for all seeds.
+            max_attempts (int): *(optional)* Number of random trials before
+                removing a seed from the list.
+                Defaults to 10,000.
+            rtol (str or float): *(optional)* The relative overlap tolerance
+                between seeds. This parameter should be between 0 and 1.
+                Using the 'fit' option, a function will determine the value
+                for rtol based on the mean and standard deviation in seed
+                volumes.
+            verbose (bool): *(optional)* This option will print a running
+                counter of how many seeds have been positioned.
+                Defaults to False.
 
         """  # NOQA: E501
         if len(hold) == 0:
@@ -737,7 +748,7 @@ def sample_pos(distribution, n=1):
         distribution (list or scipy.stats distribution): The position
             distribution.
 
-        n (int): Number of samples. *(optional)*
+        n (int): *(optional)* Number of samples. Defaults to 1.
 
     Returns:
         list: A sample of the distribution.

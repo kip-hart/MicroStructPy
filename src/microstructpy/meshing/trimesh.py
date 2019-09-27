@@ -50,12 +50,15 @@ class TriMesh(object):
         elements (list, numpy.ndarray): List of indices of the points at
             the corners of each element. The shape should be Nx3 in 2D or
             Nx4 in 3D.
-        element_attributes (list, numpy.ndarray): A number
-            associated with each element. *(optional)*
-        facets (list, numpy.ndarray): A list of facets in the mesh.
-            The shape should be Nx2 in 2D or Nx3 in 3D. *(optional)*
-        facet_attributes (list, numpy.ndarray): A number
-            associated with each facet. *(optional)*
+        element_attributes (list, numpy.ndarray): *(optional)* A number
+            associated with each element.
+            Defaults to None. 
+        facets (list, numpy.ndarray): *(optional)* A list of facets in the
+            mesh. The shape should be Nx2 in 2D or Nx3 in 3D.
+            Defaults to None.
+        facet_attributes (list, numpy.ndarray): *(optional)* A number
+            associated with each facet.
+            Defaults to None.
 
     """
     # ----------------------------------------------------------------------- #
@@ -152,31 +155,28 @@ class TriMesh(object):
 
         The minimum angle, maximum volume, and maximum edge length options
         provide quality controls for the mesh. The phase type option can take
-        several values, described below.
+        one of several values, described below.
 
-        .. table:: Phase Type Options
-            :align: center
+        * **crystalline**: granular, solid
+        * **amorphous**: glass, matrix
+        * **void**: crack, hole
 
-            +--------------+-------------------------------------------------+
-            | Value        | Description                                     |
-            +==============+=================================================+
-            | crystalline, | These options all create a mesh where cells of  |
-            | granular,    | the same seed number are merged, but cells are  |
-            | solid        | not merged across seeds. (default)              |
-            +--------------+-------------------------------------------------+
-            | amorphous,   | These options create a mesh where cells of the  |
-            | glass,       | same phase number are merged, creating an       |
-            | matrix       | amorphous region in the mesh.                   |
-            +--------------+-------------------------------------------------+
-            | crack,       | These options are the same as the amorphous     |
-            | hole,        | options described above, except that these      |
-            | void         | regions are treated as holes in the mesh.       |
-            +--------------+-------------------------------------------------+
+        The **crystalline** option creates a mesh where cells of the same seed
+        number are merged, but cells are not merged across seeds. _This is
+        the default material type._
+
+        The **amorphous** option creates a mesh where cells of the same
+        phase number are merged to create an amorphous region in the mesh.
+
+        Finally, the **void** option will merge neighboring void cells and
+        treat them as holes in the mesh.
 
         Args:
             polymesh (PolyMesh): A polygon/polyhedron mesh.
-            phases (list): A list of dictionaries containing options for each
-                phase.
+            phases (list): *(optional)* A list of dictionaries containing
+                options for each phase.
+                Default is
+                ``{'material_type': 'solid', 'max_volume': float('inf')}``.
             min_angle (float): The minimum interior angle of an element.
             max_volume (float): The default maximum cell volume, used if one
                 is not set for each phase.
@@ -187,7 +187,7 @@ class TriMesh(object):
         # condition the phases input
         if phases is None:
             default_dict = {'material_type': 'solid',
-                            'max volume': float('inf')}
+                            'max_volume': float('inf')}
             n_phases = int(np.max(polymesh.phase_numbers)) + 1
             phases = [default_dict for _ in range(n_phases)]
 
@@ -377,54 +377,28 @@ class TriMesh(object):
     # ----------------------------------------------------------------------- #
     # Write Function                                                          #
     # ----------------------------------------------------------------------- #
-    def write(self, filename, format='str', seeds=None, polymesh=None):
+    def write(self, filename, format='txt', seeds=None, polymesh=None):
         """Write mesh to file.
 
-        This function writes the contents of the mesh to a file. There are
-        some options for the format of the file, described below.
-
-        .. table:: TriMesh Write Formats
-            :align: center
-
-            +-------------+--------------+----+------------------------------+
-            | Format      | ``format``   | kD | Description                  |
-            +=============+==============+====+==============================+
-            | Abaqus      | ``abaqus``   | ND | An Abaqus input file.        |
-            +-------------+--------------+----+------------------------------+
-            | Text String | ``str``      | ND | The results of __str__       |
-            +-------------+--------------+----+------------------------------+
-            | TetGen /    | ``tet/tri``  | ND | Node and element files       |
-            | Triangle    |              |    | formatted according to the   |
-            |             |              |    | TetGen and Triangle file     |
-            |             |              |    | standard. The filename input |
-            |             |              |    | above should be the basename |
-            |             |              |    | *without* extensions.        |
-            |             |              |    | The extensions ``.node`` and |
-            |             |              |    | ``.ele`` will be added. See  |
-            |             |              |    | the links below for more     |
-            |             |              |    | information about the file   |
-            |             |              |    | formats.                     |
-            +-------------+--------------+----+------------------------------+
-            | VTK Legacy  | ``vtk``      | 3D | A VTK file                   |
-            +-------------+--------------+----+------------------------------+
-
-        .. seealso::
-            `TetGen file formats <http://wias-berlin.de/software/tetgen/fformats.html>`_
-
-            `Triangle file formats <https://www.cs.cmu.edu/~quake/triangle.html>`_
-
-            `Triangle examples <https://people.sc.fsu.edu/~jburkardt/data/triangle_files/triangle_files.html>`_
+        This function writes the contents of the mesh to a file.
+        The format options are 'abaqus', 'tet/tri', 'txt', and 'vtk'.
+        See the :ref:`s_tri_file_io` section of the :ref:`c_file_formats`
+        guide for more details on these formats.
 
         Args:
             filename (str): The name of the file to write. In the cases of
                 TetGen/Triangle, this is the basename of the files.
-            format (str): The format of the output.
-            seeds (.SeedList): List of seeds. If given, will also write phase
-                number to VTK files. This assumes the `element_attributes`
+            format (str): {'abaqus' | 'tet/tri' | 'txt' | 'vtk'}
+                *(optional)* The format of the output file.
+                Default is 'txt'.
+            seeds (SeedList): *(optional)* List of seeds. If given, VTK files
+                will also include the phase number of of each element in the
+                mesh. This assumes the ``element_attributes``
                 field contains the seed number of each element.
-            polymesh (.PolyMesh): Polygonal mesh used for generating the the
-                triangular mesh. If given, will add surface unions to Abaqus
-                files - for easier specification of boundary conditions.
+            polymesh (PolyMesh): *(optional)* Polygonal mesh used for
+                generating the triangular mesh. If given, will add surface
+                unions to Abaqus files - for easier specification of
+                boundary conditions.
 
         """  # NOQA: E501
         fmt = format.lower()
@@ -671,9 +645,13 @@ class TriMesh(object):
     def plot(self, **kwargs):
         """Plot the mesh.
 
-        This method plots the mesh using matplotlib. In 2D, the elements are
-        plotted using a matplotlib PolyCollection. In 3D, the facets are
-        plotted using a Poly3DCollection.
+        This method plots the mesh using matplotlib.
+        In 2D, this creates a :class:`matplotlib.collections.PolyCollection`
+        and adds it to the current axes.
+        In 3D, it creates a
+        :class:`mpl_toolkits.mplot3d.art3d.Poly3DCollection` and
+        adds it to the current axes.
+        The keyword arguments are passed though to matplotlib.
 
         Args:
             **kwargs: Keyword arguments that are passed through to matplotlib.

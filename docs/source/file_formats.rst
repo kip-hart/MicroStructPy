@@ -1,3 +1,5 @@
+.. _c_file_formats:
+
 Output File Formats
 ===================
 
@@ -59,6 +61,8 @@ instance of the Seed class, see :meth:`.Seed.from_str`.
     The rationale is that some geometries may be specified by some other
     point instead of the center.
 
+
+.. _s_poly_file_io:
 
 Polygonal Mesh
 --------------
@@ -163,6 +167,8 @@ See `PLY - Polygon File Format`_ for a description and examples of ply files.
 .. _`File Formats for VTK Version 4.2`: https://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf
 .. _`PLY - Polygon File Format`: http://paulbourke.net/dataformats/ply/
 
+
+.. _s_tri_file_io:
 
 Triangular Mesh
 ---------------
