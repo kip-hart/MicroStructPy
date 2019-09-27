@@ -110,7 +110,7 @@ class Circle(NSphere):
             6.283185307179586
 
         Args:
-            **kwargs: Keyword arguments, see `.Circle`.
+            **kwargs: Keyword arguments, see :class:`.Circle`.
 
         Returns:
             float: Expected value of the area of the circle.
