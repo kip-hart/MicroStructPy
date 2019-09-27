@@ -8,6 +8,9 @@ and this project adheres to `Semantic Versioning`_.
 
 `Unreleased`_
 -------------
+Added
+'''''
+- DOI links to readme and documentation.
 
 `1.1`_ - 2019-09-27
 -------------------
