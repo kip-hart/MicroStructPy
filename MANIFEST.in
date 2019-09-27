@@ -7,13 +7,14 @@ include .bumpversion.cfg
 include .coveragerc
 include .editorconfig
 
+include CHANGELOG.rst
 include LICENSE.rst
 include README.rst
 
 include tox.ini
 
-prune docs/source/_static
-prune docs/build
+prune docs/source/auto_examples
+prune docs/build*
 prune tests/tmp_out
 prune examples/*
 prune *.yml
