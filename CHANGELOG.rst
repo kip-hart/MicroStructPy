@@ -12,6 +12,10 @@ Added
 '''''
 - DOI links to readme and documentation.
 
+Changed
+'''''''
+- Added logos, icons, social meta data for HTML documentation
+
 `1.1`_ - 2019-09-27
 -------------------
 
