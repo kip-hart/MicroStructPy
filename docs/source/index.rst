@@ -24,6 +24,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
    file_formats
    api/index
    troubleshooting
+   changelog
 
 
 .. LINKS
