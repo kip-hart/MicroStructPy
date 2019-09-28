@@ -6,12 +6,12 @@ The MicroStructPy team and community take security bugs in MicroStructPy serious
 
 If you believe you've found a security issue in software that is maintained in this repository, we encourage you to notify us.
 
-| Version | In scope           | Source code                                                 |
-| ------- | ------------------ | ----------------------------------------------------------- |
-| latest  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy                   |
-| v1.1    | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/releases/tag/v1.1 |
-| v1.0.1  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/releases/tag/v1.0.1 |
-| v1.0    | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/releases/tag/v1.0 |
+| Version | In scope           | Source code                                           |
+| ------- | ------------------ | ----------------------------------------------------- |
+| latest  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy             |
+| v1.1    | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/tree/v1.1   |
+| v1.0.1  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/tree/v1.0.1 |
+| v1.0    | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/tree/v1.0   |
 
 # How to Submit a Report
 
