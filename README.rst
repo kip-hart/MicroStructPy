@@ -132,7 +132,7 @@ Contributing
 
 Contributions to the project are welcome.
 Please use the GitHub pull request and issue submission features.
-
+See the `Contributing Guidelines`_ for more details.
 
 License and Attributions
 ------------------------
@@ -150,6 +150,7 @@ advised by Prof. Julian Rimoli.
 .. _GitHub: https://github.com/kip-hart/MicroStructPy
 .. _PyPI : https://pypi.org/project/microstructpy/
 .. _Repository: https://github.com/kip-hart/MicroStructPy
+.. _`Contributing Guidelines`: https://github.com/kip-hart/MicroStructPy/blob/dev/.github/CONTRIBUTING.md
 
 .. EXTERNAL IMAGES
 
