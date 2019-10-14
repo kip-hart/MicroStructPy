@@ -14,7 +14,8 @@ Added
 
 Changed
 '''''''
-- Added logos, icons, social meta data for HTML documentation
+- Added logos, icons, social meta data for HTML documentation.
+- Fixed verification module handling of "random" orientations.
 
 `1.1`_ - 2019-09-27
 -------------------

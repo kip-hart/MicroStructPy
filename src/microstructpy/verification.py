@@ -872,7 +872,7 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
         phase = phases[i]
 
         err_io = {kw: _kw_errs(i_phase[kw], o_phase[kw]) for kw in i_phase}
-        err_po = {kw: _kw_stats(phase[kw], o_phase[kw]) for kw in o_phase}
+        err_po = {kw: _kw_stats(phase[kw], o_phase[kw], kw) for kw in o_phase}
 
         err_phase = {}
         for kw in i_phase:
@@ -929,9 +929,15 @@ def _r2(y_act, y_exp):
     return coeff_det
 
 
-def _kw_stats(dist_exp, y_act):
+def _kw_stats(dist_exp, y_act, kw=None):
     if isinstance(dist_exp, list):
-        return [_kw_stats(*tup) for tup in zip(dist_exp, y_act)]
+        return [_kw_stats(*tup, kw=kw) for tup in zip(dist_exp, y_act)]
+
+    if kw in ori_deg_kws and dist_exp == 'random':
+        dist_exp = scipy.stats.uniform(0, 360)
+
+    elif kw in ori_rad_kws and dist_exp == 'random':
+        dist_exp = scipy.stats.uniform(0, 2 * np.pi)
 
     stats = {}
     y_pred = _safe_rvs(dist_exp, 5000)
