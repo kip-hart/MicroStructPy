@@ -28,8 +28,8 @@ Breakdown Plot
 ==============
 
 MicroStructPy does no produce plots of seed breakdowns by default.
-To include this plot in the flow chart, the :func:`.SeedList.plot_breakdown`
-function is called then the plot is formatted and saved.
+To include this plot in the flow chart, the :meth:`.SeedList.plot_breakdown`
+method is called, then the plot is formatted and saved.
 
 Flowchart
 =========
