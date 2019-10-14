@@ -10,7 +10,7 @@ Python Script
 The basename for this file is ``msp_process.py``.
 The file can be run using this command::
 
-    microstructpy --demo=docs_banner.py
+    microstructpy --demo=msp_process.py
 
 The full text of the file is:
 
