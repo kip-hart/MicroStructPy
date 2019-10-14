@@ -34,6 +34,11 @@ conti_rvs = scipy.stats._continuous_distns._distn_names
 
 ori_deg_kws = ['orientation', 'angle', 'angle_deg']
 ori_rad_kws = ['angle_rad']
+non_neg_kws = ['size', 'area', 'volume', 'r', 'd', 'a', 'b', 'c',
+               'length', 'width', 'side_length', 'side_lengths', 'axes',
+               'radius', 'diameter',
+               'aspect_ratio', 'ratio_ab', 'ratio_ba', 'ratio_ac', 'ratio_ca',
+               'ratio_bc', 'ratio_cb']
 
 
 # --------------------------------------------------------------------------- #
@@ -393,6 +398,9 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
         plt.xlabel(xlbl)
         plt.ylabel('Probability Density Function')
 
+        if kw in non_neg_kws:
+            xlim = plt.gca().get_xlim()
+            plt.xlim(max(xlim[0], 0), xlim[1])
         plt.ylim([0, 1.1 * ymax])
 
         plt.title('PDF Comparison')
@@ -439,11 +447,14 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
         plt.xlabel(xlbl)
         plt.ylabel('Cumulative Distribution Function')
 
+        if kw in non_neg_kws:
+            xlim = plt.gca().get_xlim()
+            plt.xlim(max(xlim[0], 0), xlim[1])
         plt.ylim([0, 1])
 
         plt.title('CDF Comparison')
 
-        # Save PDF plot
+        # Save CDF plot
         if not isinstance(ext, list):
             ext = [ext]
 
