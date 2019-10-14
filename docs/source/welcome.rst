@@ -19,13 +19,17 @@ Features of MicroStructPy include:
 * Output to common file formats
 * Customizable workflow
 
-.. figure:: ../../examples/docs_banner/banner.png
-    :alt: Banner image showing the three steps for creating microstructure.
+.. figure:: ../../examples/msp_process/process.png
+    :alt: Banner image showing the steps for creating microstructure.
 
-    The primary steps to create a microstructure.
-    1) seed the domain with particles,
-    2) create a Voronoi power diagram, and
-    3) convert the diagram into an unstructured mesh.
+    The MicroStructPy workflow.
+
+MicroStructPy reads an XML file describing the composition of the
+microstructure, grain size distributions, and the size of the domain.
+Through the steps shown in the flowchart, this description
+is converted into a triangular/tetrahedral mesh.
+MicroStructPy can also compare the statistical distributions from the input
+file with those from the output mesh.
 
 
 Examples

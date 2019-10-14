@@ -12,6 +12,7 @@ Added
 '''''
 - DOI links to readme and documentation.
 - Area-based definition to ellipse geometry.
+- Flowchart example for standard workflow.
 
 Changed
 '''''''

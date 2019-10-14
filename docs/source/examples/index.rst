@@ -120,6 +120,7 @@ Python Package Examples
     package/grain_neighborhoods
     package/from_image
     package/mesh_process
+    package/msp_process
 
 .. only:: html
 
@@ -156,3 +157,7 @@ Python Package Examples
   .. image:: ../../../examples/docs_banner/banner.png
     :alt: Microstructure meshing process..
     :target: package/mesh_process.html
+
+  .. image:: ../../../examples/msp_process/process.png
+    :alt: Microstructure meshing process..
+    :target: package/msp_process.html
