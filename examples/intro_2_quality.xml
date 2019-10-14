@@ -22,7 +22,7 @@
 
     <domain>
         <shape> square </shape>
-        <side_length> 20 </side_length>
+        <side_length> 15 </side_length>
         <corner> (0, 0) </corner>
     </domain>
 
