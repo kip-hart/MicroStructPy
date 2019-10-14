@@ -11,6 +11,7 @@ and this project adheres to `Semantic Versioning`_.
 Added
 '''''
 - DOI links to readme and documentation.
+- Area-based definition to ellipse geometry.
 
 Changed
 '''''''

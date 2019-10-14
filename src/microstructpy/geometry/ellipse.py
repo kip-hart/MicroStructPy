@@ -28,6 +28,7 @@ class Ellipse(object):
     Args:
         a (float): *(optional)* Semi-major axis of ellipse. Defaults to 1.
         b (float): *(optional)* Semi-minor axis of ellipse. Defaults to 1.
+        area (float): *(optional)* Area of ellipse. Defaults to :math:`\pi`.
         center (list): *(optional)* The ellipse center.
             Defaults to (0, 0).
         axes (list): *(optional)* A 2-element list of semi-axes, equivalent
@@ -43,6 +44,7 @@ class Ellipse(object):
         matrix (numpy.ndarray): *(optional)* The 2x2 rotation matrix.
         orientation (numpy.ndarray): *(optional)* Alias for ``matrix``.
     """
+
     # ----------------------------------------------------------------------- #
     # Constructor                                                             #
     # ----------------------------------------------------------------------- #
@@ -86,6 +88,36 @@ class Ellipse(object):
             self.b = r / np.sqrt(k)
             self.a = k * self.b
 
+        elif ('area' in kwargs) and ('aspect_ratio' in kwargs):
+            # pi * a * b = area
+            # k = a/b
+            # pi * k * b^2 = area
+            # b = sqrt(area / (pi * k))
+
+            area = kwargs['area']
+            k = kwargs['aspect_ratio']
+            b = np.sqrt(area / (np.pi * k))
+            a = k * b
+
+            self.a = a
+            self.b = b
+
+        elif ('area' in kwargs) and ('a' in kwargs):
+            area = kwargs['area']
+            a = kwargs['a']
+            b = area / (np.pi * a)
+
+            self.a = a
+            self.b = b
+
+        elif ('area' in kwargs) and ('b' in kwargs):
+            area = kwargs['area']
+            b = kwargs['b']
+            a = area / (np.pi * b)
+
+            self.a = a
+            self.b = b
+
         elif ('a' in kwargs) and ('size' in kwargs):
             assert kwargs['a'] > 0
             assert kwargs['size'] > 0
@@ -115,6 +147,20 @@ class Ellipse(object):
 
             self.b = kwargs['b']
             self.a = self.b * kwargs['aspect_ratio']
+        
+        elif 'area' in kwargs:
+            area = kwargs['area']
+            r = np.sqrt(area / np.pi)
+
+            self.a = r
+            self.b = r
+
+        elif 'size' in kwargs:
+            size = kwargs['size']
+            r = 0.5 * size
+
+            self.a = r
+            self.b = r
 
         else:
             self.a = 1
@@ -405,6 +451,14 @@ class Ellipse(object):
                 return 0.25 * np.pi * s_dist * s_dist
             else:
                 return 0.25 * np.pi * s_dist.moment(2)
+
+        elif 'area' in kwargs:
+            a_dist = kwargs['area']
+            try:
+                a_exp = a_dist.moment(1)
+            except AttributeError:
+                a_exp = a_dist
+            return a_exp
 
         elif ('a' in kwargs) and ('b' in kwargs):
             exp = np.pi
