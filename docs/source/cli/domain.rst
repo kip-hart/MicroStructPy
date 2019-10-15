@@ -1,6 +1,6 @@
-====================================
-``<domain>`` - Microstructure Domain
-====================================
+================================
+<domain> - Microstructure Domain
+================================
 
 MicroStructPy supports the following domain geometries:
 
