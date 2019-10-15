@@ -74,8 +74,10 @@ def main():
 
     # Combine Plots
     zoom = 0.086
+    w = 0.78
 
-    _, ax = plt.subplots()
+    fig = plt.figure()
+    ax = fig.add_axes([0, 0, w, w])
 
     ax.set_xlim(-11, 40)
     ax.set_ylim(0.5, 10)
@@ -94,7 +96,7 @@ def main():
     x_mid = 0.5 * (x_min + x_max)
 
     x_verif_r = x_mid + 7
-    y_verif_mid = 3.6
+    y_verif_mid = 3.7
     x_verif_l = x_mid - 7
 
     cstyle = "angle,angleA=180,angleB=-90,rad=0"
