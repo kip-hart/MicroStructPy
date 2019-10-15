@@ -19,6 +19,10 @@ Changed
 - Added logos, icons, social meta data for HTML documentation.
 - Fixed verification module handling of "random" orientations.
 
+Removed
+'''''''
+- Single elliptical grain example.
+
 `1.1`_ - 2019-09-27
 -------------------
 
