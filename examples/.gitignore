@@ -2,3 +2,4 @@
 *.txt
 *.png
 !aluminum_micro.png
+from_image/*
