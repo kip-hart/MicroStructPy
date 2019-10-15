@@ -1,3 +1,5 @@
+from __future__ import division
+
 import os
 
 import matplotlib.pyplot as plt
@@ -73,7 +75,8 @@ def main():
     plot_breakdown(seeds, phases, domain, output_dir)
 
     # Combine Plots
-    zoom = 0.086
+    zoom_nom = 0.086
+    px_nom = 742
     w = 0.78
 
     fig = plt.figure()
@@ -134,6 +137,7 @@ def main():
 
     # - Seeds Plot
     arr_seeds = plt.imread(os.path.join(output_dir, 'seeds.png'))
+    zoom = zoom_nom * px_nom / arr_seeds.shape[1]
     ob_seeds = OffsetImage(arr_seeds, zoom=zoom)
     ab_seeds = AnnotationBbox(ob_seeds, (0, 9),
                               pad=0, box_alignment=(0, 1),
@@ -141,7 +145,10 @@ def main():
     ax.add_artist(ab_seeds)
 
     # - Breakdown Plot
-    arr_bkdwn = plt.imread(os.path.join(output_dir, 'breakdown.png'))
+    bkdwn_filename = os.path.join(output_dir, 'breakdown.png')
+    remove_whitespace(bkdwn_filename)
+    arr_bkdwn = plt.imread(bkdwn_filename)
+    zoom = zoom_nom * px_nom / arr_bkdwn.shape[1]
     ob_bkdwn = OffsetImage(arr_bkdwn, zoom=zoom)
     ab_bkdwn = AnnotationBbox(ob_bkdwn, (10, 9),
                               pad=0, box_alignment=(0, 1),
@@ -150,6 +157,7 @@ def main():
 
     # - Polymesh Plot
     arr_poly = plt.imread(os.path.join(output_dir, 'polymesh.png'))
+    zoom = zoom_nom * px_nom / arr_poly.shape[1]
     ob_poly = OffsetImage(arr_poly, zoom=zoom)
     ab_poly = AnnotationBbox(ob_poly, (20, 9),
                              pad=0, box_alignment=(0, 1),
@@ -158,6 +166,7 @@ def main():
 
     # - Trimesh Plot
     arr_tri = plt.imread(os.path.join(output_dir, 'trimesh.png'))
+    zoom = zoom_nom * px_nom / arr_tri.shape[1]
     ob_tri = OffsetImage(arr_tri, zoom=zoom)
     ab_tri = AnnotationBbox(ob_tri, (30, 9),
                             pad=0, box_alignment=(0, 1),
@@ -167,8 +176,10 @@ def main():
     # - Verification Plot
     verif_x = x_mid
     verif_filename = os.path.join(output_dir, 'verification', 'area_cdf.png')
+    remove_whitespace(verif_filename)
     arr_verif = plt.imread(verif_filename)
-    ob_verif = OffsetImage(arr_verif, zoom=zoom*0.7)
+    zoom = zoom_nom * 0.7 * 1645 / arr_verif.shape[1]
+    ob_verif = OffsetImage(arr_verif, zoom=zoom)
     ab_verif = AnnotationBbox(ob_verif, (verif_x, 2.2),
                               pad=0, box_alignment=(0.5, 0),
                               bboxprops={'edgecolor': 'none'})
@@ -197,19 +208,7 @@ def main():
     plt.clf()
 
     # Remove Whitespace
-    im = plt.imread(out_filename)
-    rgb = im[:, :, :-1]
-    mask = rgb.min(axis=-1) < 1
-    col_mask = np.any(mask, axis=0)
-    row_mask = np.any(mask, axis=1)
-    row_i = np.argmax(row_mask)
-    row_j = len(row_mask) - np.argmax(np.flip(row_mask)) + 2
-
-    col_i = np.argmax(col_mask)
-    col_j = len(col_mask) - np.argmax(np.flip(col_mask)) + 2
-
-    new_im = im[row_i:row_j, col_i:col_j]
-    plt.imsave(out_filename, new_im)
+    remove_whitespace(out_filename)
 
 
 def plot_breakdown(seeds, phases, domain, output_dir):
@@ -223,6 +222,22 @@ def plot_breakdown(seeds, phases, domain, output_dir):
     plt.xlim(lims[0])
     plt.ylim(lims[1])
     plt.savefig(os.path.join(output_dir, 'breakdown.png'))
+
+
+def remove_whitespace(filename):
+    im = plt.imread(filename)
+    rgb = im[:, :, :-1]
+    mask = rgb.min(axis=-1) < 1
+    col_mask = np.any(mask, axis=0)
+    row_mask = np.any(mask, axis=1)
+    row_i = np.argmax(row_mask)
+    row_j = len(row_mask) - np.argmax(np.flip(row_mask)) + 2
+
+    col_i = np.argmax(col_mask)
+    col_j = len(col_mask) - np.argmax(np.flip(col_mask)) + 2
+
+    new_im = im[row_i:row_j, col_i:col_j]
+    plt.imsave(filename, new_im)
 
 
 if __name__ == '__main__':
