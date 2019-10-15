@@ -11,12 +11,12 @@
 
     <domain>
         <shape> cube </shape>
-        <side_length> 15 </side_length>
+        <side_length> 12 </side_length>
     </domain>
 
     <settings>
         <directory> colormap </directory>
-        <mesh_min_angle> 15 </mesh_min_angle>
+        <mesh_min_angle> 10 </mesh_min_angle>
         <color_by> seed number </color_by>
         <colormap> RdYlBu </colormap>
     </settings>

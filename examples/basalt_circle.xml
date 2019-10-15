@@ -24,7 +24,7 @@
         </fraction>
         <size>
             <dist_type> cdf </dist_type>
-            <filename> olivine_cdf.csv </filename>
+            <filename> aphanitic_cdf.csv </filename>
         </size>
         <aspect_ratio>
             <dist_type> uniform </dist_type>
@@ -126,7 +126,7 @@
 
     <domain>
         <shape> circle </shape>
-        <diameter> 10 </diameter>
+        <diameter> 6 </diameter>
     </domain>
 
     <settings>
