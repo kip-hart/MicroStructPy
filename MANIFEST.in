@@ -19,4 +19,8 @@ prune tests/tmp_out
 prune examples/*
 prune *.yml
 
+exclude examples/*.png
+include examples/aluminum_micro.png
+exclude examples/*.txt
+
 global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.log Icon*
