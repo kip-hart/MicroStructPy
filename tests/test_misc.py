@@ -1,5 +1,3 @@
-import numpy as np
-
 from microstructpy import _misc
 
 
@@ -64,30 +62,3 @@ def test_from_str_list_of_lists():
         assert len(list_exp) == len(list_act)
         for val_exp, val_act in zip(list_exp, list_act):
             assert val_exp == val_act
-
-
-def test_tangent_sphere_2D():
-    pts = np.array([(0, 0), (4, 0), (3, 3)])
-    rads = np.array([1, 0.5, 0.5])
-
-    simps = [None, np.array([[0, 1, 2]])]
-    for simp in simps:
-        x, y, rad = _misc.tangent_sphere(pts, rads, simplices=simp)
-        cen = np.array([x, y])
-
-        rel_pos = pts - cen
-        dist = np.sqrt(np.sum(rel_pos * rel_pos, axis=-1))
-        assert np.all(np.isclose(dist, rads + rad))
-
-
-def test_tangent_sphere_ND():
-    n = 7
-    np.random.seed(0)
-    pts = np.random.rand(n + 1, n)
-    nsphere = _misc.tangent_sphere(pts)
-    cen = nsphere[:-1]
-    rad = nsphere[-1]
-
-    rel_pos = pts - cen
-    dist = np.sqrt(np.sum(rel_pos * rel_pos, axis=-1))
-    assert np.all(np.isclose(dist, rad))
