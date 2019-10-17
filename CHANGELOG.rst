@@ -22,6 +22,7 @@ Changed
 Removed
 '''''''
 - Single elliptical grain example.
+- Unused ``_misc.tangent_sphere`` function.
 
 `1.1.0`_ - 2019-09-27
 -------------------
