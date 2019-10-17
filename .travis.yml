@@ -5,6 +5,11 @@ python:
   - 3.5
   - 3.6
   - 3.7
+matrix:
+  include:
+    - python: 3.8
+      dist: xenial
+      sudo: true
 install:
   - pip install -U pytest pytest-cov coveralls
   - pip install -e .
