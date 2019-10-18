@@ -1,8 +1,10 @@
-"""Miscellaneous functions
+"""Miscellaneous functions.
 
-This private module contains miscellaneous functions.
+This private module contains miscellaneous definitions and the string
+conversion function.
+
 """
-import numpy as np
+import ast
 
 __author__ = 'Kenneth (Kip) Hart'
 
@@ -17,6 +19,11 @@ gen_kws = {'material_type', 'fraction', 'shape', 'name', 'color', 'position'}
 demo_needs = {'basalt_circle.xml': ['aphanitic_cdf.csv', 'olivine_cdf.csv'],
               'from_image.py': ['aluminum_micro.png']}
 
+try:
+    _unicode = unicode
+except NameError:
+    _unicode = str
+
 
 # --------------------------------------------------------------------------- #
 #                                                                             #
@@ -24,7 +31,7 @@ demo_needs = {'basalt_circle.xml': ['aphanitic_cdf.csv', 'olivine_cdf.csv'],
 #                                                                             #
 # --------------------------------------------------------------------------- #
 def from_str(string):
-    """ Convert string to number
+    """Convert string to number.
 
     This function takes a string and converts it into a number or a list.
 
@@ -35,43 +42,19 @@ def from_str(string):
         The value in the string.
 
     """
-    beg_delims = ('(', '[', '{', '<')
-    end_delims = (')', ']', '}', '>')
+    if type(string) not in (str, _unicode):
+        err_str = 'from_str() arg 1 must be a string or unicode'
+        raise TypeError(err_str)
 
-    string = string.strip()
-    if any([c in string for c in beg_delims + end_delims]) or ',' in string:
-        if string[0] in beg_delims:
-            string = string[1:]
-        if string[-1] in end_delims:
-            string = string[:-1]
-        val = []
-        n_beg = 0
-        n_end = 0
-        elem_str = ''
-        for char in string:
-            if char in beg_delims:
-                n_beg += 1
-            elif char in end_delims:
-                n_end += 1
+    try:
+        value = ast.literal_eval(string.strip())
+    except (ValueError, SyntaxError):
+        value = string
 
-            if (char == ',') and n_beg == n_end:
-                val.append(from_str(elem_str.strip()))
-                elem_str = ''
-            else:
-                elem_str += char
-        val.append(from_str(elem_str.strip()))
-        return val
-    else:
-        try:
-            val = int(string)
-        except ValueError:
-            try:
-                val = float(string)
-            except ValueError:
-                if string.lower() in ('true', 'yes'):
-                    val = True
-                elif string.lower() in ('false', 'no'):
-                    val = False
-                else:
-                    val = str(string)
-        return val
+        # Catch lowercase booleans
+        cap_str = string.capitalize()
+        if cap_str != string:
+            cap_value = from_str(cap_str)
+            if type(cap_value) not in (str, _unicode):
+                value = cap_value
+    return value
