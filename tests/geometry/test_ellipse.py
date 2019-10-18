@@ -1,3 +1,5 @@
+from __future__ import division
+
 import numpy as np
 import pytest
 
@@ -40,6 +42,7 @@ def test_ellipse___init___default():
         val = defaults[key]
         assert np.isclose(attr, val).all()
 
+
 @pytest.mark.parametrize('kwargs', [{'center': (2, -3), 'a': 10, 'b': 2,
                                      'angle': -110},
                                     {'axes': [5, 1.2], 'angle_deg': 381},
@@ -73,14 +76,6 @@ def test_ellipse_best_fit_exact(kwargs):
 
     pts = np.array([x, y]).T
     e_fit = e.best_fit(pts)
-
-    if not e_fit == e:
-        e.plot(facecolor='none', edgecolor='C0')
-        plt.plot(x, y, '.')
-        e_fit.plot(facecolor='none', edgecolor='k')
-        plt.axis('equal')
-        plt.show()
-
     assert e_fit == e
 
 
