@@ -29,8 +29,8 @@ class Ellipse(object):
 
     Args:
         a (float): *(optional)* Semi-major axis of ellipse. Defaults to 1.
-        b (float): *(optional)* Semi-minor axis of ellipse. Defaults to 1.
         area (float): *(optional)* Area of ellipse. Defaults to :math:`\pi`.
+        b (float): *(optional)* Semi-minor axis of ellipse. Defaults to 1.
         center (list): *(optional)* The ellipse center.
             Defaults to (0, 0).
         axes (list): *(optional)* A 2-element list of semi-axes, equivalent
@@ -149,13 +149,21 @@ class Ellipse(object):
 
             self.b = kwargs['b']
             self.a = self.b * kwargs['aspect_ratio']
-        
+
         elif 'area' in kwargs:
             area = kwargs['area']
             r = np.sqrt(area / np.pi)
 
             self.a = r
             self.b = r
+
+        elif 'a' in kwargs:
+            self.a = kwargs['a']
+            self.b = 1
+
+        elif 'b' in kwargs:
+            self.a = 1
+            self.b = kwargs['b']
 
         elif 'size' in kwargs:
             size = kwargs['size']
@@ -223,9 +231,11 @@ class Ellipse(object):
         """  # NOQA: E501
         # Fit points using ellipses module
         data = np.array(points).T
+        centroid = data.mean(axis=1)
         lsqe = ellipses.LSqEllipse()
-        lsqe.fit(data)
+        lsqe.fit(data - centroid.reshape(-1, 1))
         center, width, height, phi = lsqe.parameters()
+        center = centroid + center
 
         # Find pair closest to self
         s = np.sin(phi)
@@ -276,8 +286,38 @@ class Ellipse(object):
         return repr_str
 
     # ----------------------------------------------------------------------- #
-    # Size and Orientation Getters                                            #
+    # Test for Equality                                                       #
     # ----------------------------------------------------------------------- #
+    def __eq__(self, ellipse):
+        if type(ellipse) is not type(self):
+            return False
+
+        for attr in ['a', 'b', 'center']:
+            attr_self = getattr(self, attr)
+            attr_ell = getattr(ellipse, attr)
+            if not np.isclose(attr_self, attr_ell).all():
+                print('att not the same:', attr)
+                return False
+
+        # Do not check for equal angles if circular
+        if np.isclose(self.a, self.b):
+            return True
+
+        ang1 = self.angle_deg % 180
+        ang2 = self.angle_deg % 180
+        ang_diff = ang1 - ang2
+        if not np.isclose(ang_diff, 0):
+            return False
+        return True
+
+    # ----------------------------------------------------------------------- #
+    # Position, Size, and Orientation Getters                                 #
+    # ----------------------------------------------------------------------- #
+    @property
+    def position(self):
+        """Position of the circle center."""
+        return self.center
+
     @property
     def size(self):
         """float: Diameter of equivalent area circle"""
