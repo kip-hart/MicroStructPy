@@ -56,30 +56,32 @@ class LSqEllipse:
         x, y = numpy.asarray(data, dtype=float)
 
         #Quadratic part of design matrix [eqn. 15] from (*)
-        D1 = numpy.mat(numpy.vstack([x**2, x*y, y**2])).T
+        D1 = numpy.vstack([x**2, x*y, y**2]).T
         #Linear part of design matrix [eqn. 16] from (*)
-        D2 = numpy.mat(numpy.vstack([x, y, numpy.ones(len(x))])).T
-        
+        D2 = numpy.vstack([x, y, numpy.ones(len(x))]).T
+
+        # NOTE: Use of numpy.mat raises a "PendingDeprecationWarning" 
+
         #forming scatter matrix [eqn. 17] from (*)
-        S1 = D1.T*D1
-        S2 = D1.T*D2
-        S3 = D2.T*D2  
+        S1 = D1.T.dot(D1)
+        S2 = D1.T.dot(D2)
+        S3 = D2.T.dot(D2)  
         
         #Constraint matrix [eqn. 18]
-        C1 = numpy.mat('0. 0. 2.; 0. -1. 0.; 2. 0. 0.')
+        C1 = numpy.array([[0, 0, 2], [0, -1, 0], [2, 0, 0]])
 
         #Reduced scatter matrix [eqn. 29]
-        M=C1.I*(S1-S2*S3.I*S2.T)
+        M=numpy.linalg.inv(C1).dot(S1-S2.dot(numpy.linalg.inv(S3).dot(S2.T)))
 
         #M*|a b c >=l|a b c >. Find eigenvalues and eigenvectors from this equation [eqn. 28]
         eval, evec = numpy.linalg.eig(M) 
 
         # eigenvector must meet constraint 4ac - b^2 to be valid.
-        cond = 4*numpy.multiply(evec[0, :], evec[2, :]) - numpy.power(evec[1, :], 2)
-        a1 = evec[:, numpy.nonzero(cond.A > 0)[1]]
+        cond = 4 * evec[0] * evec[2] - evec[1] * evec[1]
+        a1 = evec[:, cond > 0]
         
         #|d f g> = -S3^(-1)*S2^(T)*|a b c> [eqn. 24]
-        a2 = -S3.I*S2.T*a1
+        a2 = -numpy.linalg.inv(S3).dot(S2.T.dot(a1))
         
         # eigenvectors |a b c d f g> 
         self.coef = numpy.vstack([a1, a2])
