@@ -93,20 +93,20 @@ def rvs(d, *args, **kwargs):
     else:
         return [rvs(di, *args, **kwargs) for di in d]
 
+    if len(args) > 0:
+        size = args[0]
+    elif 'size' in kwargs:
+        size = kwargs['size']
+    else:
+        size = kwargs.setdefault('size', 1)
+
     try:
         val = d.rvs(*args, **kwargs)
     except AttributeError:
-        if len(args) > 0:
-            size = args[0]
-        elif 'size' in kwargs:
-            size = kwargs['size']
-        else:
-            size = 1
+        val = np.full(size, d)
 
-        if size > 1:
-            val = np.full(size, d)
-        else:
-            val = d
+    if size == 1 and len(val) == 1:
+        return val[0]
     return val
 
 
@@ -160,6 +160,8 @@ def mean(d):
 
     try:
         mu = d.mean()
+    except TypeError:
+        mu = getattr(d, 'mean')
     except AttributeError:
         mu = d
     return mu
