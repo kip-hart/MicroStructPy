@@ -622,7 +622,7 @@ class SeedList(object):
 
         # set the spatial distributions
         u_dist = [scipy.stats.uniform(lb, ub - lb) for lb, ub in
-                  domain.sample_limits]
+                  domain.limits]
 
         distribs = []
         n_phases = max([s.phase for s in self]) + 1

@@ -746,11 +746,6 @@ class Ellipsoid(object):
         ubs = r_pts.max(axis=-1) + np.array(self.center)
         return list(zip(lbs, ubs))
 
-    @property
-    def sample_limits(self):
-        """list: List of (lower, upper) bounds for the sampling region"""
-        return self.limits
-
     # ----------------------------------------------------------------------- #
     # Within Test                                                             #
     # ----------------------------------------------------------------------- #

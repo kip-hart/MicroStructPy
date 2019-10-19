@@ -191,11 +191,6 @@ class NSphere(object):
         """list: list of (lower, upper) bounds for the bounding box"""
         return [(x - self.r, x + self.r) for x in self.center]
 
-    @property
-    def sample_limits(self):
-        """list: list of (lower, upper) bounds for the sampling region"""
-        return self.limits
-
     # ----------------------------------------------------------------------- #
     # Approximate                                                             #
     # ----------------------------------------------------------------------- #

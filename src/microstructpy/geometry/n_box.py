@@ -145,18 +145,6 @@ class NBox(object):
         return self.limits
 
     # ----------------------------------------------------------------------- #
-    # Sample Limits                                                           #
-    # ----------------------------------------------------------------------- #
-    @property
-    def sample_limits(self):
-        """ list: (lower, upper) bounds of the sampling region of the box"""
-        cen = self.center
-        lens = self.side_lengths
-        tol = 1e-4 * max(lens)
-        return [(x - 0.5 * s + tol, x + 0.5 * s - tol) for x, s in
-                zip(cen, lens)]
-
-    # ----------------------------------------------------------------------- #
     # Area/Volume                                                             #
     # ----------------------------------------------------------------------- #
     @property

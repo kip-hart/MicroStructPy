@@ -641,11 +641,6 @@ class Ellipse(object):
 
         return [sorted((x_min, x_max)), sorted((y_min, y_max))]
 
-    @property
-    def sample_limits(self):
-        """list: List of (lower, upper) bounds for the sampling region"""
-        return self.limits
-
     # ----------------------------------------------------------------------- #
     # Within Test                                                             #
     # ----------------------------------------------------------------------- #
