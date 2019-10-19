@@ -463,21 +463,6 @@ class Ellipse(object):
         raise KeyError(e_str)
 
     # ----------------------------------------------------------------------- #
-    # Bounding Circles                                                        #
-    # ----------------------------------------------------------------------- #
-    @property
-    def bound_max(self):
-        """tuple: Maximum bounding circle of ellipse, (x, y, r)"""
-        r = max(self.a, self.b)
-        return tuple(list(self.center) + [r])
-
-    @property
-    def bound_min(self):
-        """tuple: Minimum interior circle of ellipse, (x, y, r)"""
-        r = min(self.a, self.b)
-        return tuple(list(self.center) + [r])
-
-    # ----------------------------------------------------------------------- #
     # Circle Approximation of Ellipse                                         #
     # ----------------------------------------------------------------------- #
     def approximate(self, x1=None):

@@ -184,19 +184,6 @@ class NSphere(object):
         return self.center
 
     # ----------------------------------------------------------------------- #
-    # Bounding N-Spheres                                                      #
-    # ----------------------------------------------------------------------- #
-    @property
-    def bound_max(self):
-        """tuple: maximum bounding n-sphere"""
-        return tuple(list(self.center) + [self.r])
-
-    @property
-    def bound_min(self):
-        """tuple: minimum interior n-sphere"""
-        return self.bound_max
-
-    # ----------------------------------------------------------------------- #
     # Limits                                                                  #
     # ----------------------------------------------------------------------- #
     @property

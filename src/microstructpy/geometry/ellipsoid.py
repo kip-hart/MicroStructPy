@@ -541,21 +541,6 @@ class Ellipsoid(object):
         return avg_vol
 
     # ----------------------------------------------------------------------- #
-    # Bounding Circles                                                        #
-    # ----------------------------------------------------------------------- #
-    @property
-    def bound_max(self):
-        """tuple: maximum bounding sphere, (x, y, z, r)"""
-        r = max(self.a, self.b, self.c)
-        return tuple(list(self.center) + [r])
-
-    @property
-    def bound_min(self):
-        """tuple: minimum interior sphere, (x, y, z, r)"""
-        r = min(self.a, self.b, self.c)
-        return tuple(list(self.center) + [r])
-
-    # ----------------------------------------------------------------------- #
     # Sphere Approximation of Ellipsoid                                       #
     # ----------------------------------------------------------------------- #
     def approximate(self, x1=None):
