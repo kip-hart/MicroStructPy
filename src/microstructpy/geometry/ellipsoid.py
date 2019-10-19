@@ -780,49 +780,6 @@ class Ellipsoid(object):
         else:
             return mask
 
-    # ----------------------------------------------------------------------- #
-    # Reflect                                                                 #
-    # ----------------------------------------------------------------------- #
-    def reflect(self, points):
-        """Reflect points across surface.
-
-        This function reflects a point or set of points across the surface
-        of the ellipsoid. Points at the center of the ellipsoid are not
-        reflected.
-
-        Args:
-            points (list or numpy.ndarray): Points to reflect.
-
-        Returns:
-            numpy.ndarray: Reflected points.
-
-        """
-        pts = np.array(points)
-        single_pt = pts.ndim == 1
-        if single_pt:
-            pts = pts.reshape(1, -1)
-
-        rel_pos = pts - np.array(self.center)
-        rot_pos = rel_pos.dot(self.orientation)
-        scl_pos = rot_pos / np.array(self.axes).reshape(1, -1)
-
-        dist = np.sqrt(np.sum(scl_pos * scl_pos, axis=-1))
-        mask = dist > 0
-        if not np.any(mask):
-            return np.array([])
-
-        new_dist = 2 - dist[mask]
-        scl = new_dist / dist[mask]
-
-        new_scl_pos = scl_pos[mask] * scl
-        new_rel_pos = new_scl_pos.dot(self.orientation.T)
-        new_pos = new_rel_pos + np.array(self.center)
-
-        if single_pt:
-            return new_pos[0]
-        else:
-            return new_pos
-
 
 def _ellipse_arc(a, b, n):
     horiz_x = a * np.linspace(1, -1, n)

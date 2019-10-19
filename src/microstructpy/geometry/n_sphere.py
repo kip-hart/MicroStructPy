@@ -22,7 +22,7 @@ class NSphere(object):
     a center point and size parameter, which can be either radius or diameter.
 
     If multiple size or position keywords are given, there is no guarantee
-    whhich keywords are used to create the geometry.
+    which keywords are used to create the geometry.
 
     Args:
         r (float): *(optional)* The radius of the n-sphere.
@@ -234,41 +234,3 @@ class NSphere(object):
             return mask[0]
         else:
             return mask
-
-    # ----------------------------------------------------------------------- #
-    # Reflect                                                                 #
-    # ----------------------------------------------------------------------- #
-    def reflect(self, points):
-        """Reflect points across surface.
-
-        This function reflects a point or set of points across the surface
-        of the n-sphere. Points at the center of the n-sphere are not
-        reflected.
-
-        Args:
-            points (list or numpy.ndarray): Points to reflect.
-
-        Returns:
-            numpy.ndarray: Reflected points.
-        """
-        pts = np.array(points)
-        single_pt = pts.ndim == 1
-        if single_pt:
-            pts = pts.reshape(1, -1)
-
-        rel_pos = pts - np.array(self.center)
-        cen_dist = np.sqrt(np.sum(rel_pos * rel_pos, axis=-1))
-        mask = cen_dist > 0
-        new_dist = 2 * self.r - cen_dist[mask]
-        scl = new_dist / cen_dist[mask]
-
-        new_rel_pos = np.zeros(pts.shape)
-        new_rel_pos[mask] = scl.reshape(-1, 1) * rel_pos[mask]
-        new_rel_pos[~mask] = 0
-        new_rel_pos[~mask, 0] = 2 * self.r
-
-        new_pts = new_rel_pos + np.array(self.center)
-        if single_pt:
-            return new_pts[0]
-        else:
-            return new_pts

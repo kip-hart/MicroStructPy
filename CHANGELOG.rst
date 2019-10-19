@@ -27,6 +27,7 @@ Removed
 - Single elliptical grain example.
 - Unused ``_misc.tangent_sphere`` function.
 - Unused bounding circles properties.
+- Unused reflect methods.
 - Redundant ``sample_limits`` properties.
 
 `1.1.0`_ - 2019-09-27
