@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 
+from microstructpy import _misc
 from microstructpy.geometry.n_box import NBox
 
 __author__ = 'Kenneth (Kip) Hart'
@@ -403,10 +404,7 @@ class Rectangle(NBox):
 def _prod_exp(*args):
     prod = 1
     for arg in args:
-        try:
-            arg_mu = arg.moment(1)
-        except AttributeError:
-            arg_mu = arg
+        arg_mu = _misc.moment(arg, 1)
         prod *= arg_mu
     return prod
 
@@ -477,11 +475,7 @@ class Square(Rectangle):
         """
         if 'side_length' in kwargs:
             len_dist = kwargs['side_length']
-
-            try:
-                area_exp = len_dist.moment(2)
-            except AttributeError:
-                area_exp = len_dist * len_dist
+            area_exp = _misc.moment(len_dist, 2)
             return area_exp
 
         Rectangle.area_expectation(**kwargs)

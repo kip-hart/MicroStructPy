@@ -150,13 +150,10 @@ class SeedList(object):
         rel_vols = np.ones(n_phases)
         for i, phase in enumerate(phases):
             vol = phase.get('fraction', 1)
-            try:
-                v_sample = -1
-                while v_sample < 0:
-                    v_sample = vol.rvs()
-                rel_vols[i] = v_sample
-            except AttributeError:
-                rel_vols[i] = vol
+            v_sample = -1
+            while v_sample < 0:
+                v_sample = _misc.rvs(vol)
+            rel_vols[i] = v_sample
         vol_fracs = rel_vols / sum(rel_vols)
         phase_vols = volume * vol_fracs
 
@@ -192,10 +189,7 @@ class SeedList(object):
 
                 # Sample, with special cases for orientation
                 if kw not in _misc.ori_kws:
-                    try:
-                        val = phase[kw].rvs(random_state=rng_seed)
-                    except AttributeError:
-                        val = phase[kw]
+                    val = _misc.rvs(phase[kw], random_state=rng_seed)
                     seed_args[kw] = val
                 elif (phase[kw] == 'random') and (n_dim == 2):
                     np.random.seed(rng_seed)
@@ -216,17 +210,11 @@ class SeedList(object):
                         rot_dict = {str(kw): rotation[kw] for kw in rotation}
                         ax = rot_dict.get('axis', 'x')
                         ang_dist = rot_dict.get('angle', 0)
-                        try:
-                            ang = ang_dist.rvs(random_state=rng_seed)
-                        except AttributeError:
-                            ang = ang_dist
+                        ang = _misc.rvs(ang_dist, random_state=rng_seed)
                         seq.append((ax, ang))
                     seed_args[kw] = seq
                 else:
-                    try:
-                        val = phase[kw].rvs(random_state=rng_seed)
-                    except AttributeError:
-                        val = phase[kw]
+                    val = _misc.rvs(phase[kw], random_state=rng_seed)
                     seed_args[kw] = val
 
                 # Update the RNG seed
@@ -680,7 +668,7 @@ class SeedList(object):
             searching = True
             n_attempts = 0
             while searching and n_attempts < max_attempts:
-                pt = sample_pos(pos_dist)
+                pt = _misc.rvs(pos_dist)
 
                 if domain.within(pt):
                     seed.position = pt
@@ -733,50 +721,3 @@ class SeedList(object):
             w_str += ' Their data has beeen written to ' + f + ' and their'
             w_str += ' indices were ' + str(i_reject) + '.'
             warnings.warn(w_str, RuntimeWarning)
-
-
-def sample_pos(distribution, n=1):
-    """ Sample position distribution
-
-    This function returns a sample of the postion distribution.
-    This distribution can be either a list of independent distributions
-    for each axis, or a single multi-variate distribution. A list of
-    multi-variate distributions is given on the `SciPy stats website`_.
-
-    Two examples of position distributions are given below.
-
-    .. code-block:: python
-
-        # three independent distributions
-        distribution = [scipy.stats.uniform(-1, 2),
-                        scipy.stats.norm(0, 1),
-                        scipy.stats.binom(5, 0.4)]
-
-        # one multi-variate distribution
-        mu = [2, -3 , 5]
-        sigma = [[1, 3, 0], [3, 1, 2], [0, 2, 2]]
-        distribution = scipy.stats.multivariate_normal(mu, sigma)
-
-    Args:
-        distribution (list or scipy.stats distribution): The position
-            distribution.
-
-        n (int): *(optional)* Number of samples. Defaults to 1.
-
-    Returns:
-        list: A sample of the distribution.
-    """  # NOQA : E501
-    if type(distribution) is list:
-        pos = np.full((n, len(distribution)), 0, dtype='float')
-        for j, coord_dist in enumerate(distribution):
-            try:
-                pos[:, j] = coord_dist.rvs(n)
-            except AttributeError:
-                pos[:, j] = coord_dist
-    else:
-        pos = distribution.rvs(n)
-
-    if n == 1:
-        return pos[0]
-    else:
-        return pos

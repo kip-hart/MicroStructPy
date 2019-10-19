@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
+from microstructpy import _misc
 from microstructpy.geometry.n_sphere import NSphere
 
 __author__ = 'Kenneth (Kip) Hart'
@@ -109,15 +110,13 @@ class Sphere(NSphere):
         """  # NOQA: E501
         # Check for radius distribution
         r_dist = None
-        if 'radius' in kwargs:
-            r_dist = kwargs['radius']
-        elif 'r' in kwargs:
-            r_dist = kwargs['r']
+        for r_kw in ['radius', 'r']:
+            if r_kw in kwargs:
+                r_dist = kwargs[r_kw]
+                break
 
-        if type(r_dist) in (float, int):
-            return 4 * np.pi * r_dist * r_dist * r_dist / 3
-        elif r_dist is not None:
-            return 4 * np.pi * r_dist.moment(3) / 3
+        if r_dist is not None:
+            return 4 * np.pi * _misc.moment(r_dist, 3) / 3
 
         # Check for diameter distribution
         d_dist = None
@@ -126,19 +125,12 @@ class Sphere(NSphere):
                 d_dist = kwargs[d_kw]
                 break
 
-        if type(d_dist) in (float, int):
-            return 0.5 * np.pi * d_dist * d_dist * d_dist / 3
-        elif d_dist is not None:
-            return 0.5 * np.pi * d_dist.moment(3) / 3
+        if d_dist is not None:
+            return 0.5 * np.pi * _misc.moment(d_dist, 3) / 3
 
+        # Check for volume distribution
         if 'volume' in kwargs:
-            v_dist = kwargs['volume']
-            try:
-                v_exp = v_dist.moment(1)
-            except AttributeError:
-                v_exp = v_dist
-
-            return v_exp
+            return _misc.moment(kwargs['volume'], 1)
 
         # Raise error
         e_str = 'Could not find one of the following keywords in the inputs: '

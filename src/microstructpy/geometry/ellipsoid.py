@@ -514,20 +514,14 @@ class Ellipsoid(object):
         # Check for size distribution
         if 'size' in kwargs:
             s_dist = kwargs['size']
-            if type(s_dist) in (float, int):
-                return 0.5 * np.pi * s_dist * s_dist * s_dist / 3
-            else:
-                return 0.5 * np.pi * s_dist.moment(3) / 3
+            return 0.5 * np.pi * _misc.moment(s_dist, 3) / 3
 
         # check for a, b, and c distribution
         try:
             exp_vol = 4 * np.pi / 3
             for kw in ('a', 'b', 'c'):
                 dist = kwargs[kw]
-                try:
-                    mu = dist.moment(1)
-                except AttributeError:
-                    mu = dist
+                mu = _misc.moment(dist, 1)
                 exp_vol *= mu
             return exp_vol
         except KeyError:
@@ -541,10 +535,7 @@ class Ellipsoid(object):
         for i in range(n_trials):
             params = {}
             for kw in kws:
-                try:
-                    params[kw] = kwargs[kw].rvs()
-                except AttributeError:
-                    params[kw] = kwargs[kw]
+                params[kw] = _misc.rvs(kwargs[kw])
             total_vol += Ellipsoid(**params).volume
         avg_vol = total_vol / n_trials
         return avg_vol

@@ -105,12 +105,12 @@ def write_volume_fractions(vol_fracs, phases, filename='volume_fractions.txt'):
     for i, phase in enumerate(phases):
         mask = vol_trials[:, i] < 0
         while np.any(mask):
-            new_vals = _safe_rvs(phase.get('fraction', 1), np.sum(mask))
+            new_vals = _misc.rvs(phase.get('fraction', 1), np.sum(mask))
             vol_trials[mask, i] = new_vals
             mask = vol_trials[:, i] < 0
 
     # Determine input and output relative volumes
-    vols_exp = np.array([_safe_mean(p.get('fraction', 1)) for p in phases])
+    vols_exp = np.array([_misc.mean(p.get('fraction', 1)) for p in phases])
     vols_act = np.sum(vols_exp) * np.array(vol_fracs)
 
     # Determine input volume fractions
@@ -176,7 +176,7 @@ def plot_volume_fractions(vol_fracs, phases, filename='volume_fractions.png'):
     for i, phase in enumerate(phases):
         mask = vol_trials[:, i] < 0
         while np.any(mask):
-            new_vals = _safe_rvs(phase.get('fraction', 1), np.sum(mask))
+            new_vals = _misc.rvs(phase.get('fraction', 1), np.sum(mask))
             vol_trials[mask, i] = new_vals
             mask = vol_trials[:, i] < 0
 
@@ -467,65 +467,61 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
 
 
 def _plot_inp_pdf(kw, i, phase):
-    ymax = 0
     inp_dist = phase[kw]
     color = phase.get('color', 'C' + str(i % 10))
     if kw in ori_deg_kws and phase[kw] == 'random':
         x_plt = [0, 360]
         y_plt = [1 / 360, 1 / 360]
         plt.plot(x_plt, y_plt, color=color, ls=':')
-        ymax = 1 / 360
+        return 1 / 360
 
-    elif kw in ori_rad_kws and phase[kw] == 'random':
+    if kw in ori_rad_kws and phase[kw] == 'random':
         x_plt = [0, 2 * np.pi]
         y_plt = [0.5 / np.pi, 0.5 / np.pi]
         plt.plot(x_plt, y_plt, color=color, ls=':')
-        ymax = y_plt[0]
+        return y_plt[0]
 
-    elif phase[kw] == 'random':
+    if phase[kw] == 'random':
         e_str = 'Cannot create PDF for random setting'
         e_str += ' of keyword <' + str(kw) + '>'
         raise NotImplementedError(e_str)
 
-    elif kw == 'orientation':
+    if kw == 'orientation':
         ct = inp_dist[0][0]
         st = inp_dist[1][0]
         inp_deg = np.rad2deg(np.arctan2(st, ct))
         plt.plot([inp_deg, inp_deg], [0, 1e12], color=color, ls=':')
+        return 0
 
-    elif isinstance(inp_dist, list):
+    if isinstance(inp_dist, list):
+        ymax = 0
         for j, dist in enumerate(inp_dist):
-            try:
-                lb = dist.ppf(1e-3)
-                ub = dist.ppf(1 - 1e-3)
-                x_plt = np.linspace(lb, ub, 51)
-                y_plt = dist.pdf(x_plt)
-                ymax = max(ymax, np.max(y_plt))
-            except AttributeError:
-                x_plt = [dist, dist]
-                y_plt = [0, 1e12]
+            x_plt, y_plt, ymax_j = _scalar_pdf_xy(dist)
+            ymax = max(ymax, ymax_j)
             m = styles_vec[j % len(styles_vec)]
             plt.plot(x_plt, y_plt, color=color, ls=':', marker=m)
+        return ymax
 
-    else:
-        try:
-            lb = inp_dist.ppf(1e-3)
-            ub = inp_dist.ppf(1 - 1e-3)
-            x_plt = np.linspace(lb, ub, 51)
-            y_plt = inp_dist.pdf(x_plt)
-            ymax = np.max(y_plt)
-        except AttributeError:
-            x_plt = [inp_dist, inp_dist]
-            y_plt = [0, 1e12]
-
-        plt.plot(x_plt, y_plt, color=color, ls=':')
+    x_plt, y_plt, ymax = _scalar_pdf_xy(inp_dist)
+    plt.plot(x_plt, y_plt, color=color, ls=':')
     return ymax
 
 
-def _plot_inp_cdf(kw, i, phase):
-    quants = np.linspace(0, 1, 501)[1:-1]
-    quants_lr = np.linspace(0, 1, 21)[1:-1]
+def _scalar_pdf_xy(dist):
+    try:
+        lb = dist.ppf(1e-3)
+        ub = dist.ppf(1 - 1e-3)
+        x_plt = np.linspace(lb, ub, 51)
+        y_plt = dist.pdf(x_plt)
+        y_max = np.max(y_plt)
+    except AttributeError:
+        x_plt = [dist, dist]
+        y_plt = [0, 1e12]
+        y_max = -1
+    return x_plt, y_plt, y_max
 
+
+def _plot_inp_cdf(kw, i, phase):
     inp_dist = phase[kw]
     color = phase.get('color', 'C' + str(i % 10))
     if kw in ori_deg_kws and phase[kw] == 'random':
@@ -550,31 +546,34 @@ def _plot_inp_cdf(kw, i, phase):
 
     elif isinstance(inp_dist, list):
         for j, dist in enumerate(inp_dist):
-            try:
-                x_plt = dist.ppf(quants)
-                y_plt = quants
-
-                x_plt_lr = dist.ppf(quants_lr)
-                y_plt_lr = quants_lr
-            except AttributeError:
-                x_plt = np.full(11, dist)
-                y_plt = np.linspace(0, 1, 11)
-
-                x_plt_lr = x_plt
-                y_plt_lr = y_plt
+            x_plt, y_plt, x_plt_lr, y_plt_lr = _scalar_cdf_xy(dist)
             m = styles_vec[j % len(styles_vec)]
             plt.plot(x_plt, y_plt, color=color, ls=':')
             plt.plot(x_plt_lr, y_plt_lr, color=color, marker=m)
 
     else:
-        try:
-            x_plt = inp_dist.ppf(quants)
-            y_plt = quants
-        except AttributeError:
-            x_plt = [inp_dist, inp_dist]
-            y_plt = [0, 1]
-
+        x_plt, y_plt = _scalar_cdf_xy(inp_dist)[:2]
         plt.plot(x_plt, y_plt, color=color, ls=':')
+
+
+def _scalar_cdf_xy(dist):
+    quants = np.linspace(0, 1, 501)[1:-1]
+    quants_lr = np.linspace(0, 1, 21)[1:-1]
+
+    try:
+        x_plt = dist.ppf(quants)
+        y_plt = quants
+
+        x_plt_lr = dist.ppf(quants_lr)
+        y_plt_lr = quants_lr
+    except AttributeError:
+        x_plt = np.full(11, dist)
+        y_plt = np.linspace(0, 1, 11)
+
+        x_plt_lr = x_plt
+        y_plt_lr = y_plt
+
+    return x_plt, y_plt, x_plt_lr, y_plt_lr
 
 
 def _plot_out_pdf(kw, i, phase, comp_phase):
@@ -951,7 +950,7 @@ def _kw_stats(dist_exp, y_act, kw=None):
         dist_exp = scipy.stats.uniform(0, 2 * np.pi)
 
     stats = {}
-    y_pred = _safe_rvs(dist_exp, 5000)
+    y_pred = _misc.rvs(dist_exp, 5000)
 
     # Wasserstein Distance
     wass = scipy.stats.wasserstein_distance(y_act, y_pred)
@@ -1079,25 +1078,6 @@ def write_error_stats(errs, phases, filename='error_stats.txt'):
 # Private Functions                                                           #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-def _safe_mean(x):
-    try:
-        mu = x.mean()
-    except AttributeError:
-        mu = x
-    return mu
-
-
-def _safe_rvs(x, size=1):
-    if isinstance(x, list):
-        return np.array([_safe_rvs(xi, size) for xi in x]).T
-
-    try:
-        samples = x.rvs(size=size)
-    except AttributeError:
-        samples = np.full(size, x)
-    return samples
-
-
 def _phase_values(seeds, phases, poly_mesh=None, verif_mask=None):
     """Takes the properties of the seeds and organizes them like the phases
 

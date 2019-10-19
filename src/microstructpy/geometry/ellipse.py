@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 
+from microstructpy import _misc
 from microstructpy.geometry import ellipses
 
 __author__ = 'Kenneth (Kip) Hart'
@@ -431,58 +432,35 @@ class Ellipse(object):
         """  # NOQA: E501
         if 'size' in kwargs:
             s_dist = kwargs['size']
+            return 0.25 * np.pi * _misc.moment(s_dist, 2)
 
-            if type(s_dist) in (float, int):
-                return 0.25 * np.pi * s_dist * s_dist
-            else:
-                return 0.25 * np.pi * s_dist.moment(2)
-
-        elif 'area' in kwargs:
+        if 'area' in kwargs:
             a_dist = kwargs['area']
-            try:
-                a_exp = a_dist.moment(1)
-            except AttributeError:
-                a_exp = a_dist
-            return a_exp
+            return _misc.moment(a_dist, 1)
 
-        elif ('a' in kwargs) and ('b' in kwargs):
+        if ('a' in kwargs) and ('b' in kwargs):
             exp = np.pi
             for kw in ('a', 'b'):
                 dist = kwargs[kw]
-                if type(dist) in (float, int):
-                    mu = dist
-                else:
-                    mu = dist.moment(1)
+                mu = _misc.moment(dist, 1)
                 exp *= mu
             return exp
-        elif ('b' in kwargs) and ('aspect_ratio' in kwargs):
+
+        if ('b' in kwargs) and ('aspect_ratio' in kwargs):
             exp = np.pi
-            try:
-                exp *= kwargs['b'].moment(2)
-            except AttributeError:
-                exp *= kwargs['b'] * kwargs['b']
-
-            try:
-                exp *= kwargs['aspect_ratio'].moment(1)
-            except AttributeError:
-                exp *= kwargs['aspect_ratio']
+            exp *= _misc.moment(kwargs['b'], 2)
+            exp *= _misc.moment(kwargs['aspect_ratio'], 1)
             return exp
-        elif ('a' in kwargs) and ('aspect_ratio' in kwargs):
-            n = 1000
-            try:
-                a = kwargs['a'].rvs(size=n)
-            except AttributeError:
-                a = np.full(n, kwargs['a'])
 
-            try:
-                k = kwargs['aspect_ratio'].rvs(size=n)
-            except AttributeError:
-                k = np.full(n, kwargs['aspect_ratio'])
+        if ('a' in kwargs) and ('aspect_ratio' in kwargs):
+            n = 1000
+            a = _misc.rvs(kwargs['a'], n)
+            k = _misc.rvs(kwargs['aspect_ratio'], n)
             return np.pi * np.mean((a * a) / k)
-        else:
-            e_str = 'Could not calculate expected area from keywords '
-            e_str += str(kwargs.keys()) + '.'
-            raise KeyError(e_str)
+
+        e_str = 'Could not calculate expected area from keywords '
+        e_str += str(kwargs.keys()) + '.'
+        raise KeyError(e_str)
 
     # ----------------------------------------------------------------------- #
     # Bounding Circles                                                        #

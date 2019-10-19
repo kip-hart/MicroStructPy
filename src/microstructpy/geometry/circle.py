@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 
+from microstructpy import _misc
 from microstructpy.geometry.n_sphere import NSphere
 
 __author__ = 'Kenneth (Kip) Hart'
@@ -118,18 +119,13 @@ class Circle(NSphere):
         """  # NOQA: E501
         # Check for radius distribution
         r_dist = None
-        if 'radius' in kwargs:
-            r_dist = kwargs['radius']
-        elif 'r' in kwargs:
-            r_dist = kwargs['r']
+        for r_kw in ['radius', 'r']:
+            if r_kw in kwargs:
+                r_dist = kwargs[r_kw]
+                break
 
-        try:
-            return np.pi * r_dist.moment(2)
-        except AttributeError:
-            try:
-                return np.pi * r_dist * r_dist
-            except TypeError:
-                pass
+        if r_dist is not None:
+            return np.pi * _misc.moment(r_dist, 2)
 
         # Check for diameter distribution
         d_dist = None
@@ -138,21 +134,13 @@ class Circle(NSphere):
                 d_dist = kwargs[d_kw]
                 break
 
-        try:
-            return 0.25 * np.pi * d_dist.moment(2)
-        except AttributeError:
-            try:
-                return 0.25 * np.pi * d_dist * d_dist
-            except TypeError:
-                pass
+        if d_dist is not None:
+            return 0.25 * np.pi * _misc.moment(d_dist, 2)
 
+        # Check for area distribution
         if 'area' in kwargs:
             a_dist = kwargs['area']
-            try:
-                a_exp = a_dist.moment(1)
-            except AttributeError:
-                a_exp = a_dist
-            return a_exp
+            return _misc.moment(a_dist, 1)
 
         # Raise error
         e_str = 'Could not find one of the following keywords in the inputs: '
