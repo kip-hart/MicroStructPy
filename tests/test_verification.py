@@ -3,7 +3,6 @@ from __future__ import division
 import numpy as np
 import pytest
 import scipy.stats
-from matplotlib import rcParams
 
 from microstructpy import meshing
 from microstructpy import seeding
@@ -44,8 +43,6 @@ def test_write_volume_fractions(tmpdir, volume_fractions):
 
 
 def test_plot_volume_fractions(tmpdir, volume_fractions):
-    rcParams['backend'] = 'agg'
-
     filename = tmpdir.join('volume_fraction.png')
     vol_fracs, phases = volume_fractions
     verification.plot_volume_fractions(vol_fracs, phases, str(filename))
@@ -53,8 +50,6 @@ def test_plot_volume_fractions(tmpdir, volume_fractions):
 
 
 def test_plot_distributions(tmpdir):
-    rcParams['backend'] = 'agg'
-
     s1 = seeding.Seed.factory('circle', phase=0)
     s2 = seeding.Seed.factory('circle', phase=1)
     seeds = seeding.SeedList([s1, s2, s1, s2])
