@@ -34,7 +34,6 @@ def volume_fractions():
     yield vol_fracs, phases
 
 
-
 def test_write_volume_fractions(tmpdir, volume_fractions):
     filename = tmpdir.join('volume_fraction.txt')
     vol_fracs, phases = volume_fractions

@@ -142,7 +142,7 @@ def mean(d):
 
     Args:
         d: Scalar, list, or scipy.stats distribution.
-    
+
     Returns:
         int, float, or list: Mean of the distribution.
 

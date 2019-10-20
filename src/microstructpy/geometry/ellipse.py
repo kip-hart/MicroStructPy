@@ -318,7 +318,7 @@ class Ellipse(object):
         if np.isclose(self.a, ellipse.a):
             x2 = np.array(ellipse.matrix).dot([ellipse.a, 0])
             return np.isclose(np.abs(x1.dot(x2)), self.a * ellipse.a)
-        y2 =  np.array(ellipse.matrix).dot([0, ellipse.b])
+        y2 = np.array(ellipse.matrix).dot([0, ellipse.b])
         return np.isclose(np.abs(x1.dot(y2)), self.a * ellipse.b)
 
     def __ne__(self, ellipse):

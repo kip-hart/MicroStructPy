@@ -1,11 +1,7 @@
 from __future__ import division
 
-import ast
-
 import numpy as np
 import pytest
-
-import matplotlib.pyplot as plt
 
 from microstructpy.geometry import ellipse
 
@@ -180,4 +176,3 @@ def test_ellipse_within_limits(ellipse_geom):
             y = lims[1][j]
             pts.append([x, y])
     assert not np.any(ellipse_geom.within(pts))
-
