@@ -5,6 +5,8 @@ python:
   - 3.5
   - 3.6
   - 3.7
+env:
+  - MPLBACKEND=Agg
 install:
   - pip install -U pytest pytest-cov coveralls
   - pip install -e .
