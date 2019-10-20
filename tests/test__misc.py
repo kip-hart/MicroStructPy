@@ -50,6 +50,15 @@ def test_from_str_list(l):
     assert _misc.from_str(s) == l
 
 
+@pytest.mark.parametrize('inp,out', [('12, 49', (12, 49)),
+                                     ('abc, def', ('abc', 'def'))])
+def test_from_str_list_without(inp, out):
+    act_out = _misc.from_str(inp)
+    assert len(act_out) == len(out)
+    for i, o in zip(_misc.from_str(inp), out):
+        assert i == o
+
+
 @pytest.mark.parametrize('v', [1.2, True, -3, [3.2, 4, 'a'], {1, 2}])
 def test_from_str_bad_input(v):
     with pytest.raises(TypeError):

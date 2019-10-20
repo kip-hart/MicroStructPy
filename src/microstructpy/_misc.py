@@ -59,6 +59,10 @@ def from_str(string):
             cap_value = from_str(cap_str)
             if type(cap_value) not in (str, _unicode):
                 value = cap_value
+
+        # Catch lists without brackets
+        if ',' in string:
+            value = [from_str(v.strip()) for v in string.split(',')]
     return value
 
 
@@ -86,11 +90,7 @@ def rvs(d, *args, **kwargs):
         int, float, or list: Sample(s) from distribution.
 
     """
-    try:
-        iter(d)
-    except TypeError:
-        pass
-    else:
+    if is_iter(d):
         return [rvs(di, *args, **kwargs) for di in d]
 
     if len(args) > 0:
@@ -124,11 +124,7 @@ def moment(d, n):
         int, float, or list: n-th moment of the distribution.
 
     """
-    try:
-        iter(d)
-    except TypeError:
-        pass
-    else:
+    if is_iter(d):
         return [moment(di, n) for di in d]
 
     try:
@@ -151,11 +147,7 @@ def mean(d):
         int, float, or list: Mean of the distribution.
 
     """
-    try:
-        iter(d)
-    except TypeError:
-        pass
-    else:
+    if is_iter(d):
         return [mean(di) for di in d]
 
     try:
@@ -165,3 +157,21 @@ def mean(d):
     except AttributeError:
         mu = d
     return mu
+
+
+def is_iter(value):
+    """Determine if value is iterable.
+
+    Args:
+        value: Value to test.
+
+    Return:
+        bool: True if is iterable.
+
+    """
+    try:
+        iter(value)
+    except TypeError:
+        return False
+    else:
+        return True
