@@ -33,6 +33,6 @@ steps:
   displayName: 'Install package'
 
 - script: |
-    pip install pytest pytest-azurepipelines
+    pip install pytest pytest-azurepipelines pytest-cov
     pytest
   displayName: 'pytest'
