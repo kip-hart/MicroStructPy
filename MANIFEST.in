@@ -15,9 +15,10 @@ include tox.ini
 
 prune docs/source/auto_examples
 prune docs/build*
+prune examples/*
+prune junit
 prune tests/tmp_out
 prune test_reports
-prune examples/*
 
 exclude examples/*.png
 include examples/aluminum_micro.png
