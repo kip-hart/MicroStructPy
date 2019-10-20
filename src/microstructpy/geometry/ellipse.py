@@ -290,26 +290,39 @@ class Ellipse(object):
     # Test for Equality                                                       #
     # ----------------------------------------------------------------------- #
     def __eq__(self, ellipse):
-        if type(ellipse) is not type(self):
+        # Check that same types
+        if not isinstance(ellipse, type(self)):
+            t = type(ellipse).__name__
+            raise TypeError('Cannot compare with type ' + t)
+
+        # Check that center is the same
+        self_cen = self.center
+        ell_cen = ellipse.center
+        if not np.isclose(self_cen, ell_cen).all():
             return False
 
-        for attr in ['a', 'b', 'center']:
-            attr_self = getattr(self, attr)
-            attr_ell = getattr(ellipse, attr)
-            if not np.isclose(attr_self, attr_ell).all():
-                print('att not the same:', attr)
-                return False
+        # Check that axes are the same
+        s_min, s_max = sorted(self.axes)
+        e_min, e_max = sorted(ellipse.axes)
+        if not np.isclose(s_min, e_min):
+            return False
+        if not np.isclose(s_max, e_max):
+            return False
 
-        # Do not check for equal angles if circular
-        if np.isclose(self.a, self.b):
+        # If degenerate ellipse, do not check for orientation
+        if np.isclose(s_min, s_max):
             return True
 
-        ang1 = self.angle_deg % 180
-        ang2 = self.angle_deg % 180
-        ang_diff = ang1 - ang2
-        if not np.isclose(ang_diff, 0):
-            return False
-        return True
+        # If the first axis is the same, check that angles are same
+        x1 = np.array(self.matrix).dot([self.a, 0])
+        if np.isclose(self.a, ellipse.a):
+            x2 = np.array(ellipse.matrix).dot([ellipse.a, 0])
+            return np.isclose(np.abs(x1.dot(x2)), self.a * ellipse.a)
+        y2 =  np.array(ellipse.matrix).dot([0, ellipse.b])
+        return np.isclose(np.abs(x1.dot(y2)), self.a * ellipse.b)
+
+    def __ne__(self, ellipse):
+        return not self.__eq__(ellipse)
 
     # ----------------------------------------------------------------------- #
     # Position, Size, and Orientation Getters                                 #
