@@ -8,7 +8,6 @@ MicroStructPy - Microstructure Mesh Generation in Python
 |s-cov|
 |s-pvyer|
 |s-license|
-
 |s-doi|
 
 |l-github| `Repository`_
