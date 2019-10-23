@@ -58,6 +58,11 @@ def test_from_str_list_without(inp, out):
     for i, o in zip(_misc.from_str(inp), out):
         assert i == o
 
+@pytest.mark.parametrize('t', [(2, 3), ((5.1, -1.2),), ('abc', 'def', '2')])
+def test_from_str_tuple(t):
+    s = str(t)
+    assert _misc.from_str(s) == t
+
 
 @pytest.mark.parametrize('v', [1.2, True, -3, [3.2, 4, 'a'], {1, 2}])
 def test_from_str_bad_input(v):

@@ -200,7 +200,7 @@ class Seed(object):
         str_str += str(self.geometry) + '\n'
         str_str += 'Phase: ' + str(self.phase) + '\n'
         bkdwn_str = ', '.join([str(tuple(b)) for b in self.breakdown])
-        str_str += 'Breakdown: (' + bkdwn_str + ')\n'
+        str_str += 'Breakdown: (' + bkdwn_str + ',)\n'
         str_str += 'Position: (' + ', '.join([str(x) for x in self.position])
         str_str += ')'
         return str_str
@@ -210,7 +210,7 @@ class Seed(object):
         repr_str += repr(self.geometry) + ', '
         repr_str += 'phase=' + repr(self.phase) + ', '
         bkdwn_str = ', '.join([repr(tuple(b)) for b in self.breakdown])
-        repr_str += 'breakdown=(' + bkdwn_str + '), '
+        repr_str += 'breakdown=(' + bkdwn_str + ',), '
         repr_str += 'position=(' + ', '.join([repr(x) for x in self.position])
         repr_str += ')'
         repr_str += ')'
