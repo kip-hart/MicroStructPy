@@ -21,6 +21,7 @@ Changed
 '''''''
 - Added logos, icons, social meta data for HTML documentation.
 - Fixed verification module handling of "random" orientations.
+- Moved ellipse of best fit code to separate file, mimicking source.
 
 Removed
 '''''''
