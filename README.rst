@@ -8,7 +8,6 @@ MicroStructPy - Microstructure Mesh Generation in Python
 |s-cov|
 |s-pvyer|
 |s-license|
-|s-doi|
 
 |l-github| `Repository`_
 |l-rtd| `Documentation`_
@@ -163,13 +162,14 @@ The changelog for this project is included with the GitHub repository
     :target: https://pypi.org/project/microstructpy/
     :alt: PyPI version
 
-.. |s-ci| image:: https://img.shields.io/azure-devops/build/MicroStructPy/6527cc56-6267-4595-a619-2a66ff664a87/1
-    :target: https://dev.azure.com/MicroStructPy/MicroStructPy/_build
-    :alt: Azure DevOps builds
+.. |s-ci| image:: https://travis-ci.org/kip-hart/MicroStructPy.svg?branch=master
+    :target: https://travis-ci.org/kip-hart/MicroStructPy
+    :alt: Travis CI
 
-.. |s-cov| image:: https://img.shields.io/azure-devops/coverage/MicroStructPy/6527cc56-6267-4595-a619-2a66ff664a87/1
-    :target: https://dev.azure.com/MicroStructPy/MicroStructPy/_build
-    :alt: Azure DevOps coverage
+.. |s-cov| image:: https://coveralls.io/repos/github/kip-hart/MicroStructPy/badge.svg?branch=master
+    :target: https://coveralls.io/github/kip-hart/MicroStructPy?branch=master
+    :alt: Coveralls code coverage
+
 
 .. |s-pvyer| image:: https://img.shields.io/pypi/pyversions/microstructpy
     :target: https://pypi.org/project/microstructpy/
@@ -182,3 +182,4 @@ The changelog for this project is included with the GitHub repository
 .. |s-doi| image:: https://zenodo.org/badge/206468500.svg
    :target: https://zenodo.org/badge/latestdoi/206468500
    :alt: DOI
+
