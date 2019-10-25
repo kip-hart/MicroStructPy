@@ -7,6 +7,7 @@ python:
   - 3.7
 env:
   - MPLBACKEND=Agg
+  - COVERALLS_PARALLEL=true coveralls
 install:
   - pip install -U pytest pytest-cov coveralls
   - pip install -e .
