@@ -14,3 +14,5 @@ script:
   - pytest --cov=src/microstructpy --cov-branch
 after_success:
   - coveralls
+notifications:
+  webhooks: https://coveralls.io/webhook
