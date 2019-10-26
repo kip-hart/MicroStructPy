@@ -2,4 +2,4 @@ matplotlib
 numpy
 pybind11
 sphinx
-sphinx-gallery
+sphinx-gallery==0.4.0
