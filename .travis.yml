@@ -6,11 +6,13 @@ python:
   - 3.6
   - 3.7
 env:
-  - MPLBACKEND=Agg
+  - MPLBACKEND=Agg COVERALLS_PARALLEL=true
 install:
   - pip install -U pytest pytest-cov coveralls
   - pip install -e .
 script:
-  - pytest
+  - pytest --cov=src/microstructpy --cov-branch
 after_success:
   - coveralls
+notifications:
+  webhooks: https://coveralls.io/webhook
