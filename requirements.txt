@@ -1,6 +1,6 @@
 aabbtree==2.3.1
 matplotlib==3.0.2
-pybind11==2.2.4
+pybind11==2.4.3
 MeshPy==2018.2.1
 numpy==1.17.3
 pyquaternion==0.9.5
