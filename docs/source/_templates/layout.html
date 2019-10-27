@@ -1,5 +1,6 @@
 {% extends "!layout.html" %}
 {%- block extrahead %}
+{%- if render_sidebar %}
     <!-- Original Alabaster Extends -->
     {{ super() }}
     <link rel="stylesheet" href="{{ pathto('_static/custom.css', 1) }}" type="text/css" />
@@ -61,4 +62,5 @@
 
     <!-- Touch Icons - Windows 8.1 + IE11 and above -->
     <meta name="msapplication-config" content="_static/logo/browserconfig.xml" />
+{% endif %}
 {%- endblock %}
