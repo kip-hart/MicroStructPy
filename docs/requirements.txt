@@ -1,5 +1,5 @@
 matplotlib==3.1.1
-numpy
-pybind11
-sphinx
-sphinx-gallery
+numpy==1.17.3
+pybind11==2.4.3
+sphinx==2.2.1
+sphinx-gallery==0.4.0

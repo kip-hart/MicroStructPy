@@ -13,6 +13,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 desc = 'Microstructure modeling, mesh generation, analysis, and visualization.'
+vs_fname = ('src/microstructpy', '_vs.py')
 
 
 def read(*fname):
@@ -20,10 +21,18 @@ def read(*fname):
 
 
 def find_version(*fname):
+    ver_str = ''
     for line in read(*fname).split('\n'):
         if line.startswith('__version__') and '=' in line:
-            return line.split('=')[-1].strip().strip('\"').strip('\'')
-    return ''
+            ver_str = line.split('=')[-1].strip().strip('\"').strip('\'')
+            break
+
+    for line in read(*vs_fname).split('\n'):
+        if '+' in line:
+            tag = line.split('+')[-1].strip().strip('\"').strip('\'')
+            ver_str += '+' + tag
+            break
+    return ver_str
 
 
 setup(
@@ -75,7 +84,7 @@ setup(
         'aabbtree',
         'matplotlib>=2.2.0,<3.1.0',
         'pybind11',  # must come before meshpy for successful install
-        'meshpy',
+        'meshpy>=2018.2.1',
         'numpy>=1.13.0',
         'pyquaternion',
         'pyvoro-mmalahe',  # install issue with pyvoro

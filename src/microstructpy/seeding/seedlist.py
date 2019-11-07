@@ -454,8 +454,11 @@ class SeedList(object):
                         val_list.append(val)
                         pc_kwargs[key] = val_list
 
+                elif geom_name == 'nonetype':
+                    pass
+
                 else:
-                    e_str = 'Cannot plot groups of ' + str(seed.seed_type)
+                    e_str = 'Cannot plot groups of ' + geom_name
                     e_str += ' yet.'
                     raise NotImplementedError(e_str)
 
