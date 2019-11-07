@@ -58,7 +58,7 @@ class Ellipse(object):
             if kw in kwargs and kwargs[kw] <= 0:
                 raise ValueError(kw + ' should be positive.')
         if 'axes' in kwargs:
-            for i, ax in kwargs['axes']:
+            for i, ax in enumerate(kwargs['axes']):
                 if ax <= 0:
                     raise ValueError('axes[{}] should be positive'.format(i))
 
@@ -67,7 +67,7 @@ class Ellipse(object):
                 m = np.array(kwargs[kw])
                 if m.shape != (2, 2):
                     raise ValueError(kw + ' should be 2x2.')
-                if not np.all(np.isclose(m * m.T, np.eye(2))):
+                if not np.all(np.isclose(m.dot(m.T), np.eye(2))):
                     raise ValueError(kw + ' should be orthonormal.')
 
         # position
@@ -285,7 +285,7 @@ class Ellipse(object):
         ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
         ang_rad = self.angle_rad + ang_diff
 
-        return type(self)(center=center, a=a, b=b, angle_rad=ang_rad)
+        return type(self)(center=(xc, yc), a=a, b=b, angle_rad=ang_rad)
 
     # ----------------------------------------------------------------------- #
     # String and Representation Functions                                     #
