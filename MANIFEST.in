@@ -2,9 +2,11 @@ graft docs
 graft src
 graft tests
 
+include .azure-pipelines.yml
 include .bumpversion.cfg
 include .coveragerc
 include .editorconfig
+include .readthedocs.yml
 
 include CHANGELOG.rst
 include LICENSE.rst
@@ -20,7 +22,7 @@ prune src/*/examples/*
 prune src/*.egg-info
 prune tests/tmp_out
 
-exclude *.{coverage*,git*,Python,xml,yml}
+exclude coverage.xml
 exclude src/*/examples/*.png
 include src/microstructpy/examples/aluminum_micro.png
 exclude src/*/examples/*.txt
