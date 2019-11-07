@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 
+from microstructpy.geometry._ellipse_best_fit import _best_fit
+
 __author__ = 'Kenneth (Kip) Hart'
 
 
@@ -49,6 +51,23 @@ class Ellipse(object):
     # Constructor                                                             #
     # ----------------------------------------------------------------------- #
     def __init__(self, **kwargs):
+        # Check Values
+        for kw in ('a', 'b', 'size', 'aspect_ratio'):
+            if kw in kwargs and kwargs[kw] <= 0:
+                raise ValueError(kw + ' should be positive.')
+        if 'axes' in kwargs:
+            for i, ax in kwargs['axes']:
+                if ax <= 0:
+                    raise ValueError('axes[{}] should be positive'.format(i))
+
+        for kw in ['matrix', 'orientation']:
+            if kw in kwargs:
+                m = np.array(kwargs[kw])
+                if m.shape != (2, 2):
+                    raise ValueError(kw + ' should be 2x2.')
+                if not np.all(np.isclose(m * m.T, np.eye(2))):
+                    raise ValueError(kw + ' should be orthonormal.')
+
         # position
         if 'center' in kwargs:
             self.center = kwargs['center']
@@ -219,68 +238,14 @@ class Ellipse(object):
           (http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1.7559&rep=rep1&type=pdf)
 
         """  # NOQA: E501
-        # Unpack the input points
-        pts = np.array(points, dtype='float')
-        x, y = pts.T
 
-        # Quadratic part of design matrix
-        D1 = np.mat(np.vstack([x * x, x * y, y * y])).T
+        pts = np.array(points)
+        pt_cen = pts.mean(axis=0)
+        pts -= pt_cen.reshape(1, -1)
 
-        # Linear part of design matrix
-        D2 = np.mat(np.vstack([x, y, np.ones(len(x))])).T
-
-        # Scatter matrix
-        S1 = D1.T * D1
-        S2 = D1.T * D2
-        S3 = D2.T * D2
-
-        # Constraint matrix
-        C1inv = np.mat([[0, 0, 0.5], [0, -1, 0], [0.5, 0, 0]])
-
-        # Reduced scatter matrix
-        M = C1inv * (S1 - S2 * S3.I * S2.T)
-
-        # Find eigenvalues
-        _, evec = np.linalg.eig(M)
-
-        # Mask
-        cond = 4 * np.multiply(evec[0, :], evec[2, :])
-        cond -= np.multiply(evec[1, :], evec[1, :])
-        a1 = evec[:, np.nonzero(cond.A > 0)[1]]
-
-        a2 = -S3.I * S2.T * a1
-
-        # Coefficients
-        a = a1[0, 0]
-        b = 0.5 * a1[1, 0]
-        c = a1[2, 0]
-
-        d = 0.5 * a2[0, 0]
-        f = 0.5 * a2[1, 0]
-        g = a2[2, 0]
-
-        # Center of ellipse
-        k = b * b - a * c
-        xc = (c * d - b * f) / k
-        yc = (a * f - b * d) / k
-
-        # Semi-axes lengths
-        numer = a * f * f
-        numer += c * d * d
-        numer += g * b * b
-        numer -= 2 * b * d * f
-        numer -= a * c * g
-        numer *= 2
-
-        tan2 = 2 * b / (a - c)
-        sq_val = np.sqrt(1 + tan2 * tan2)
-        denom1 = k * ((c - a) * sq_val - (c + a))
-        denom2 = k * ((a - c) * sq_val - (c + a))
-        width = np.sqrt(numer / denom1)
-        height = np.sqrt(numer / denom2)
-
-        # Angle of rotation
-        phi = 0.5 * np.arctan(tan2)
+        width, height, phi, xc, yc = _best_fit(pts, self)
+        xc += pt_cen[0]
+        yc += pt_cen[1]
 
         # Find pair closest to self
         s = np.sin(phi)

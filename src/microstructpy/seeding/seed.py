@@ -66,7 +66,7 @@ class Seed(object):
         self.geometry = seed_geometry
         self.phase = phase
 
-        if position is None:
+        if position is None and self.geometry is not None:
             self.position = [0 for _ in range(self.geometry.n_dim)]
         else:
             self.position = position
@@ -121,7 +121,10 @@ class Seed(object):
         assert type(seed_type) is str
         seed_type = seed_type.strip().lower()
 
-        n_dim = geometry.factory(seed_type).n_dim
+        if seed_type == 'nonetype':
+            n_dim = 0
+        else:
+            n_dim = geometry.factory(seed_type).n_dim
         if 'volume' in kwargs:
             if n_dim == 2:
                 size = 2 * np.sqrt(kwargs['volume'] / np.pi)
@@ -129,7 +132,11 @@ class Seed(object):
                 size = 2 * np.cbrt(3 * kwargs['volume'] / (4 * np.pi))
             kwargs['size'] = size
 
-        geom = geometry.factory(seed_type, **kwargs)
+        # Catch NoneType geometries
+        if seed_type == 'nonetype':
+            geom = None
+        else:
+            geom = geometry.factory(seed_type, **kwargs)
 
         if breakdown is None:
             if seed_type in ('circle', 'sphere'):
@@ -162,10 +169,14 @@ class Seed(object):
         # Convert to dictionary
         str_dict = {}
         for line in seed_str.strip().split('\n'):
-            k_str, v_str = line.split(':')
-            k = k_str.strip().lower().replace(' ', '_')
-            v = _misc.from_str(v_str)
-            str_dict[k] = v
+            try:
+                k_str, v_str = line.split(':')
+            except ValueError:
+                continue
+            else:
+                k = k_str.strip().lower().replace(' ', '_')
+                v = _misc.from_str(v_str)
+                str_dict[k] = v
 
         # Extract seed type, phase, and breakdown
         seed_type = str_dict['geometry']
@@ -220,6 +231,11 @@ class Seed(object):
     # Comparison Functions                                                    #
     # ----------------------------------------------------------------------- #
     def __lt__(self, seed):
+        if self.geometry is None:
+            return True
+        if seed.geometry is None:
+            return False
+
         a_str = 'Seeds are not the same dimension.'
         assert self.geometry.n_dim == seed.geometry.n_dim, a_str
         if self.geometry.n_dim == 2:
@@ -300,6 +316,8 @@ class Seed(object):
     @property
     def volume(self):
         """float: The area (2D) or volume (3D) of the seed"""
+        if self.geometry is None:
+            return 0
         if self.geometry.n_dim == 2:
             return self.geometry.area
         else:
@@ -311,6 +329,8 @@ class Seed(object):
     @property
     def limits(self):
         """list: The (lower, upper) bounds of the seed"""
+        if self.geometry is None:
+            return []
         return self.geometry.limits
 
     # ----------------------------------------------------------------------- #
@@ -328,7 +348,8 @@ class Seed(object):
             **kwargs: Plotting keyword arguments.
 
         """
-        self.geometry.plot(**kwargs)
+        if self.geometry is not None:
+            self.geometry.plot(**kwargs)
 
     # ----------------------------------------------------------------------- #
     # Plot Breakdown                                                          #
@@ -345,7 +366,7 @@ class Seed(object):
 
         """
 
-        n = self.geometry.n_dim
+        n = len(self.breakdown[0]) - 1
         if n == 2:
             pc = [patches.Circle([x, y], r) for x, y, r in self.breakdown]
             coll = collections.PatchCollection(pc, **kwargs)

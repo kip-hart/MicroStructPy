@@ -71,8 +71,8 @@ def main():
         run_file(filename)
 
     # run demo files
-    cli_path = os.path.realpath(__file__)
-    demo_path = os.path.normpath(os.path.join(cli_path, '../../../examples/'))
+    cli_path = os.path.dirname(__file__)
+    demo_path = os.path.normpath(os.path.join(cli_path, '../../examples/'))
     demo_files = args.demo_files
 
     if len(demo_files) == 1 and demo_files[0].lower().strip() == 'all':

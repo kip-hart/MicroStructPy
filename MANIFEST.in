@@ -12,6 +12,7 @@ include LICENSE.rst
 include README.rst
 
 include tox.ini
+include requirements.txt
 
 prune docs/source/auto_examples
 prune docs/build*
