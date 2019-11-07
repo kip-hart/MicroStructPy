@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/intro_3_size_shape.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/intro_3_size_shape.xml
     :language: xml
 
 
@@ -70,19 +70,19 @@ These three plots are shown in :numref:`f_ex_3_size_shape_seeds` -
 :numref:`f_ex_3_size_shape_tri`.
 
 .. _f_ex_3_size_shape_seeds:
-.. figure:: ../../../../examples/intro_3_size_shape/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/intro_3_size_shape/seeds.png
     :alt: Seed geometries.
 
     Introduction 3 - seed geometries.
     
 .. _f_ex_3_size_shape_poly:
-.. figure:: ../../../../examples/intro_3_size_shape/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_3_size_shape/polymesh.png
     :alt: Polygonal mesh.
 
     Introduction 3 - polygonal mesh.
     
 .. _f_ex_3_size_shape_tri:
-.. figure:: ../../../../examples/intro_3_size_shape/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_3_size_shape/trimesh.png
     :alt: Triangular mesh.
 
     Introduction 3 - triangular mesh.

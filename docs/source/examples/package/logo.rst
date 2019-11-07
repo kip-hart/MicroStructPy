@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../../../examples/logo.py
+.. literalinclude:: ../../../../src/microstructpy/examples/logo.py
     :language: python
 
 Domain
@@ -50,7 +50,7 @@ HTML documentation.
 The logo that results is shown in :numref:`f_ex_logo`.
 
 .. _f_ex_logo:
-.. figure:: ../../../../examples/logo/logo.png
+.. figure:: ../../../../src/microstructpy/examples/logo/logo.png
     :alt: MicroStructPy logo.
 
     MicroStructPy logo.

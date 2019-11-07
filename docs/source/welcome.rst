@@ -19,8 +19,8 @@ Features of MicroStructPy include:
 * Output to common file formats
 * Customizable workflow
 
-.. figure:: ../../examples/msp_process/process.png
-    :alt: Banner image showing the steps for creating microstructure.
+.. figure:: ../../src/microstructpy/examples/docs_banner/banner.png
+    :alt: Banner image showing the three steps for creating microstructure.
 
     The MicroStructPy workflow.
 
@@ -38,7 +38,7 @@ Examples
 These images were created using MicroStructPy.
 For more examples, see the :ref:`examples_page` section.
 
-.. figure:: ../../examples/welcome_examples.png
+.. figure:: ../../src/microstructpy/examples/welcome_examples.png
     :alt: Several examples created using MicroStructPy.
 
     Examples created using MicroStructPy.
@@ -58,7 +58,7 @@ named ``microstructpy``.
 To use the command line interface, create a file called ``input.xml`` and copy
 this into it:
 
-.. literalinclude:: ../../examples/minimal.xml
+.. literalinclude:: ../../src/microstructpy/examples/minimal.xml
     :language: xml
 
 Next, run the file from the command line::
@@ -72,7 +72,7 @@ The text files contain all of the data related to the seed geometries and
 meshes.
 The image files contain:
 
-.. figure:: ../../examples/joined.png
+.. figure:: ../../src/microstructpy/examples/joined.png
     :alt: Seed geometries, polygonal mesh, and unstructured mesh for min. expl.
 
     The output plots are:
@@ -114,8 +114,7 @@ The same results can be produced using this script:
 License and Attribution
 -----------------------
 
-MicroStructPy is open source and freely availabe under the terms of the the
-MIT license.
+MicroStructPy is open source and freely available.
 Copyright for MicroStructPy is held by Georgia Tech Research Corporation.
 MicroStructPy is a major part of Kenneth (Kip) Hart's doctoral thesis,
 advised by Prof. Julian Rimoli.

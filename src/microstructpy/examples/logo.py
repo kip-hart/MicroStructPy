@@ -3,12 +3,12 @@ from __future__ import division
 import os
 
 import matplotlib.pyplot as plt
-import microstructpy as msp
 import numpy as np
 from matplotlib import collections
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib.offsetbox import AnnotationBbox
+from matplotlib.offsetbox import OffsetImage
 
-__author__ = 'Kenneth (Kip) Hart'
+import microstructpy as msp
 
 
 def main(n_seeds, size_rng, pos_rng, k_lw):
@@ -106,13 +106,12 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     # Create the Logo
     logo_im = np.copy(plt_im)
 
-    xx, yy = np.meshgrid(np.arange(logo_im.shape[0]), np.arange(logo_im.shape[1]))
-    zz = - 0.2 * xx +   0.9 * yy
+    xx, yy = np.meshgrid(*[np.arange(n) for n in logo_im.shape])
+    zz = - 0.2 * xx + 0.9 * yy
     ss = (zz - zz.min()) / (zz.max() - zz.min())
 
     c1 = [67, 206, 162]
     c2 = [24, 90, 157]
-
 
     logo_im[mask, -1] = 0  # transparent background
 
@@ -124,9 +123,9 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     logo_im = logo_im[inds]
     logo_im = logo_im[:, inds]
 
-    pad_width =  logo_im.shape[0]
-    pad_height = 0.5 * logo_im.shape[1]
-    pad_shape = np.array([pad_width, pad_height, logo_im.shape[2]]).astype('int')
+    pad_w = logo_im.shape[0]
+    pad_h = 0.5 * logo_im.shape[1]
+    pad_shape = np.array([pad_w, pad_h, logo_im.shape[2]]).astype('int')
     logo_pad = np.zeros(pad_shape, dtype=logo_im.dtype)
     pad_im = np.concatenate((logo_pad, logo_im, logo_pad), axis=1)
     doc_im = np.concatenate((logo_pad, pad_im, logo_pad), axis=1)
@@ -141,7 +140,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     inds = np.linspace(0, fav_im.shape[0] - 1, favicon_size).astype('int')
     fav_im = fav_im[inds]
     fav_im = fav_im[:, inds]
-    
+
     plt.imsave(favicon_filename, fav_im, dpi=dpi, format='png')
 
     # Create the Social Banner
@@ -170,7 +169,6 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     plt.draw()
     plt.savefig(social_filename, bbox_inches='tight')
     plt.close('all')
-
 
 
 if __name__ == '__main__':

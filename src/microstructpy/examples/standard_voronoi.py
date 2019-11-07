@@ -1,8 +1,8 @@
 import os
 
 import matplotlib.pyplot as plt
-import microstructpy as msp
 
+import microstructpy as msp
 
 # Create domain
 domain = msp.geometry.Square()

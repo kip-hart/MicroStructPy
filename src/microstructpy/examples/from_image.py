@@ -3,9 +3,9 @@ import shutil
 
 import matplotlib.image as mpim
 import matplotlib.pyplot as plt
-import microstructpy as msp
 import numpy as np
 
+import microstructpy as msp
 
 # Read in image
 image_basename = 'aluminum_micro.png'

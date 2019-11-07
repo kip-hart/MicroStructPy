@@ -4,13 +4,13 @@ import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import microstructpy as msp
 import numpy as np
 from scipy.spatial import distance
 
+import microstructpy as msp
 
 # Create domain
-domain = msp.geometry.Square(corner=(0,0))
+domain = msp.geometry.Square(corner=(0, 0))
 
 # Create list of seed points
 factory = msp.seeding.Seed.factory
