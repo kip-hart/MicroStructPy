@@ -6,43 +6,63 @@ def _best_fit(points, ellipse):
     pts = np.array(points, dtype='float')
     x, y = pts.T
 
-    xx = x * x
-    yy = y * y
-    xy = x * y
-    g = 1.0
-    ones = -g * np.ones(len(x))
-    coeffs = np.array([xx, xy, yy, x, y]).T
-    a, b, c, d, f = np.linalg.lstsq(coeffs, ones, rcond=None)[0]
-    b *= 0.5
-    d *= 0.5
-    f *= 0.5
+    # Quadratic part of design matrix
+    D1 = np.mat(np.vstack([x * x, x * y, y * y])).T
 
-    mj = b * b - a * c
-    x0 = (c * d - b * f) / mj
-    y0 = (a * f - b * d) / mj
+    # Linear part of design matrix
+    D2 = np.mat(np.vstack([x, y, np.ones(len(x))])).T
 
-    numer = 2 * (a * f * f + c * d * d + g * b * b - 2 * b * d * f - a * c * g)
-    denom1 = np.sign(c - a) * np.sqrt((a - c) * (a - c) + 4 * b * b)
-    denom2 = a + c
-    a2_d = mj * (denom1 - denom2)
-    a2 = numer / a2_d
-    b2_d = mj * (-denom1 - denom2)
-    b2 = numer / b2_d
+    # Scatter matrix
+    S1 = D1.T * D1
+    S2 = D1.T * D2
+    S3 = D2.T * D2
 
-    a = alt_sqrt(a2)
-    b = alt_sqrt(b2)
+    # Constraint matrix
+    C1inv = np.mat([[0, 0, 0.5], [0, -1, 0], [0.5, 0, 0]])
 
-    if np.isclose(b, 0) and a < c:
-        phi = 0
-    elif np.isclose(b, 0):
-        phi = 0.5 * np.pi
-    else:
-        phi = 0.5 * np.arctan2(2 * b, a - c)
+    # Reduced scatter matrix
+    M = C1inv * (S1 - S2 * S3.I * S2.T)
 
-    return a, b, phi, x0, y0
+    # Find eigenvalues
+    _, evec = np.linalg.eig(M)
 
+    # Mask
+    cond = 4 * np.multiply(evec[0, :], evec[2, :])
+    cond -= np.multiply(evec[1, :], evec[1, :])
+    a1 = evec[:, np.nonzero(cond.A > 0)[1]]
 
-def alt_sqrt(x):
-    if x >= 0:
-        return np.sqrt(x)
-    return - np.sqrt(-x)
+    a2 = -S3.I * S2.T * a1
+
+    # Coefficients
+    a = a1[0, 0]
+    b = 0.5 * a1[1, 0]
+    c = a1[2, 0]
+
+    d = 0.5 * a2[0, 0]
+    f = 0.5 * a2[1, 0]
+    g = a2[2, 0]
+
+    # Center of ellipse
+    k = b * b - a * c
+    xc = (c * d - b * f) / k
+    yc = (a * f - b * d) / k
+
+    # Semi-axes lengths
+    numer = a * f * f
+    numer += c * d * d
+    numer += g * b * b
+    numer -= 2 * b * d * f
+    numer -= a * c * g
+    numer *= 2
+
+    tan2 = 2 * b / (a - c)
+    sq_val = np.sqrt(1 + tan2 * tan2)
+    denom1 = k * ((c - a) * sq_val - (c + a))
+    denom2 = k * ((a - c) * sq_val - (c + a))
+    width = np.sqrt(numer / denom1)
+    height = np.sqrt(numer / denom2)
+
+    # Angle of rotation
+    phi = 0.5 * np.arctan(tan2)
+
+    return width, height, phi, xc, yc
