@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/two_phase_3D.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/two_phase_3D.xml
     :language: xml
 
 
@@ -54,19 +54,19 @@ These three plots are shown in :numref:`f_ex_2p3d_seeds` -
 :numref:`f_ex_2p3d_tri`.
 
 .. _f_ex_2p3d_seeds:
-.. figure:: ../../../../examples/two_phase_3D/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/two_phase_3D/seeds.png
     :alt: Seed geometries.
 
     Two phase 3D example - seed geometries.
     
 .. _f_ex_2p3d_poly:
-.. figure:: ../../../../examples/two_phase_3D/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/two_phase_3D/polymesh.png
     :alt: Polygonal mesh.
 
     Two phase 3D example - polygonal mesh.
     
 .. _f_ex_2p3d_tri:
-.. figure:: ../../../../examples/two_phase_3D/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/two_phase_3D/trimesh.png
     :alt: Triangular mesh.
 
     Two phase 3D example - triangular mesh.

@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../../../examples/grain_neighborhoods.py
+.. literalinclude:: ../../../../src/microstructpy/examples/grain_neighborhoods.py
     :language: python
 
 Domain
@@ -63,7 +63,7 @@ matplotlib colors: C0, C1, C2, etc.
 The output PNG file is shown in :numref:`f_ex_neighs_tri`.
 
 .. _f_ex_neighs_tri:
-.. figure:: ../../../../examples/grain_neighborhoods/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/grain_neighborhoods/trimesh.png
   :alt: Triangular mesh of microstructure with seed neighborhoods.
 
   Triangular mesh of microstructure with seed neighborhoods.

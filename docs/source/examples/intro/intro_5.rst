@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is given below.
 
-.. literalinclude:: ../../../../examples/intro_5_plotting.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/intro_5_plotting.xml
     :language: xml
 
 
@@ -62,19 +62,19 @@ These three plots are shown in :numref:`f_ex_5_plotting_seeds` -
 :numref:`f_ex_5_plotting_tri`.
 
 .. _f_ex_5_plotting_seeds:
-.. figure:: ../../../../examples/intro_5_plotting/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/intro_5_plotting/seeds.png
     :alt: Seed geometries.
 
     Introduction 5 - seed geometries.
     
 .. _f_ex_5_plotting_poly:
-.. figure:: ../../../../examples/intro_5_plotting/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_5_plotting/polymesh.png
     :alt: Polygonal mesh.
 
     Introduction 5 - polygonal mesh.
     
 .. _f_ex_5_plotting_tri:
-.. figure:: ../../../../examples/intro_5_plotting/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_5_plotting/trimesh.png
     :alt: Triangular mesh.
 
     Introduction 5 - triangular mesh.

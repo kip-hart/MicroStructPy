@@ -60,7 +60,7 @@ The three fields of the input file that MicroStructPy looks for are:
 ``<material>``, ``<domain>``, and ``<settings>`` (optional).
 For example:
 
-.. literalinclude:: ../../../examples/minimal_paired.xml
+.. literalinclude:: ../../../src/microstructpy/examples/minimal_paired.xml
     :language: xml
 
 

@@ -1,9 +1,10 @@
 import os
 
 import matplotlib.pyplot as plt
-import microstructpy as msp
 import numpy as np
 import scipy.stats
+
+import microstructpy as msp
 
 
 def main():
@@ -49,7 +50,7 @@ def main():
             while not good_pt:
                 trial_pt = trial_position(void_tess)
                 good_pt = check_pt(trial_pt, r, check_bkdwns)
-        
+
         seed.position = trial_pt
         bkdwns[i] = seed.breakdown
         seed.phase = 1
@@ -96,6 +97,7 @@ def pick_edge(void_tess):
     kp1 = facet[j]
     kp2 = facet[j - 1]
     return kp1, kp2
+
 
 def trial_position(void_tess):
     kp1, kp2 = pick_edge(void_tess)

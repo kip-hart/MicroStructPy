@@ -8,7 +8,7 @@ Single Material
 MicroStructPy supports an arbitrary number of materials, including just one.
 For example:
 
-.. literalinclude:: ../../../examples/minimal.xml
+.. literalinclude:: ../../../src/microstructpy/examples/minimal.xml
     :language: xml
 
 This input file will produce a microstructure with nearly circular grains

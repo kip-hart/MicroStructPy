@@ -15,7 +15,7 @@ import microstructpy as msp
 
 locale.setlocale(locale.LC_NUMERIC, "C")
 
-example_dir = '../../../examples'
+example_dir = '../../../src/microstructpy/examples'
 
 welcome_fnames = ['intro_2_quality/trimesh.png',
                   'minimal/polymesh.png',

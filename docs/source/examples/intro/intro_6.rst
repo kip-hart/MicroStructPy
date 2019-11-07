@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/intro_6_culmination.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/intro_6_culmination.xml
     :language: xml
 
 
@@ -76,19 +76,19 @@ These three plots are shown in :numref:`f_ex_6_culmination_seeds` -
 :numref:`f_ex_6_culmination_tri`.
 
 .. _f_ex_6_culmination_seeds:
-.. figure:: ../../../../examples/intro_6_culmination/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/intro_6_culmination/seeds.png
     :alt: Seed geometries.
 
     Introduction 6 - seed geometries.
     
 .. _f_ex_6_culmination_poly:
-.. figure:: ../../../../examples/intro_6_culmination/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_6_culmination/polymesh.png
     :alt: Polygonal mesh.
 
     Introduction 6 - polygonal mesh.
     
 .. _f_ex_6_culmination_tri:
-.. figure:: ../../../../examples/intro_6_culmination/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_6_culmination/trimesh.png
     :alt: Triangular mesh.
 
     Introduction 6 - triangular mesh.

@@ -314,7 +314,7 @@ def seeds_of_best_fit(seeds, phases, pmesh, tmesh):
                 seed_facets = [f for f, m in zip(pmesh.facets, mask) if m]
                 kps = np.unique([kp for f in seed_facets for kp in f])
             seed_pts = poly_pts[kps.astype('int')]
-        
+
         try:
             fit_geom = seed.geometry.best_fit(seed_pts)
         except ValueError:

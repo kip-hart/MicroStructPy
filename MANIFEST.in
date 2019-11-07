@@ -1,11 +1,12 @@
 graft docs
-graft examples
 graft src
 graft tests
 
+include .azure-pipelines.yml
 include .bumpversion.cfg
 include .coveragerc
 include .editorconfig
+include .readthedocs.yml
 
 include CHANGELOG.rst
 include LICENSE.rst
@@ -14,16 +15,17 @@ include README.rst
 include tox.ini
 include requirements.txt
 
+prune .github
 prune docs/source/auto_examples
 prune docs/build*
-prune examples/*
-prune junit
+prune src/*/examples/*
+prune src/*.egg-info
 prune tests/tmp_out
-prune test_reports
 
-exclude examples/*.png
-include examples/aluminum_micro.png
-exclude examples/*.txt
-exclude *.yml
+exclude coverage.xml
+exclude src/*/examples/*.png
+include src/microstructpy/examples/aluminum_micro.png
+exclude src/*/examples/*.txt
+exclude src/*/examples/.gitignore
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.log Icon*
