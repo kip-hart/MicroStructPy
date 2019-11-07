@@ -26,10 +26,15 @@ The form contains some questions that will help us best address your issue.
 
 The code is hosted on [GitHub](https://www.github.com/kip-hart/MicroStructPy),
 so you will need to use [Git](http://git-scm.com/) to clone the project and
-make changes to the codebase.
+make changes to the codebase. Please also run:
+```
+git config --local --add merge.ours.driver true
+```
+to add the merge driver option, which is used to exclude non-original work
+from the ``NASA`` branch.
+
 Once you have obtained a copy of the code, you should create a development
-environment that is separate from your existing Python environment so that
-you can make and test changes without compromising your own work environment.
+environment to separate development from your system Python.
 Consider using the Python
 [venv](https://docs.python.org/3/library/venv.html#module-venv) module to
 create a development environment.
