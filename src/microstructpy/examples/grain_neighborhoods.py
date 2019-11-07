@@ -3,11 +3,11 @@ from __future__ import division
 import os
 
 import matplotlib.pyplot as plt
-import microstructpy as msp
 import numpy as np
 import scipy.integrate
 import scipy.stats
 
+import microstructpy as msp
 
 # Define the domain
 domain = msp.geometry.Square(corner=(0, 0), side_length=10)
@@ -83,7 +83,7 @@ tmesh = msp.meshing.TriMesh.from_polymesh(pmesh, phases, min_angle=20,
                                           max_volume=0.1)
 
 # Plot triangle mesh
-colors = ['C' + str(repl_seeds[a].phase) for a in tmesh.element_attributes]
+colors = ['C' + str(repl_seeds[att].phase) for att in tmesh.element_attributes]
 tmesh.plot(facecolors=colors, edgecolors='k', linewidth=0.2)
 
 plt.axis('square')

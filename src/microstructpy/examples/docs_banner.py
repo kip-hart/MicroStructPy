@@ -3,9 +3,10 @@ from __future__ import division
 import os
 
 import matplotlib.pyplot as plt
-import microstructpy as msp
 import numpy as np
 import scipy.stats
+
+import microstructpy as msp
 
 
 def main():
@@ -61,7 +62,7 @@ def main():
     len_y = domain.width + 2 * off
     plt.figure(figsize=(k * len_x, k * len_y))
 
-    # Plot Seeds 
+    # Plot Seeds
     seed_colors = [phases[s.phase]['color'] for s in seeds]
     seeds.plot(color=seed_colors, alpha=0.8, edgecolor='k', linewidth=0.3)
     domain.plot(facecolor='none', edgecolor='k', linewidth=0.3)
@@ -111,7 +112,7 @@ def main():
     plt.gca().set_axis_off()
     plt.gca().get_xaxis().set_visible(False)
     plt.gca().get_yaxis().set_visible(False)
-    
+
     xlim, ylim = domain.limits
     xlim[0] -= off
     xlim[1] += 3 * off + 2 * domain.length
