@@ -110,8 +110,7 @@ The same results can be produced using this script:
 License and Attribution
 -----------------------
 
-MicroStructPy is open source and freely availabe under the terms of the the
-MIT license.
+MicroStructPy is open source and freely available.
 Copyright for MicroStructPy is held by Georgia Tech Research Corporation.
 MicroStructPy is a major part of Kenneth (Kip) Hart's doctoral thesis,
 advised by Prof. Julian Rimoli.
