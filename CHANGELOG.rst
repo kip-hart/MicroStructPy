@@ -6,18 +6,22 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
-`Unreleased`_
--------------
+`1.1.1`_ - 2019-11-05
+---------------------
 Added
 '''''
 - DOI links to readme and documentation.
 
 Changed
 '''''''
-- Added logos, icons, social meta data for HTML documentation
+- Added logos, icons, social meta data for HTML documentation.
+
+Fixed
+'''''
+- Paths to demo files in CLI.
 
 `1.1.0`_ - 2019-09-27
--------------------
+---------------------
 
 Added
 '''''
@@ -37,7 +41,7 @@ Changed
 
 
 `1.0.0`_ - 2019-09-07
--------------------
+---------------------
 
 Added
 '''''
@@ -47,7 +51,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.0...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.1...HEAD
+.. _`1.1.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.0...v1.1.1
 .. _`1.1.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.0.1...v1.1.0
 .. _`1.0.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.0.0...v1.0.1
 .. _`1.0.0`: https://github.com/kip-hart/MicroStructPy/releases/tag/v1.0.0

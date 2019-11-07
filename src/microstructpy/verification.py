@@ -21,6 +21,7 @@ import numpy as np
 import scipy.stats
 from matplotlib.lines import Line2D
 
+import microstructpy.geometry
 from microstructpy import _misc
 from microstructpy import seeding
 
@@ -252,6 +253,14 @@ def seeds_of_best_fit(seeds, phases, pmesh, tmesh):
             for more information on formatting.
         pmesh (PolyMesh): Resultant polygonal/polyhedral mesh.
         tmesh (TriMesh): Resultant triangular/tetrahedral mesh.
+
+    Returns:
+        SeedList: List of seeds of best fit.
+
+    .. note:
+
+        If the geometry of best fit for the seed is ill-conditioned (e.g.
+        negative axes for an ellipse), the seed geometry is set to None.
     """
     poly_pts = np.array(pmesh.points, dtype='float')
     poly_neighs = np.array(pmesh.facet_neighbors, dtype='int')
@@ -300,13 +309,27 @@ def seeds_of_best_fit(seeds, phases, pmesh, tmesh):
                 seed_facets = [f for f, m in zip(pmesh.facets, mask) if m]
                 kps = np.unique([kp for f in seed_facets for kp in f])
             seed_pts = poly_pts[kps.astype('int')]
-
-        fit_geom = seed.geometry.best_fit(seed_pts)
+        
+        try:
+            fit_geom = seed.geometry.best_fit(seed_pts)
+        except ValueError:
+            fit_geom = None
         fit_seed = copy.deepcopy(seed)
-        fit_seed.geometry = fit_geom
+
+        # Check for ill-conditioned seeds of best fit
+        if _ill_conditioned(fit_geom):
+            fit_seed.geometry = None
+        else:
+            fit_seed.geometry = fit_geom
 
         fit_seeds.append(fit_seed)
     return seeding.SeedList(fit_seeds)
+
+
+def _ill_conditioned(geom):
+    if isinstance(geom, microstructpy.geometry.Ellipse):
+        return min(geom.axes) <= 0
+    return False
 
 
 # --------------------------------------------------------------------------- #
@@ -348,7 +371,7 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
     kws -= set(_misc.gen_kws)
 
     # Create Plots
-    n_dim = seeds[0].geometry.n_dim
+    n_dim = len(seeds[0].position)
     for kw in sorted(kws):
         if (kw in _misc.ori_kws) and (n_dim == 3):
             continue
@@ -572,7 +595,7 @@ def _plot_out_pdf(kw, i, phase, comp_phase):
     ymax = 0
 
     inp_dist = phase[kw]
-    comp_vals = comp_phase[kw]
+    comp_vals = np.array([v for v in comp_phase[kw] if v is not None])
     color = phase.get('color', 'C' + str(i % 10))
     name = str(phase.get('name', 'Material ' + str(i + 1)))
     if kw == 'orientation':
@@ -618,7 +641,7 @@ def _plot_out_cdf(kw, i, phase, comp_phase):
     line_labels = []
 
     inp_dist = phase[kw]
-    comp_vals = comp_phase[kw]
+    comp_vals = np.array([v for v in comp_phase[kw] if v is not None])
     color = phase.get('color', 'C' + str(i % 10))
     name = str(phase.get('name', 'Material ' + str(i + 1)))
     if kw == 'orientation':
@@ -703,7 +726,7 @@ def mle_phases(seeds, phases, poly_mesh=None, verif_mask=None):
     for comp_phase, phase in zip(comp_phases, phases):
         param_phase = {}
         for kw in comp_phase:
-            comp_vals = comp_phase[kw]
+            comp_vals = np.array([v for v in comp_phase[kw] if v is not None])
             inp_dist = phase[kw]
             can_circ = 'angle' in kw and hasattr(inp_dist, 'dist')
             if can_circ:
@@ -893,7 +916,14 @@ def _kw_errs(y_exp, y_act):
 
     errs = {}
 
-    r = y_act - y_exp
+    mask = np.array([y_a is not None for y_a in y_act])
+    if not np.any(mask):
+        return errs
+
+    y_expect = np.array(y_exp)[mask]
+    y_actual = np.array([y_a for y_a in y_act if y_a is not None])
+
+    r = y_actual - y_expect
 
     # MAE
     mae = np.mean(np.abs(r))
@@ -908,7 +938,7 @@ def _kw_errs(y_exp, y_act):
     errs['rmse'] = rmse
 
     # R^2
-    coeff_det = _r2(y_act, y_exp)
+    coeff_det = _r2(y_actual, y_expect)
     errs['R^2'] = coeff_det
 
     # Max Error
@@ -934,14 +964,18 @@ def _kw_stats(dist_exp, y_act):
         return [_kw_stats(*tup) for tup in zip(dist_exp, y_act)]
 
     stats = {}
+    y_actual = np.array([y_a for y_a in y_act if y_a is not None])
+    if len(y_actual) == 0:
+        return stats
+
     y_pred = _safe_rvs(dist_exp, 5000)
 
     # Wasserstein Distance
-    wass = scipy.stats.wasserstein_distance(y_act, y_pred)
+    wass = scipy.stats.wasserstein_distance(y_actual, y_pred)
     stats['wasserstein_distance'] = wass
 
     # Energy Distance
-    e_dist = scipy.stats.energy_distance(y_act, y_pred)
+    e_dist = scipy.stats.energy_distance(y_actual, y_pred)
     stats['energy_distance'] = e_dist
 
     # K-S Test
@@ -951,12 +985,12 @@ def _kw_stats(dist_exp, y_act):
         def cdf_func(x):
             return (x > dist_exp).astype('float')
 
-    ks_stat, ks_p = scipy.stats.kstest(y_act, cdf_func)
+    ks_stat, ks_p = scipy.stats.kstest(y_actual, cdf_func)
     stats['ks_statistic'] = ks_stat
     stats['ks_p_value'] = ks_p
 
     # T-test
-    t_stat, t_p = scipy.stats.ttest_ind(y_act, y_pred)
+    t_stat, t_p = scipy.stats.ttest_ind(y_actual, y_pred)
     stats['t_stat'] = t_stat
     stats['t_p_value'] = t_p
 
@@ -1103,15 +1137,15 @@ def _phase_values(seeds, phases, poly_mesh=None, verif_mask=None):
         for kw in phase:
             if 'rot_seq' in kw:
                 continue
+            if kw in _misc.gen_kws:
+                continue
 
             try:
                 if kw in ('area', 'volume') and (poly_mesh is not None):
-                    vlist = [v for v, s, f in zip(vols, seeds, verif_mask)
-                             if s.phase == i and f]
-                    vals = np.array(vlist)
+                    vals = [v for v, s, f in zip(vols, seeds, verif_mask)
+                            if s.phase == i and f]
                 else:
-                    vals = np.array([getattr(s.geometry, kw) for s in
-                                     phase_seeds]).T
+                    vals = [_getattr(s.geometry, kw) for s in phase_seeds]
 
                 comp_phase[kw] = vals
             except AttributeError:
@@ -1119,6 +1153,14 @@ def _phase_values(seeds, phases, poly_mesh=None, verif_mask=None):
 
         comp_phases.append(comp_phase)
     return comp_phases
+
+
+def _getattr(inst, kw):
+    try:
+        a = getattr(inst, kw)
+    except AttributeError:
+        a = None
+    return a
 
 
 def _mle_dist(values, dist):
