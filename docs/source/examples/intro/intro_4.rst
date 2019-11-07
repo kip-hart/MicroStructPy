@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/intro_4_oriented.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/intro_4_oriented.xml
     :language: xml
 
 
@@ -70,19 +70,19 @@ These three plots are shown in :numref:`f_ex_4_oriented_seeds` -
 :numref:`f_ex_4_oriented_tri`.
 
 .. _f_ex_4_oriented_seeds:
-.. figure:: ../../../../examples/intro_4_oriented/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/intro_4_oriented/seeds.png
     :alt: Seed geometries.
 
     Introduction 4 - seed geometries.
     
 .. _f_ex_4_oriented_poly:
-.. figure:: ../../../../examples/intro_4_oriented/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_4_oriented/polymesh.png
     :alt: Polygonal mesh.
 
     Introduction 4 - polygonal mesh.
     
 .. _f_ex_4_oriented_tri:
-.. figure:: ../../../../examples/intro_4_oriented/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_4_oriented/trimesh.png
     :alt: Triangular mesh.
 
     Introduction 4 - triangular mesh.

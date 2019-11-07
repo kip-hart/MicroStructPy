@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/intro_2_quality.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/intro_2_quality.xml
     :language: xml
 
 
@@ -62,19 +62,19 @@ These three plots are shown in :numref:`f_ex_2_quality_seeds` -
 :numref:`f_ex_2_quality_tri`.
 
 .. _f_ex_2_quality_seeds:
-.. figure:: ../../../../examples/intro_2_quality/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/intro_2_quality/seeds.png
     :alt: Seed geometries.
 
     Introduction 2 - seed geometries.
     
 .. _f_ex_2_quality_poly:
-.. figure:: ../../../../examples/intro_2_quality/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_2_quality/polymesh.png
     :alt: Polygonal mesh.
 
     Introduction 2 - polygonal mesh.
     
 .. _f_ex_2_quality_tri:
-.. figure:: ../../../../examples/intro_2_quality/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/intro_2_quality/trimesh.png
     :alt: Triangular mesh.
 
     Introduction 2 - triangular mesh.

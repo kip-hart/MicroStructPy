@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/minimal_paired.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/minimal_paired.xml
     :language: xml
 
 
@@ -55,19 +55,19 @@ These three plots are shown in :numref:`f_ex_min_seeds` -
 :numref:`f_ex_min_tri`.
 
 .. _f_ex_min_seeds:
-.. figure:: ../../../../examples/minimal/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/minimal/seeds.png
     :alt: Seed geometries.
 
     Minimal example - seed geometries.
     
 .. _f_ex_min_poly:
-.. figure:: ../../../../examples/minimal/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/minimal/polymesh.png
     :alt: Polygonal mesh.
 
     Minimal example - polygonal mesh.
     
 .. _f_ex_min_tri:
-.. figure:: ../../../../examples/minimal/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/minimal/trimesh.png
     :alt: Triangular mesh.
 
     Minimal example - triangular mesh.

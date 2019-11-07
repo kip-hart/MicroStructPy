@@ -22,7 +22,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../../../examples/from_image.py
+.. literalinclude:: ../../../../src/microstructpy/examples/from_image.py
     :language: python
 
 Read Image
@@ -33,7 +33,7 @@ The brightness of the image is taken as the red channel, since the RGB values
 are equal. That image is shown in :numref:`f_ex_image_in`.
 
 .. _f_ex_image_in:
-.. figure:: ../../../../examples/aluminum_micro.png
+.. figure:: ../../../../src/microstructpy/examples/aluminum_micro.png
   :alt: Micrograph of aluminum.
 
   Micrograph of aluminum.
@@ -77,7 +77,7 @@ same directory for comparison.
 The output PNG file of this script is shown in :numref:`f_ex_image_out`.
 
 .. _f_ex_image_out:
-.. figure:: ../../../../examples/from_image/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/from_image/trimesh.png
   :alt: Triangular mesh of aluminum microstructure.
 
   Triangular mesh of aluminum microstructure.

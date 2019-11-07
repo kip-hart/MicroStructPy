@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/elliptical_grains.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/elliptical_grains.xml
     :language: xml
 
 
@@ -73,19 +73,19 @@ These three plots are shown in :numref:`f_ex_ell_seeds` -
 :numref:`f_ex_ell_tri`.
 
 .. _f_ex_ell_seeds:
-.. figure:: ../../../../examples/elliptical_grains/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/elliptical_grains/seeds.png
     :alt: Seed geometries.
 
     Elliptical grain example - seed geometries.
 
 .. _f_ex_ell_poly:    
-.. figure:: ../../../../examples/elliptical_grains/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/elliptical_grains/polymesh.png
     :alt: Polygonal mesh.
 
     Elliptical grain example - polygonal mesh.
     
 .. _f_ex_ell_tri:
-.. figure:: ../../../../examples/elliptical_grains/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/elliptical_grains/trimesh.png
     :alt: Triangular mesh.
 
     Elliptical grain example - triangular mesh.

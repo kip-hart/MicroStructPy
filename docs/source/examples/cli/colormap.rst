@@ -17,7 +17,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../../../examples/colormap.xml
+.. literalinclude:: ../../../../src/microstructpy/examples/colormap.xml
     :language: xml
 
 
@@ -63,19 +63,19 @@ These three plots are shown in :numref:`f_ex_colormap_seeds` -
 :numref:`f_ex_colormap_tri`.
 
 .. _f_ex_colormap_seeds:
-.. figure:: ../../../../examples/colormap/seeds.png
+.. figure:: ../../../../src/microstructpy/examples/colormap/seeds.png
     :alt: Seed geometries.
 
     Colormap example - seed geometries.
     
 .. _f_ex_colormap_poly:
-.. figure:: ../../../../examples/colormap/polymesh.png
+.. figure:: ../../../../src/microstructpy/examples/colormap/polymesh.png
     :alt: Polygonal mesh.
 
     Colormap example - polygonal mesh.
     
 .. _f_ex_colormap_tri:
-.. figure:: ../../../../examples/colormap/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/colormap/trimesh.png
     :alt: Triangular mesh.
 
     Colormap example - triangular mesh.

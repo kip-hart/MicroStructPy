@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/docs_banner.py
+.. literalinclude:: ../../../../src/microstructpy/examples/docs_banner.py
     :language: python
 
 Domain Geometry
@@ -82,7 +82,7 @@ The PNG and PDF versions of this plot are saved in a folder named
 ``docs_banner``, in the current directory (i.e ``./docs_banner``).
 
 .. _f_ex_process:
-.. figure:: ../../../../examples/docs_banner/banner.png
+.. figure:: ../../../../src/microstructpy/examples/docs_banner/banner.png
     :alt: Microstructure meshing process.
 
     Microstructure meshing process.

@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../../../examples/standard_voronoi.py
+.. literalinclude:: ../../../../src/microstructpy/examples/standard_voronoi.py
     :language: python
 
 Domain
@@ -44,6 +44,6 @@ Plotting
 The output Voronoi diagram is plotted in :numref:`f_ex_voro`.
 
 .. _f_ex_voro:
-.. figure:: ../../../../examples/standard_voronoi/voronoi_diagram.png
+.. figure:: ../../../../src/microstructpy/examples/standard_voronoi/voronoi_diagram.png
 
   Standard Voronoi diagram.

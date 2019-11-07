@@ -17,7 +17,7 @@ The file can be run using this command::
 
 The full text of the script is:
 
-.. literalinclude:: ../../../../examples/foam.py
+.. literalinclude:: ../../../../src/microstructpy/examples/foam.py
     :language: python
 
 Domain
@@ -72,6 +72,6 @@ Finally, the triangular mesh is saved as a PNG and as a PDF, with the
 resulting plot shown in :numref:`f_ex_foam_tri`.
 
 .. _f_ex_foam_tri:
-.. figure:: ../../../../examples/foam/trimesh.png
+.. figure:: ../../../../src/microstructpy/examples/foam/trimesh.png
 
   Foam example - triangular mesh.

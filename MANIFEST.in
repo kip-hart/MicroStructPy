@@ -1,5 +1,4 @@
 graft docs
-graft examples
 graft src
 graft tests
 
@@ -16,12 +15,13 @@ include requirements.txt
 
 prune docs/source/auto_examples
 prune docs/build*
+prune src/*/examples/*
 prune tests/tmp_out
-prune examples/*
 prune *.yml
 
 exclude examples/*.png
 include examples/aluminum_micro.png
 exclude examples/*.txt
+exclude src/*/examples/.gitignore
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.log Icon*
