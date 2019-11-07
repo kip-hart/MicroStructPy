@@ -10,7 +10,8 @@ import numpy as np
 from matplotlib import patches
 
 from microstructpy import _misc
-from microstructpy.geometry import ellipses
+from microstructpy.geometry._ellipse_best_fit import _best_fit
+
 
 __author__ = 'Kenneth (Kip) Hart'
 
@@ -52,6 +53,23 @@ class Ellipse(object):
     # Constructor                                                             #
     # ----------------------------------------------------------------------- #
     def __init__(self, **kwargs):
+        # Check Values
+        for kw in ('a', 'b', 'size', 'aspect_ratio'):
+            if kw in kwargs and kwargs[kw] <= 0:
+                raise ValueError(kw + ' should be positive.')
+        if 'axes' in kwargs:
+            for i, ax in kwargs['axes']:
+                if ax <= 0:
+                    raise ValueError('axes[{}] should be positive'.format(i))
+
+        for kw in ['matrix', 'orientation']:
+            if kw in kwargs:
+                m = np.array(kwargs[kw])
+                if m.shape != (2, 2):
+                    raise ValueError(kw + ' should be 2x2.')
+                if not np.all(np.isclose(m * m.T, np.eye(2))):
+                    raise ValueError(kw + ' should be orthonormal.')
+
         # position
         if 'center' in kwargs:
             self.center = kwargs['center']
@@ -230,13 +248,14 @@ class Ellipse(object):
           (http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1.7559&rep=rep1&type=pdf)
 
         """  # NOQA: E501
-        # Fit points using ellipses module
-        data = np.array(points).T
-        centroid = data.mean(axis=1)
-        lsqe = ellipses.LSqEllipse()
-        lsqe.fit(data - centroid.reshape(-1, 1))
-        center, width, height, phi = lsqe.parameters()
-        center = centroid + center
+
+        pts = np.array(points)
+        pt_cen = pts.mean(axis=0)
+        pts -= pt_cen.reshape(1, -1)
+
+        width, height, phi, xc, yc = _best_fit(pts, self)
+        xc += pt_cen[0]
+        yc += pt_cen[1]
 
         # Find pair closest to self
         s = np.sin(phi)
