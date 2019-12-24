@@ -1032,14 +1032,14 @@ def dict_convert(dictionary, filepath='.'):
     new_dict = collections.OrderedDict()
     for key in dictionary:
         val = dictionary[key]
-        if type(val) in (dict, collections.OrderedDict):
+        if isinstance(val, dict) or isinstance(val, collections.OrderedDict):
             new_val = dict_convert(val, filepath)
 
             # Exception for scipy.stats distributions
             if 'dist_type' in val:
                 new_val = _dist_convert(new_val)
 
-        elif type(val) is list:
+        elif isinstance(val, list):
             if type(val[0]) is str:
                 new_val = [_misc.from_str(v) for v in val]
             else:
@@ -1055,7 +1055,7 @@ def dict_convert(dictionary, filepath='.'):
             else:
                 new_val = val
 
-        elif type(val) is str:
+        elif isinstance(val, str) or isinstance(val, unicode):
             new_val = _misc.from_str(val)
 
         else:

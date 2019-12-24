@@ -153,6 +153,6 @@ Python Package Examples
     :height: 210px
     :target: package/from_image.html
 
-  .. image:: ../../../src/microstructpy/examples/docs_banner/banner.png
+  .. image:: ../../../src/microstructpy/examples/msp_process/process.png
     :alt: Microstructure meshing process..
     :target: package/msp_process.html
