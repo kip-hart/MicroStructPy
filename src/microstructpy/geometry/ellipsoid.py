@@ -519,6 +519,14 @@ class Ellipsoid(object):
             else:
                 return 0.5 * np.pi * s_dist.moment(3) / 3
 
+        if 'volume' in kwargs:
+            v_dist = kwargs['volume']
+            try:
+                v_exp = v_dist.moment(1)
+            except AttributeError:
+                v_exp = v_dist
+            return v_exp
+
         # check for a, b, and c distribution
         try:
             exp_vol = 4 * np.pi / 3
