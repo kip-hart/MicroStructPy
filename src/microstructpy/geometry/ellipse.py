@@ -169,9 +169,9 @@ class Ellipse(object):
         r"""Find ellipse of best fit for points
 
         This function computes the ellipse of best fit for a set of points.
-        It solves for the quadratic form of the ellipse using linear least
-        squares regression, then computes the center, axes, and orientation of
-        the ellipse from the quadratic coefficients.
+        It is heavily adapted from the `least-squares-ellipse-fitting`_
+        repository on GitHub. This repository implements a published fitting
+        algorithm in Python. [#halir]_
 
         The current instance of the class is used as an initial guess for
         the ellipse of best fit. Since an ellipse can be expressed multiple
@@ -183,6 +183,13 @@ class Ellipse(object):
 
         Returns:
             .Ellipse: An instance of the class that best fits the points.
+
+        .. _`least-squares-ellipse-fitting`: https://github.com/bdhammel/least-squares-ellipse-fitting
+
+        .. [#halir] Halir, R., Flusser, J., "Numerically Stable Direct Least
+          Squares Fitting of Ellipses," *6th International Conference in Central
+          Europe on Computer Graphics and Visualization*, Vol. 98, 1998.
+          (http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1.7559&rep=rep1&type=pdf)
 
         """  # NOQA: E501
 
