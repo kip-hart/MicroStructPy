@@ -545,7 +545,10 @@ class SeedList(object):
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
             handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            ax.legend(handles=handles, loc=loc)
+            if n == 2:
+                ax.legend(handles=handles, loc=loc)
+            else:
+                plt.gca().legend(handles=handles, loc=loc)
 
     def plot_breakdown(self, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
