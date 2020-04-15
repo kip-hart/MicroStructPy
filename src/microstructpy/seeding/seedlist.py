@@ -540,7 +540,7 @@ class SeedList(object):
 
             # Replace plural keywords
             for p_kw in p_kwargs:
-                for kw in ('edgecolors', 'facecolors'):
+                for kw in ('edgecolors', 'facecolors', 'linewidths'):
                     if kw in p_kw:
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
