@@ -619,21 +619,11 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     # Plot seeds
     edge_kwargs.setdefault('edgecolors', {2: 'k', 3: 'none'}[n_dim])
-    seeds.plot(facecolors=seed_colors, **edge_kwargs)
-
-    # Add legend
-    custom_seeds = [None for _ in phases]
-    for seed in seeds:
-        phase_num = seed.phase
-        if custom_seeds[phase_num] is None:
-            c = _phase_color(phase_num, phases)
-            lbl = phase_names[phase_num]
-            phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
-            custom_seeds[phase_num] = phase_patch
-
     if given_names and color_by == 'material':
-        handles = [h for h in custom_seeds if h is not None]
-        ax.legend(handles=handles, loc=4)
+        seeds.plot(material=phase_names, facecolors=seed_colors, loc=4,
+                   **edge_kwargs)
+    else:
+        seeds.plot(facecolors=seed_colors, **edge_kwargs)
 
     # Set limits
     lims = domain.limits
