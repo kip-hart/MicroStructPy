@@ -729,7 +729,10 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
     # Plot polygons
     fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
     if n_dim == 2:
-        pmesh.plot(facecolors=fcs)
+        if given_names:
+            pmesh.plot(facecolors=fcs, material=phase_names)
+        else:
+            pmesh.plot(facecolors=fcs)
 
         edge_color = edge_kwargs.pop('edgecolors', (0, 0, 0, 1))
         facet_colors = []
@@ -740,22 +743,14 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
                 facet_colors.append('none')
 
         edge_kwargs.setdefault('capstyle', 'round')
-        pmesh.plot_facets(color=facet_colors, **edge_kwargs)
+        pmesh.plot_facets(color=facet_colors, index_by='facet', **edge_kwargs)
     else:
         edge_kwargs.setdefault('edgecolors', 'k')
-        pmesh.plot(facecolors=fcs, **edge_kwargs)
-
-    # add legend
-    if given_names:
-        custom_seeds = [None for _ in phases]
-        for phase_num in pmesh.phase_numbers:
-            if custom_seeds[phase_num] is None:
-                c = phase_colors[phase_num]
-                lbl = phase_names[phase_num]
-                phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
-                custom_seeds[phase_num] = phase_patch
-        handles = [h for h in custom_seeds if h is not None]
-        ax.legend(handles=handles, loc=4)
+        if given_names:
+            pmesh.plot(facecolors=fcs, index_by='seed', material=phase_names,
+                       **edge_kwargs)
+        else:
+            pmesh.plot(facecolors=fcs, index_by='seed', **edge_kwargs)
 
     # format axes
     lims = np.array([np.min(pmesh.points, 0), np.max(pmesh.points, 0)]).T
@@ -790,25 +785,22 @@ def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
             return [_cm_color(p / (n - 1), colormap) for p in
                     pmesh.phase_numbers]
     else:
-        poly_fcs = []
-        for n_pair in pmesh.facet_neighbors:
-            if min(n_pair) < 0:
-                n_int = max(n_pair)
-                if color_by == 'material':
-                    phase_num = pmesh.phase_numbers[n_int]
-                    color = _phase_color(phase_num, phases)
-                elif color_by == 'seed number':
-                    n_seed = max(pmesh.seed_numbers) + 1
-                    seed_num = pmesh.seed_numbers[n_int]
-                    color = _cm_color(seed_num / (n_seed - 1), colormap)
-                elif color_by == 'material number':
-                    n_phases = len(phases)
-                    phase_num = pmesh.phase_numbers[n_int]
-                    color = _cm_color(phase_num / (n_phases - 1), colormap)
+        s2p = {s: p for s, p in zip(pmesh.seed_numbers, pmesh.phase_numbers)}
+        n = max(s2p.keys()) + 1
+        colors = []
+        for s in range(n):
+            if color_by == 'material':
+                phase_num = s2p[s]
+                color = _phase_color(phase_num, phases)
+            elif color_by == 'seed number':
+                color = _cm_color(seed_num / (n - 1), colormap)
+            elif color_by == 'material number':
+                n_phases = len(phases)
+                color = _cm_color(s2p[s] / (n - 1), colormap)
             else:
                 color = 'none'
-            poly_fcs.append(color)
-        return poly_fcs
+            colors.append(color)
+        return colors
 
 
 # --------------------------------------------------------------------------- #
