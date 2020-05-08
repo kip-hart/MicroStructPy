@@ -793,10 +793,10 @@ def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
                 phase_num = s2p[s]
                 color = _phase_color(phase_num, phases)
             elif color_by == 'seed number':
-                color = _cm_color(seed_num / (n - 1), colormap)
+                color = _cm_color(s / (n - 1), colormap)
             elif color_by == 'material number':
                 n_phases = len(phases)
-                color = _cm_color(s2p[s] / (n - 1), colormap)
+                color = _cm_color(s2p[s] / (n_phases - 1), colormap)
             else:
                 color = 'none'
             colors.append(color)
