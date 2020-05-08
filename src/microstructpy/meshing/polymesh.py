@@ -653,8 +653,8 @@ class PolyMesh(object):
                 function. For example,
                 ``plot(index_by='material', color=['blue', 'red'])`` will plot
                 the regions with ``phase_number`` equal to 0 in blue, and
-                regions with ``phase`` equal to 1 in red. The facet option is
-                only available for 3D plots. Defaults to 'seed'.
+                regions with ``phase_number`` equal to 1 in red. The facet
+                option is only available for 3D plots. Defaults to 'seed'.
             material (list): *(optional)* Names of material phases. One entry
                 per material phase (the ``index_by`` argument is ignored).
                 If this argument is set, a legend is added to the plot with
