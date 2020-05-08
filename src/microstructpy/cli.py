@@ -775,15 +775,20 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
 def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
     if n_dim == 2:
         if color_by == 'material':
-            return [_phase_color(n, phases) for n in pmesh.phase_numbers]
+            r_colors = [_phase_color(n, phases) for n in pmesh.phase_numbers]
         elif color_by == 'seed number':
             n = max(pmesh.seed_numbers) + 1
-            return [_cm_color(s / (n - 1), colormap) for s in
+            r_colors = [_cm_color(s / (n - 1), colormap) for s in
                     pmesh.seed_numbers]
         elif color_by == 'material number':
             n = len(phases)
-            return [_cm_color(p / (n - 1), colormap) for p in
+            r_colors = [_cm_color(p / (n - 1), colormap) for p in
                     pmesh.phase_numbers]
+        n_seeds = max(pmesh.seed_numbers) + 1
+        s_colors = ['none' for i in range(n_seeds)]
+        for seed_num, r_c in zip(pmesh.seed_numbers, r_colors):
+            s_colors[seed_num] = r_c
+        return s_colors
     else:
         s2p = {s: p for s, p in zip(pmesh.seed_numbers, pmesh.phase_numbers)}
         n = max(s2p.keys()) + 1
