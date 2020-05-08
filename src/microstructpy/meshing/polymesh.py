@@ -663,19 +663,12 @@ class PolyMesh(object):
             ax.add_collection(pc)
             ax.autoscale_view()
         elif n_dim == 3:
-            if len(plt.gcf().axes) == 0:
-                ax = plt.axes(projection=Axes3D.name)
-            else:
-                ax = plt.gca()
-
-            xy = [np.array([self.points[kp] for kp in f]) for f in self.facets]
-            pc = Poly3DCollection(xy, **kwargs)
-            ax.add_collection(pc)
+            self.plot_facets(**kwargs)
 
         else:
             raise NotImplementedError('Cannot plot in ' + str(n_dim) + 'D.')
 
-    def plot_facets(self, **kwargs):
+    def plot_facets(self, hide_interior=True, **kwargs):
         """Plot PolyMesh facets.
 
         This function plots the facets of the polygon mesh, rather than the
@@ -688,6 +681,9 @@ class PolyMesh(object):
         The keyword arguments are passed though to matplotlib.
 
         Args:
+            hide_interior (bool): If True, removes interior facets from the
+            output plot. This avoids occasional matplotlib issue where
+            interior facets are shown in output plots.
             **kwargs (dict): Keyword arguments for matplotlib.
 
         """
@@ -700,18 +696,29 @@ class PolyMesh(object):
             ax.add_collection(pc)
             ax.autoscale_view()
         else:
-            kwargs_3d = {}
-            color_spec = False
-            for kw, val in kwargs.items():
-                if kw == 'colors':
-                    color_spec = True
-                    kwargs_3d['edgecolors'] = val
-                else:
-                    kwargs_3d[kw] = val
-            if color_spec:
-                kwargs_3d['facecolors'] = 'none'
+            if len(plt.gcf().axes) == 0:
+                ax = plt.axes(projection=Axes3D.name)
+            else:
+                ax = plt.gca()
 
-            self.plot(**kwargs_3d)
+            hide_interior = False
+            if hide_interior:
+                f_mask = [min(fn) < 0 for fn in self.facet_neighbors]
+                xy = [np.array([self.points[kp] for kp in f]) for m, f in
+                      zip(f_mask, self.facets) if m]
+                list_kws = [k for k, v in kwargs.items()
+                            if isinstance(v, list)]
+                plt_kwargs = {k: v for k, v in kwargs.items() if
+                              k not in list_kws}
+                for k in list_kws:
+                    v = [val for val, m in zip(kwargs[k], f_mask) if m]
+                    plt_kwargs[k] = v
+            else:
+                xy = [np.array([self.points[kp] for kp in f]) for f in
+                      self.facets]
+                plt_kwargs = kwargs
+            pc = Poly3DCollection(xy, **plt_kwargs)
+            ax.add_collection(pc)
 
     # ----------------------------------------------------------------------- #
     # Mesh Equality                                                           #
