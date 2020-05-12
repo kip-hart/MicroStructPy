@@ -5,12 +5,10 @@
 # --------------------------------------------------------------------------- #
 from __future__ import division
 
-import ellipses as lsqel
+import ellipse as lsqel  # ellipse module in lsq-ellipse package
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
-
-from microstructpy.geometry._ellipse_best_fit import _best_fit
 
 __author__ = 'Kenneth (Kip) Hart'
 
