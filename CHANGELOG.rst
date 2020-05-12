@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_ - 2020-05-11
+--------------------------
+Changed
+'''''''
+- Ellipse of best fit method calls the `lsq-ellipse`_ package.
+
 `1.1.2`_ - 2019-11-07
 ---------------------
 Fixed
@@ -65,4 +71,5 @@ Added
 .. _`1.0.0`: https://github.com/kip-hart/MicroStructPy/releases/tag/v1.0.0
 
 .. _`Keep a Changelog`: https://keepachangelog.com/en/1.0.0/
+.. _`lsq-ellipse`: https://pypi.org/project/lsq-ellipse
 .. _`Semantic Versioning`: https://semver.org/spec/v2.0.0.html

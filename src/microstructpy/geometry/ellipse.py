@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------- #
 from __future__ import division
 
+import ellipses as lsqel
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
@@ -169,9 +170,8 @@ class Ellipse(object):
         r"""Find ellipse of best fit for points
 
         This function computes the ellipse of best fit for a set of points.
-        It is heavily adapted from the `least-squares-ellipse-fitting`_
-        repository on GitHub. This repository implements a published fitting
-        algorithm in Python. [#halir]_
+        It calls the `least-squares-ellipse-fitting`_ package, which implements
+        a published fitting algorithm in Python. [#halir]_
 
         The current instance of the class is used as an initial guess for
         the ellipse of best fit. Since an ellipse can be expressed multiple
@@ -197,7 +197,10 @@ class Ellipse(object):
         pt_cen = pts.mean(axis=0)
         pts -= pt_cen.reshape(1, -1)
 
-        width, height, phi, xc, yc = _best_fit(pts, self)
+        reg = lsqel.LsqEllipse().fit(pts)
+        center, width, height, phi = reg.as_parameters()
+        xc, yc = center
+
         xc += pt_cen[0]
         yc += pt_cen[1]
 
