@@ -10,6 +10,7 @@ and this project adheres to `Semantic Versioning`_.
 --------------------------
 Changed
 '''''''
+- Removed support for Python 2.7.
 - Ellipse of best fit method calls the `lsq-ellipse`_ package.
 
 `1.1.2`_ - 2019-11-07
