@@ -976,18 +976,31 @@ def _kw_stats(dist_exp, y_act, kw=None):
 
     if kw in ori_deg_kws and dist_exp == 'random':
         dist_exp = scipy.stats.uniform(0, 360)
-
+        if kw == 'orientation':
+            y_actual = np.array([np.arctan2(y[1][0], y[0][0]) for y in y_act
+                                 if y is not None])
+        else:
+            y_actual = np.array([y_a for y_a in y_act if y_a is not None])
     elif kw in ori_rad_kws and dist_exp == 'random':
         dist_exp = scipy.stats.uniform(0, 2 * np.pi)
+        y_actual = np.array([y_a for y_a in y_act if y_a is not None])
+    else:
+        y_actual = np.array([y_a for y_a in y_act if y_a is not None])
 
     stats = {}
-    y_actual = np.array([y_a for y_a in y_act if y_a is not None])
     if len(y_actual) == 0:
+        return stats
+
+    is_3d_ori = kw == 'orientation' and np.array(y_act[0]).shape[0] == 3
+    if is_3d_ori or 'rot_seq' in kw:
         return stats
 
     y_pred = _safe_rvs(dist_exp, 5000)
 
     # Wasserstein Distance
+    print('kw', kw)
+    print('y_actual', np.array(y_actual).shape)
+    print('y_pred', np.array(y_pred).shape)
     wass = scipy.stats.wasserstein_distance(y_actual, y_pred)
     stats['wasserstein_distance'] = wass
 
