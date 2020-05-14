@@ -15,6 +15,14 @@ Changed
 Removed
 '''''''
 - Single elliptical grain example.
+
+`Unreleased`_ - 2020-05-11
+--------------------------
+Changed
+'''''''
+- Removed support for Python 2.7.
+- Ellipse of best fit method calls the `lsq-ellipse`_ package.
+
 `1.1.2`_ - 2019-11-07
 ---------------------
 Fixed
@@ -76,4 +84,5 @@ Added
 .. _`1.0.0`: https://github.com/kip-hart/MicroStructPy/releases/tag/v1.0.0
 
 .. _`Keep a Changelog`: https://keepachangelog.com/en/1.0.0/
+.. _`lsq-ellipse`: https://pypi.org/project/lsq-ellipse
 .. _`Semantic Versioning`: https://semver.org/spec/v2.0.0.html

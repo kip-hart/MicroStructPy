@@ -64,9 +64,6 @@ setup(
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering',
@@ -88,6 +85,7 @@ setup(
         'aabbtree',
         'matplotlib>=2.2.0,<3.1.0',
         'pybind11',  # must come before meshpy for successful install
+        'lsq-ellipse',
         'meshpy>=2018.2.1',
         'numpy>=1.13.0',
         'pyquaternion',
