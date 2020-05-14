@@ -826,13 +826,14 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
     phase_colors = []
     phase_names = []
-    given_names = []
+    given_names = False
     for i, phase in enumerate(phases):
         color = phase.get('color', 'C' + str(i % 10))
         name = phase.get('name', 'Material ' + str(i + 1))
         phase_colors.append(color)
         phase_names.append(name)
-        given_names.append('name' in phase)
+        if 'name' in phase:
+            given_names = True
 
     # Set up axes
     plt.clf()
