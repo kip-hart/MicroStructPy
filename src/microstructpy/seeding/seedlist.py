@@ -568,7 +568,7 @@ class SeedList(object):
             plt.gca().set_xlim(xlim)
             plt.gca().set_ylim(ylim)
             plt.gca().set_zlim(zlim)
-            ax.set_aspect('equal')
+            plt.gca().set_aspect('equal')
 
     def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.

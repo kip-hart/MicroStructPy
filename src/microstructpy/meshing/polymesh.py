@@ -842,7 +842,7 @@ class PolyMesh(object):
             plt.gca().set_xlim(xlim)
             plt.gca().set_ylim(ylim)
             plt.gca().set_zlim(zlim)
-            ax.set_aspect('equal')
+            plt.gca().set_aspect('equal')
 
     # ----------------------------------------------------------------------- #
     # Mesh Equality                                                           #
