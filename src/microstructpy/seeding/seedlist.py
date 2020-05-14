@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 from matplotlib import collections
+from matplotlib import patches
 from matplotlib.patches import Rectangle
 from pyquaternion import Quaternion
 from scipy.spatial import distance
@@ -359,7 +360,7 @@ class SeedList(object):
     # ----------------------------------------------------------------------- #
     # Plot Function                                                           #
     # ----------------------------------------------------------------------- #
-    def plot(self, **kwargs):
+    def plot(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the seeds in the seed list.
 
         This function plots the seeds contained in the seed list.
@@ -373,17 +374,34 @@ class SeedList(object):
         length as the seed list.
 
         Args:
+            index_by (str): *(optional)* {'material' | 'seed'}
+                Flag for indexing into the other arrays passed into the
+                function. For example,
+                ``plot(index_by='material', color=['blue', 'red'])`` will plot
+                the seeds with ``phase`` equal to 0 in blue, and seeds with
+                ``phase`` equal to 1 in red. Defaults to 'seed'.
+            material (list): *(optional)* Names of material phases. One entry
+                per material phase (the ``index_by`` argument is ignored).
+                If this argument is set, a legend is added to the plot with
+                one entry per material.
+            loc (int or str): *(optional)* The location of the legend,
+                if 'material' is specified. This argument is passed directly
+                through to :func:`matplotlib.pyplot.legend`. Defaults to 0,
+                which is 'best' in matplotlib.
             **kwargs: Keyword arguments to pass to matplotlib
 
         """
         seed_args = [{} for seed in self]
-        for key, val in kwargs.items():
-            if type(val) in (list, np.array):
-                for args, elem in zip(seed_args, val):
-                    args[key] = elem
-            else:
-                for args in seed_args:
-                    args[key] = val
+        for seed_num, seed in enumerate(self):
+            phase_num = seed.phase
+            for key, val in kwargs.items():
+                if type(val) in (list, np.array):
+                    if index_by == 'seed' and len(val) > seed_num:
+                        seed_args[seed_num][key] = val[seed_num]
+                    elif index_by == 'material' and len(val) > phase_num:
+                        seed_args[seed_num][key] = val[phase_num]
+                else:
+                    seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
 
@@ -504,7 +522,35 @@ class SeedList(object):
 
             ax.autoscale_view()
 
-    def plot_breakdown(self, **kwargs):
+        # Add legend
+        if material:
+            p_kwargs = [{'label': m} for m in material]
+            if index_by == 'seed':
+                for seed_kwargs, seed in zip(seed_args,  self):
+                    p = seed.phase
+                    p_kwargs[p].update(seed_kwargs)
+            else:
+                for key, val in kwargs.items():
+                    if type(val) in (list, np.array):
+                        for i, elem in enumerate(val):
+                            p_kwargs[i][key] = elem
+                    else:
+                        for i in range(len(p_kwargs)):
+                            p_kwargs[i][key] = val
+
+            # Replace plural keywords
+            for p_kw in p_kwargs:
+                for kw in _misc.mpl_plural_kwargs:
+                    if kw in p_kw:
+                        p_kw[kw[:-1]] = p_kw[kw]
+                        del p_kw[kw]
+            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
+            if n == 2:
+                ax.legend(handles=handles, loc=loc)
+            else:
+                plt.gca().legend(handles=handles, loc=loc)
+
+    def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
 
         This function plots the breakdowns of seeds contained in the seed list.
@@ -518,17 +564,34 @@ class SeedList(object):
         length as the seed list.
 
         Args:
+            index_by (str): *(optional)* {'material' | 'seed'}
+                Flag for indexing into the other arrays passed into the
+                function. For example,
+                ``plot(index_by='material', color=['blue', 'red'])`` will plot
+                the seeds with ``phase`` equal to 0 in blue, and seeds with
+                ``phase`` equal to 1 in red. Defaults to 'seed'.
+            material (list): *(optional)* Names of material phases. One entry
+                per material phase (the ``index_by`` argument is ignored).
+                If this argument is set, a legend is added to the plot with
+                one entry per material.
+            loc (int or str): *(optional)* The location of the legend,
+                if 'material' is specified. This argument is passed directly
+                through to :func:`matplotlib.pyplot.legend`. Defaults to 0,
+                which is 'best' in matplotlib.
             **kwargs: Keyword arguments to pass to matplotlib
 
         """
         seed_args = [{} for seed in self]
-        for key, val in kwargs.items():
-            if type(val) in (list, np.array):
-                for args, elem in zip(seed_args, val):
-                    args[key] = elem
-            else:
-                for args in seed_args:
-                    args[key] = val
+        for seed_num, seed in enumerate(self):
+            phase_num = seed.phase
+            for key, val in kwargs.items():
+                if type(val) in (list, np.array):
+                    if index_by == 'seed' and len(val) > seed_num:
+                        seed_args[seed_num][key] = val[seed_num]
+                    elif index_by == 'material' and len(val) > phase_num:
+                        seed_args[seed_num][key] = val[phase_num]
+                else:
+                    seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
 
@@ -565,6 +628,34 @@ class SeedList(object):
                                                **ec_kwargs)
             ax.add_collection(ec)
             ax.autoscale_view()
+
+        # Add legend
+        if material:
+            p_kwargs = [{'label': m} for m in material]
+            if index_by == 'seed':
+                for seed_kwargs, seed in zip(seed_args,  self):
+                    p = seed.phase
+                    p_kwargs[p].update(seed_kwargs)
+            else:
+                for key, val in kwargs.items():
+                    if type(val) in (list, np.array):
+                        for i, elem in enumerate(val):
+                            p_kwargs[i][key] = elem
+                    else:
+                        for i in range(len(p_kwargs)):
+                            p_kwargs[i][key] = val
+
+            # Replace plural keywords
+            for p_kw in p_kwargs:
+                for kw in _misc.mpl_plural_kwargs:
+                    if kw in p_kw:
+                        p_kw[kw[:-1]] = p_kw[kw]
+                        del p_kw[kw]
+            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
+            if n == 2:
+                ax.legend(handles=handles, loc=loc)
+            else:
+                plt.gca().legend(handles=handles, loc=loc)
 
     # ----------------------------------------------------------------------- #
     # Position Function                                                       #
