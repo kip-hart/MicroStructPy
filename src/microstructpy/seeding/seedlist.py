@@ -378,7 +378,7 @@ class SeedList(object):
                 Flag for indexing into the other arrays passed into the
                 function. For example,
                 ``plot(index_by='material', color=['blue', 'red'])`` will plot
-                the seeds with ``phase`` equal to 0 in blue, and seeds with 
+                the seeds with ``phase`` equal to 0 in blue, and seeds with
                 ``phase`` equal to 1 in red. Defaults to 'seed'.
             material (list): *(optional)* Names of material phases. One entry
                 per material phase (the ``index_by`` argument is ignored).
@@ -568,7 +568,7 @@ class SeedList(object):
                 Flag for indexing into the other arrays passed into the
                 function. For example,
                 ``plot(index_by='material', color=['blue', 'red'])`` will plot
-                the seeds with ``phase`` equal to 0 in blue, and seeds with 
+                the seeds with ``phase`` equal to 0 in blue, and seeds with
                 ``phase`` equal to 1 in red. Defaults to 'seed'.
             material (list): *(optional)* Names of material phases. One entry
                 per material phase (the ``index_by`` argument is ignored).
@@ -628,7 +628,7 @@ class SeedList(object):
                                                **ec_kwargs)
             ax.add_collection(ec)
             ax.autoscale_view()
-        
+
         # Add legend
         if material:
             p_kwargs = [{'label': m} for m in material]

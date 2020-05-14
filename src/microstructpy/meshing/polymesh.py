@@ -797,9 +797,9 @@ class PolyMesh(object):
                 f_mask = [min(fn) < 0 for fn in self.facet_neighbors]
                 xy = [np.array([self.points[kp] for kp in f]) for m, f in
                       zip(f_mask, self.facets) if m]
-                list_kws = [k for k, v in f_kwargs.items()
-                            if isinstance(v, list)]
-                plt_kwargs = {k: v for k, v in f_kwargs.items() if
+                list_kws = [k for k, vl in f_kwargs.items()
+                            if isinstance(vl, list)]
+                plt_kwargs = {k: vl for k, vl in f_kwargs.items() if
                               k not in list_kws}
                 for k in list_kws:
                     v = [val for val, m in zip(f_kwargs[k], f_mask) if m]
