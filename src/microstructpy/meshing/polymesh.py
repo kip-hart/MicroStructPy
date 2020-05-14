@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyvoro
 from matplotlib import collections
+from matplotlib import patches
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial import distance
@@ -635,7 +636,7 @@ class PolyMesh(object):
     # ----------------------------------------------------------------------- #
     # Plot Mesh                                                               #
     # ----------------------------------------------------------------------- #
-    def plot(self, **kwargs):
+    def plot(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the mesh.
 
         This function plots the polygon mesh.
@@ -647,6 +648,21 @@ class PolyMesh(object):
         The keyword arguments are passed though to matplotlib.
 
         Args:
+            index_by (str): *(optional)* {'facet' | 'material' | 'seed'}
+                Flag for indexing into the other arrays passed into the
+                function. For example,
+                ``plot(index_by='material', color=['blue', 'red'])`` will plot
+                the regions with ``phase_number`` equal to 0 in blue, and
+                regions with ``phase_number`` equal to 1 in red. The facet
+                option is only available for 3D plots. Defaults to 'seed'.
+            material (list): *(optional)* Names of material phases. One entry
+                per material phase (the ``index_by`` argument is ignored).
+                If this argument is set, a legend is added to the plot with
+                one entry per material.
+            loc (int or str): *(optional)* The location of the legend,
+                if 'material' is specified. This argument is passed directly
+                through to :func:`matplotlib.pyplot.legend`. Defaults to 0,
+                which is 'best' in matplotlib.
             **kwargs: Keyword arguments for matplotlib.
 
         """
@@ -658,24 +674,62 @@ class PolyMesh(object):
             # create poly input
             xy = [np.array([self.points[kp] for kp in lp]) for lp in vloops]
 
-            pc = collections.PolyCollection(xy, **kwargs)
+            plt_kwargs = {}
+            for key, value in kwargs.items():
+                if type(value) in (list, np.array):
+                    plt_value = []
+                    for s, p in zip(self.seed_numbers, self.phase_numbers):
+                        if index_by == 'material':
+                            region_value = value[p]
+                        elif index_by == 'seed':
+                            region_value = value[s]
+                        else:
+                            e_str = 'Cannot index by {}.'.format(index_by)
+                            raise ValueError(e_str)
+                        plt_value.append(region_value)
+                else:
+                    plt_value = value
+                plt_kwargs[key] = plt_value
+            pc = collections.PolyCollection(xy, **plt_kwargs)
             ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
         elif n_dim == 3:
-            if len(plt.gcf().axes) == 0:
-                ax = plt.axes(projection=Axes3D.name)
-            else:
-                ax = plt.gca()
-
-            xy = [np.array([self.points[kp] for kp in f]) for f in self.facets]
-            pc = Poly3DCollection(xy, **kwargs)
-            ax.add_collection(pc)
+            self.plot_facets(index_by=index_by, **kwargs)
 
         else:
             raise NotImplementedError('Cannot plot in ' + str(n_dim) + 'D.')
 
-    def plot_facets(self, **kwargs):
+        # Add legend
+        if material and index_by in ('seed', 'material'):
+            p_kwargs = [{'label': m} for m in material]
+            s2p = {s: p for s, p in zip(self.seed_numbers, self.phase_numbers)}
+            for key, value in kwargs.items():
+                if type(value) in (list, np.array):
+                    if index_by == 'material':
+                        for p, v in enumerate(value):
+                            p_kwargs[p][key] = v
+                    else:
+                        for s, v in enumerate(value):
+                            p = s2p[s]
+                            p_kwargs[p][key] = v
+                else:
+                    for i, m in enumerate(material):
+                        p_kwargs[i][key] = value
+
+            # Replace plural keywords
+            for p_kw in p_kwargs:
+                for kw in _misc.mpl_plural_kwargs:
+                    if kw in p_kw:
+                        p_kw[kw[:-1]] = p_kw[kw]
+                        del p_kw[kw]
+            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
+            if n_dim == 2:
+                ax.legend(handles=handles, loc=loc)
+            else:
+                plt.gca().legend(handles=handles, loc=loc)
+
+    def plot_facets(self, index_by='seed', hide_interior=True, **kwargs):
         """Plot PolyMesh facets.
 
         This function plots the facets of the polygon mesh, rather than the
@@ -688,30 +742,74 @@ class PolyMesh(object):
         The keyword arguments are passed though to matplotlib.
 
         Args:
+            index_by (str): *(optional)* {'facet' | 'material' | 'seed'}
+                Flag for indexing into the other arrays passed into the
+                function. For example,
+                ``plot(index_by='material', color=['blue', 'red'])`` will plot
+                the regions with ``phase_number`` equal to 0 in blue, and
+                regions with ``phase`` equal to 1 in red. The facet option is
+                only available for 3D plots. Defaults to 'seed'.
+            hide_interior (bool): If True, removes interior facets from the
+            output plot. This avoids occasional matplotlib issue where
+            interior facets are shown in output plots.
             **kwargs (dict): Keyword arguments for matplotlib.
 
         """
+        f_kwargs = {}
+        for key, value in kwargs.items():
+            if type(value) in (list, np.array):
+                f_values = []
+                for fn in range(len(self.facets)):
+                    neighs = self.facet_neighbors[fn]
+                    r = max(neighs)
+                    sn = self.seed_numbers[r]
+                    pn = self.phase_numbers[r]
+                    if index_by == 'facet':
+                        ind = fn
+                    elif index_by == 'material':
+                        ind = pn
+                    elif index_by == 'seed':
+                        ind = sn
+                    else:
+                        e_str = 'Cannot index by {}.'.format(index_by)
+                        raise ValueError(e_str)
+                    v = value[ind]
+                    f_values.append(v)
+                f_kwargs[key] = f_values
+            else:
+                f_kwargs[key] = value
+
         n_dim = len(self.points[0])
         if n_dim == 2:
             xy = [np.array([self.points[kp] for kp in f]) for f in self.facets]
 
-            pc = collections.LineCollection(xy, **kwargs)
+            pc = collections.LineCollection(xy, **f_kwargs)
             ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
         else:
-            kwargs_3d = {}
-            color_spec = False
-            for kw, val in kwargs.items():
-                if kw == 'colors':
-                    color_spec = True
-                    kwargs_3d['edgecolors'] = val
-                else:
-                    kwargs_3d[kw] = val
-            if color_spec:
-                kwargs_3d['facecolors'] = 'none'
+            if len(plt.gcf().axes) == 0:
+                ax = plt.axes(projection=Axes3D.name)
+            else:
+                ax = plt.gca()
 
-            self.plot(**kwargs_3d)
+            if hide_interior:
+                f_mask = [min(fn) < 0 for fn in self.facet_neighbors]
+                xy = [np.array([self.points[kp] for kp in f]) for m, f in
+                      zip(f_mask, self.facets) if m]
+                list_kws = [k for k, vl in f_kwargs.items()
+                            if isinstance(vl, list)]
+                plt_kwargs = {k: vl for k, vl in f_kwargs.items() if
+                              k not in list_kws}
+                for k in list_kws:
+                    v = [val for val, m in zip(f_kwargs[k], f_mask) if m]
+                    plt_kwargs[k] = v
+            else:
+                xy = [np.array([self.points[kp] for kp in f]) for f in
+                      self.facets]
+                plt_kwargs = f_kwargs
+            pc = Poly3DCollection(xy, **plt_kwargs)
+            ax.add_collection(pc)
 
     # ----------------------------------------------------------------------- #
     # Mesh Equality                                                           #
