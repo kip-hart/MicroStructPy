@@ -14,7 +14,7 @@ The file can be run using this command::
 
 The full text of the file is:
 
-.. literalinclude:: ../../../../examples/msp_process.py
+.. literalinclude:: ../../../../src/microstructpy/examples/msp_process.py
     :language: python
 
 XML File
@@ -39,7 +39,7 @@ boxes, then adding arrows to connect them.
 The chart is shown in :numref:`f_ex_msp_process`.
 
 .. _f_ex_msp_process:
-.. figure:: ../../../../examples/msp_process/process.png
+.. figure:: ../../../../src/microstructpy/examples/msp_process/process.png
     :alt: MicroStructPy welcome page flowchart.
 
     MicroStructPy welcome page flowchart.

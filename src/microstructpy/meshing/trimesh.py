@@ -18,6 +18,7 @@ import meshpy.tet
 import meshpy.triangle
 import numpy as np
 from matplotlib import collections
+from matplotlib import patches
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
@@ -642,7 +643,7 @@ class TriMesh(object):
     # ----------------------------------------------------------------------- #
     # Plot Function                                                           #
     # ----------------------------------------------------------------------- #
-    def plot(self, **kwargs):
+    def plot(self, index_by='element', material=[], loc=0, **kwargs):
         """Plot the mesh.
 
         This method plots the mesh using matplotlib.
@@ -654,6 +655,25 @@ class TriMesh(object):
         The keyword arguments are passed though to matplotlib.
 
         Args:
+            index_by (str): *(optional)* {'element' | 'attribute'}
+                Flag for indexing into the other arrays passed into the
+                function. For example,
+                ``plot(index_by='attribute', color=['blue', 'red'])`` will plot
+                the elements with ``element_attribute`` equal to 0 in blue, and
+                elements with ``element_attribute`` equal to 1 in red.
+                Note that in 3D the facets are plotted instead of the elements,
+                so kwarg lists must be based on ``facets`` and
+                ``facet_attributes``. Defaults to 'element'.
+            material (list): *(optional)* Names of material phases. One entry
+                per material phase (the ``index_by`` argument is ignored).
+                If this argument is set, a legend is added to the plot with
+                one entry per material. Note that the ``element_attributes``
+                in 2D or the ``facet_attributes`` in 3D must be the material
+                numbers for the legend to be formatted properly.
+            loc (int or str): *(optional)* The location of the legend,
+                if 'material' is specified. This argument is passed directly
+                through to :func:`matplotlib.pyplot.legend`. Defaults to 0,
+                which is 'best' in matplotlib.
             **kwargs: Keyword arguments that are passed through to matplotlib.
 
         """
@@ -663,7 +683,25 @@ class TriMesh(object):
             pts = np.array(self.points)
             xy = pts[simps, :]
 
-            pc = collections.PolyCollection(xy, **kwargs)
+            plt_kwargs = {}
+            for key, value in kwargs.items():
+                if type(value) in (list, np.array):
+                    plt_value = []
+                    for e_num, e_att in enumerate(self.element_attributes):
+                        if index_by == 'element':
+                            ind = e_num
+                        elif index_by == 'attribute':
+                            ind = int(e_att)
+                        else:
+                            e_str = 'Cannot index by {}.'.format(index_by)
+                            raise ValueError(e_str)
+                        v = value[ind]
+                        plt_value.append(v)
+                else:
+                    plt_value = value
+                plt_kwargs[key] = plt_value
+
+            pc = collections.PolyCollection(xy, **plt_kwargs)
             ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
@@ -674,8 +712,55 @@ class TriMesh(object):
                 ax = plt.gca()
 
             xy = [np.array([self.points[kp] for kp in f]) for f in self.facets]
-            pc = Poly3DCollection(xy, **kwargs)
+
+            plt_kwargs = {}
+            for key, value in kwargs.items():
+                if type(value) in (list, np.array):
+                    plt_value = []
+                    for f_num, f_att in enumerate(self.facet_attributes):
+                        if index_by == 'element':
+                            ind = f_num
+                        elif index_by == 'attribute':
+                            ind = int(f_att)
+                        else:
+                            e_str = 'Cannot index by {}.'.format(index_by)
+                            raise ValueError(e_str)
+                        if ind < len(value):
+                            v = value[ind]
+                        else:
+                            v = 'none'
+                        plt_value.append(v)
+                else:
+                    plt_value = value
+                plt_kwargs[key] = plt_value
+            pc = Poly3DCollection(xy, **plt_kwargs)
             ax.add_collection(pc)
+
+        # Add legend
+        if material and index_by == 'attribute':
+            p_kwargs = [{'label': m} for m in material]
+            for key, value in kwargs.items():
+                if type(value) not in (list, np.array):
+                    for kws in p_kwargs:
+                        kws[key] = value
+
+                for i, m in enumerate(material):
+                    if type(value) in (list, np.array):
+                        p_kwargs[i][key] = value[i]
+                    else:
+                        p_kwargs[i][key] = value
+
+            # Replace plural keywords
+            for p_kw in p_kwargs:
+                for kw in _misc.mpl_plural_kwargs:
+                    if kw in p_kw:
+                        p_kw[kw[:-1]] = p_kw[kw]
+                        del p_kw[kw]
+            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
+            if n_dim == 2:
+                ax.legend(handles=handles, loc=loc)
+            else:
+                plt.gca().legend(handles=handles, loc=loc)
 
 
 def facet_check(neighs, polymesh, phases):

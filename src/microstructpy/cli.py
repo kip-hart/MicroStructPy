@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 import xmltodict
-from matplotlib import patches
 from mpl_toolkits.mplot3d import Axes3D
 
 from microstructpy import _misc
@@ -619,21 +618,11 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     # Plot seeds
     edge_kwargs.setdefault('edgecolors', {2: 'k', 3: 'none'}[n_dim])
-    seeds.plot(facecolors=seed_colors, **edge_kwargs)
-
-    # Add legend
-    custom_seeds = [None for _ in phases]
-    for seed in seeds:
-        phase_num = seed.phase
-        if custom_seeds[phase_num] is None:
-            c = _phase_color(phase_num, phases)
-            lbl = phase_names[phase_num]
-            phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
-            custom_seeds[phase_num] = phase_patch
-
     if given_names and color_by == 'material':
-        handles = [h for h in custom_seeds if h is not None]
-        ax.legend(handles=handles, loc=4)
+        seeds.plot(material=phase_names, facecolors=seed_colors, loc=4,
+                   **edge_kwargs)
+    else:
+        seeds.plot(facecolors=seed_colors, **edge_kwargs)
 
     # Set limits
     lims = domain.limits
@@ -669,6 +658,14 @@ def _seed_colors(seeds, phases, color_by='material', colormap='viridis'):
 
 def _phase_color(i, phases):
     return phases[i].get('color', 'C' + str(i % 10))
+
+
+def _phase_color_by(i, phases, color_by='material', colormap='viridis'):
+    if color_by == 'material':
+        return phases[i].get('color', 'C' + str(i % 10))
+    elif color_by == 'material number':
+        n = len(phases)
+        return _cm_color(i / (n - 1), colormap)
 
 
 def _cm_color(f, colormap='viridis'):
@@ -739,7 +736,10 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
     # Plot polygons
     fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
     if n_dim == 2:
-        pmesh.plot(facecolors=fcs)
+        if given_names and color_by == 'material':
+            pmesh.plot(facecolors=fcs, material=phase_names)
+        else:
+            pmesh.plot(facecolors=fcs)
 
         edge_color = edge_kwargs.pop('edgecolors', (0, 0, 0, 1))
         facet_colors = []
@@ -750,22 +750,14 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
                 facet_colors.append('none')
 
         edge_kwargs.setdefault('capstyle', 'round')
-        pmesh.plot_facets(color=facet_colors, **edge_kwargs)
+        pmesh.plot_facets(color=facet_colors, index_by='facet', **edge_kwargs)
     else:
         edge_kwargs.setdefault('edgecolors', 'k')
-        pmesh.plot(facecolors=fcs, **edge_kwargs)
-
-    # add legend
-    if given_names:
-        custom_seeds = [None for _ in phases]
-        for phase_num in pmesh.phase_numbers:
-            if custom_seeds[phase_num] is None:
-                c = phase_colors[phase_num]
-                lbl = phase_names[phase_num]
-                phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
-                custom_seeds[phase_num] = phase_patch
-        handles = [h for h in custom_seeds if h is not None]
-        ax.legend(handles=handles, loc=4)
+        if given_names and color_by == 'material':
+            pmesh.plot(facecolors=fcs, index_by='seed', material=phase_names,
+                       **edge_kwargs)
+        else:
+            pmesh.plot(facecolors=fcs, index_by='seed', **edge_kwargs)
 
     # format axes
     lims = np.array([np.min(pmesh.points, 0), np.max(pmesh.points, 0)]).T
@@ -790,35 +782,37 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
 def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
     if n_dim == 2:
         if color_by == 'material':
-            return [_phase_color(n, phases) for n in pmesh.phase_numbers]
+            r_colors = [_phase_color(n, phases) for n in pmesh.phase_numbers]
         elif color_by == 'seed number':
             n = max(pmesh.seed_numbers) + 1
-            return [_cm_color(s / (n - 1), colormap) for s in
-                    pmesh.seed_numbers]
+            r_colors = [_cm_color(s / (n - 1), colormap) for s in
+                        pmesh.seed_numbers]
         elif color_by == 'material number':
             n = len(phases)
-            return [_cm_color(p / (n - 1), colormap) for p in
-                    pmesh.phase_numbers]
+            r_colors = [_cm_color(p / (n - 1), colormap) for p in
+                        pmesh.phase_numbers]
+        n_seeds = max(pmesh.seed_numbers) + 1
+        s_colors = ['none' for i in range(n_seeds)]
+        for seed_num, r_c in zip(pmesh.seed_numbers, r_colors):
+            s_colors[seed_num] = r_c
+        return s_colors
     else:
-        poly_fcs = []
-        for n_pair in pmesh.facet_neighbors:
-            if min(n_pair) < 0:
-                n_int = max(n_pair)
-                if color_by == 'material':
-                    phase_num = pmesh.phase_numbers[n_int]
-                    color = _phase_color(phase_num, phases)
-                elif color_by == 'seed number':
-                    n_seed = max(pmesh.seed_numbers) + 1
-                    seed_num = pmesh.seed_numbers[n_int]
-                    color = _cm_color(seed_num / (n_seed - 1), colormap)
-                elif color_by == 'material number':
-                    n_phases = len(phases)
-                    phase_num = pmesh.phase_numbers[n_int]
-                    color = _cm_color(phase_num / (n_phases - 1), colormap)
+        s2p = {s: p for s, p in zip(pmesh.seed_numbers, pmesh.phase_numbers)}
+        n = max(s2p.keys()) + 1
+        colors = []
+        for s in range(n):
+            if color_by == 'material':
+                phase_num = s2p[s]
+                color = _phase_color(phase_num, phases)
+            elif color_by == 'seed number':
+                color = _cm_color(s / (n - 1), colormap)
+            elif color_by == 'material number':
+                n_phases = len(phases)
+                color = _cm_color(s2p[s] / (n_phases - 1), colormap)
             else:
                 color = 'none'
-            poly_fcs.append(color)
-        return poly_fcs
+            colors.append(color)
+        return colors
 
 
 # --------------------------------------------------------------------------- #
@@ -883,27 +877,56 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
             ax._axis3don = False
     fig.add_axes(ax)
 
-    # determine triangle element colors
-    fcs = _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim)
-    phase_nums = range(len(phases))
-
     # plot triangle mesh
     edge_kwargs.setdefault('linewidths', {2: 0.5, 3: 0.1}[n_dim])
     edge_kwargs.setdefault('edgecolors', 'k')
-    tmesh.plot(facecolors=fcs, **edge_kwargs)
+    if given_names and color_by in ('material', 'material number'):
+        n = len(phases)
+        cs = [_phase_color_by(i, phases, color_by, colormap) for i in range(n)]
 
-    # add legend
-    if any([given_names[phase_num] for phase_num in phase_nums]):
-        custom_seeds = [None for _ in phases]
-        for seed_num in tmesh.element_attributes:
-            phase_num = seeds[seed_num].phase
-            if custom_seeds[phase_num] is None:
-                c = phase_colors[phase_num]
-                lbl = phase_names[phase_num]
-                phase_patch = patches.Patch(fc=c, ec='k', label=lbl)
-                custom_seeds[phase_num] = phase_patch
-        handles = [h for h in custom_seeds if h is not None]
-        ax.legend(handles=handles, loc=4)
+        old_e_att = np.copy(tmesh.element_attributes)
+        old_f_att = np.copy(tmesh.facet_attributes)
+        tmesh.element_attributes = [seeds[i].phase for i in old_e_att]
+
+        # Determine which facets are visible
+        visible_facets = [i for i, fn in enumerate(pmesh.facet_neighbors)
+                          if min(fn) < 0]
+        f_frontier = set(visible_facets)
+        f_expl = set()
+        r_expl = set(range(-6, 0))
+        while f_frontier:
+            new_facets = set()
+            for f_num in f_frontier:
+                regions = pmesh.facet_neighbors[f_num]
+                new_regions = set(regions) - r_expl
+                for r in new_regions:
+                    phase = phases[pmesh.phase_numbers[r]]
+                    p_type = phase.get('material_type', 'solid')
+                    if p_type in _misc.kw_void:
+                        new_facets |= set(pmesh.regions[r])
+                        r_expl.update(r)
+            f_expl |= f_frontier
+
+            f_frontier |= new_facets
+            f_frontier -= f_expl
+
+        plot_facets = [i for i, fn in enumerate(pmesh.facet_neighbors) if
+                       len(set(fn) - r_expl) == 1]
+        plot_regions = [list(set(pmesh.facet_neighbors[i]) - r_expl)[0] for i
+                        in plot_facets]
+        poly_phases = [pmesh.phase_numbers[r] for r in plot_regions]
+        p_dict = {f: p for f, p in zip(plot_facets, poly_phases)}
+        plot_phases = [p_dict.get(f, n) for f in tmesh.facet_attributes]
+        tmesh.facet_attributes = plot_phases
+
+        tmesh.plot(facecolors=cs, index_by='attribute', material=phase_names,
+                   **edge_kwargs)
+
+        tmesh.element_attributes = old_e_att
+        tmesh.facet_attributes = old_f_att
+    else:
+        fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
+        tmesh.plot(facecolors=fcs, index_by='attribute', **edge_kwargs)
 
     # format axes
     lims = np.array([np.min(tmesh.points, 0), np.max(tmesh.points, 0)]).T
@@ -1032,14 +1055,14 @@ def dict_convert(dictionary, filepath='.'):
     new_dict = collections.OrderedDict()
     for key in dictionary:
         val = dictionary[key]
-        if type(val) in (dict, collections.OrderedDict):
+        if isinstance(val, dict) or isinstance(val, collections.OrderedDict):
             new_val = dict_convert(val, filepath)
 
             # Exception for scipy.stats distributions
             if 'dist_type' in val:
                 new_val = _dist_convert(new_val)
 
-        elif type(val) is list:
+        elif isinstance(val, list):
             if type(val[0]) is str:
                 new_val = [_misc.from_str(v) for v in val]
             else:
@@ -1055,7 +1078,7 @@ def dict_convert(dictionary, filepath='.'):
             else:
                 new_val = val
 
-        elif type(val) is str:
+        elif isinstance(val, str) or isinstance(val, unicode):
             new_val = _misc.from_str(val)
 
         else:

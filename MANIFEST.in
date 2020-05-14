@@ -6,6 +6,7 @@ include .azure-pipelines.yml
 include .bumpversion.cfg
 include .coveragerc
 include .editorconfig
+include .pyup.yml
 include .readthedocs.yml
 
 include CHANGELOG.rst

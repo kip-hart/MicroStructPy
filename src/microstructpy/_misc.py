@@ -3,6 +3,7 @@
 This private module contains miscellaneous definitions and the string
 conversion function.
 
+This private module contains miscellaneous functions.
 """
 import ast
 
@@ -25,6 +26,9 @@ try:
     _unicode = unicode
 except NameError:
     _unicode = str
+
+mpl_plural_kwargs = {'edgecolors', 'facecolors', 'linewidths', 'antialiaseds',
+                     'offsets'}
 
 
 # --------------------------------------------------------------------------- #

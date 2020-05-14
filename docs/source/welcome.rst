@@ -19,7 +19,7 @@ Features of MicroStructPy include:
 * Output to common file formats
 * Customizable workflow
 
-.. figure:: ../../src/microstructpy/examples/docs_banner/banner.png
+.. figure:: ../../src/microstructpy/examples/msp_process/process.png
     :alt: Banner image showing the three steps for creating microstructure.
 
     The MicroStructPy workflow.

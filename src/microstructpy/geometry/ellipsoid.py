@@ -107,6 +107,8 @@ class Ellipsoid(object):
             ratio_bc = 1 / kwargs['ratio_cb']
         if 'size' in kwargs:
             size = kwargs['size']
+        elif 'volume' in kwargs:
+            size = 2 * np.cbrt(3 * kwargs['volume'] / (4 * np.pi))
         if 'axes' in kwargs:
             self.a, self.b, self.c = kwargs['axes']
 
@@ -166,6 +168,21 @@ class Ellipsoid(object):
                 self.a = r3 / (self.b * self.c)
             elif (self.a is not None) and (self.c is not None):
                 self.b = r3 / (self.a * self.c)
+            elif (self.a is not None) and (ratio_bc is not None):
+                r2 = r3 / self.a
+                # r2 = b * c
+                # r2 = c * ratio_bc * c = ratio_bc * c^2
+                # c = sqrt(r2 / ratio_bc) and b = ratio_bc * c
+                self.c = np.sqrt(r2 / ratio_bc)
+                self.b = ratio_bc * self.c
+            elif (self.b is not None) and (ratio_ac is not None):
+                r2 = r3 / self.b
+                self.c = np.sqrt(r2 / ratio_ac)
+                self.a = ratio_ac * self.c
+            elif (self.c is not None) and (ratio_ab is not None):
+                r2 = r3 / self.c
+                self.b = np.sqrt(r2 / ratio_ab)
+                self.a = ratio_ab * self.b
             else:
                 # r3 = a * b * c
                 # r3 = a * (a / ratio_ab) * (a / ratio_ac)
@@ -516,6 +533,14 @@ class Ellipsoid(object):
             s_dist = kwargs['size']
             return 0.5 * np.pi * _misc.moment(s_dist, 3) / 3
 
+        if 'volume' in kwargs:
+            v_dist = kwargs['volume']
+            try:
+                v_exp = v_dist.moment(1)
+            except AttributeError:
+                v_exp = v_dist
+            return v_exp
+
         # check for a, b, and c distribution
         try:
             exp_vol = 4 * np.pi / 3
@@ -565,7 +590,7 @@ class Ellipsoid(object):
             return np.array([self.bound_max])
 
         if x1 is None:
-            x1 = 0.75 * min(self.axes)
+            x1 = 0.25 * min(self.axes)
 
         # Perform approximation such that a > b > c
         if (self.a >= self.b) and (self.b >= self.c):

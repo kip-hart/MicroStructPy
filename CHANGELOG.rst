@@ -21,6 +21,21 @@ Removed
 - Unused reflect methods.
 - Redundant ``sample_limits`` properties.
 
+`1.2.0`_ - 2020-05-13
+--------------------------
+Added
+'''''
+- Options to shorten input keyword argument lists for plot methods
+  (addresses `#14`_)
+
+Changed
+'''''''
+- Ellipse of best fit method calls the `lsq-ellipse`_ package.
+
+Removed
+'''''''
+- Removed support for Python 2.7.
+
 `1.1.2`_ - 2019-11-07
 ---------------------
 Fixed
@@ -77,7 +92,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.2...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.2.0...HEAD
+.. _`1.2.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.2...v1.2.0
 .. _`1.1.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.1...v1.1.2
 .. _`1.1.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.0...v1.1.1
 .. _`1.1.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.0.1...v1.1.0
@@ -85,4 +101,7 @@ Added
 .. _`1.0.0`: https://github.com/kip-hart/MicroStructPy/releases/tag/v1.0.0
 
 .. _`Keep a Changelog`: https://keepachangelog.com/en/1.0.0/
+.. _`lsq-ellipse`: https://pypi.org/project/lsq-ellipse
 .. _`Semantic Versioning`: https://semver.org/spec/v2.0.0.html
+
+.. _`#14`: https://github.com/kip-hart/MicroStructPy/issues/14
