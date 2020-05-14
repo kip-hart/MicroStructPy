@@ -1,6 +1,6 @@
 """Miscellaneous functions
 
-This private module contains miscalleaneous functions.
+This private module contains miscellaneous functions.
 """
 import numpy as np
 
@@ -16,6 +16,9 @@ gen_kws = {'material_type', 'fraction', 'shape', 'name', 'color', 'position'}
 
 demo_needs = {'basalt_circle.xml': ['aphanitic_cdf.csv', 'olivine_cdf.csv'],
               'from_image.py': ['aluminum_micro.png']}
+
+mpl_plural_kwargs = {'edgecolors', 'facecolors', 'linewidths', 'antialiaseds',
+                     'offsets'}
 
 
 # --------------------------------------------------------------------------- #
