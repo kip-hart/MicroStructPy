@@ -853,7 +853,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     vis_regions = set()
     invis_regions = set(range(-6, 0))
     f_front = set([i for i, fn in enumerate(pmesh.facet_neighbors)
-                    if min(fn) < 0])
+                   if min(fn) < 0])
     while f_front:
         new_front = set()
         for f in f_front:
