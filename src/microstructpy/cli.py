@@ -624,20 +624,6 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
     else:
         seeds.plot(facecolors=seed_colors, **edge_kwargs)
 
-    # Set limits
-    lims = domain.limits
-    if n_dim == 2:
-        plt.axis('square')
-        plt.xlim(lims[0])
-        plt.ylim(lims[1])
-
-    else:
-        for x in lims[0]:
-            for y in lims[1]:
-                for z in lims[2]:
-                    ax.plot([x], [y], [z])
-        ax.set_aspect('equal')
-
     # Save plot
     for fname in plot_files:
         plt.savefig(fname, bbox_inches='tight', pad_inches=0)
@@ -759,20 +745,6 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
         else:
             pmesh.plot(facecolors=fcs, index_by='seed', **edge_kwargs)
 
-    # format axes
-    lims = np.array([np.min(pmesh.points, 0), np.max(pmesh.points, 0)]).T
-    if n_dim == 2:
-        plt.axis('square')
-        plt.xlim(lims[0])
-        plt.ylim(lims[1])
-
-    else:
-        for x in lims[0]:
-            for y in lims[1]:
-                for z in lims[2]:
-                    ax.plot([x], [y], [z])
-        ax.set_aspect('equal')
-
     # save plot
     for fname in plot_files:
         plt.savefig(fname, bbox_inches='tight', pad_inches=0)
@@ -877,47 +849,53 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
             ax._axis3don = False
     fig.add_axes(ax)
 
+    # Determine which facets are visible
+    vis_regions = set()
+    invis_regions = set(range(-6, 0))
+    f_front = set([i for i, fn in enumerate(pmesh.facet_neighbors)
+                    if min(fn) < 0])
+    while f_front:
+        new_front = set()
+        for f in f_front:
+            neighs = set(pmesh.facet_neighbors[f])
+            for n in neighs - invis_regions:
+                p = pmesh.phase_numbers[n]
+                p_type = phases[p].get('material_type', 'solid')
+                if p_type in _misc.kw_void:
+                    new_front |= set(pmesh.regions[n])
+                else:
+                    vis_regions.add(n)
+        new_front -= f_front
+        f_front = new_front
+
+    # Determine facet colors based on visibility
+    seed_colors = _seed_colors(seeds, phases, color_by, colormap)
+    facet_colors = []
+    facet_phases = []
+    for i, fn in enumerate(pmesh.facet_neighbors):
+        if _f_plottable(fn, vis_regions, invis_regions):
+            r = list(set(fn) - invis_regions)[0]
+            s = pmesh.seed_numbers[r]
+            color = seed_colors[s]
+            phase = seeds[s].phase
+        else:
+            color = 'none'
+            phase = -1
+        facet_colors.append(color)
+        facet_phases.append(phase)
+
     # plot triangle mesh
     edge_kwargs.setdefault('linewidths', {2: 0.5, 3: 0.1}[n_dim])
     edge_kwargs.setdefault('edgecolors', 'k')
     if given_names and color_by in ('material', 'material number'):
         n = len(phases)
         cs = [_phase_color_by(i, phases, color_by, colormap) for i in range(n)]
+        cs.append('none')
 
         old_e_att = np.copy(tmesh.element_attributes)
         old_f_att = np.copy(tmesh.facet_attributes)
         tmesh.element_attributes = [seeds[i].phase for i in old_e_att]
-
-        # Determine which facets are visible
-        visible_facets = [i for i, fn in enumerate(pmesh.facet_neighbors)
-                          if min(fn) < 0]
-        f_frontier = set(visible_facets)
-        f_expl = set()
-        r_expl = set(range(-6, 0))
-        while f_frontier:
-            new_facets = set()
-            for f_num in f_frontier:
-                regions = pmesh.facet_neighbors[f_num]
-                new_regions = set(regions) - r_expl
-                for r in new_regions:
-                    phase = phases[pmesh.phase_numbers[r]]
-                    p_type = phase.get('material_type', 'solid')
-                    if p_type in _misc.kw_void:
-                        new_facets |= set(pmesh.regions[r])
-                        r_expl.update(r)
-            f_expl |= f_frontier
-
-            f_frontier |= new_facets
-            f_frontier -= f_expl
-
-        plot_facets = [i for i, fn in enumerate(pmesh.facet_neighbors) if
-                       len(set(fn) - r_expl) == 1]
-        plot_regions = [list(set(pmesh.facet_neighbors[i]) - r_expl)[0] for i
-                        in plot_facets]
-        poly_phases = [pmesh.phase_numbers[r] for r in plot_regions]
-        p_dict = {f: p for f, p in zip(plot_facets, poly_phases)}
-        plot_phases = [p_dict.get(f, n) for f in tmesh.facet_attributes]
-        tmesh.facet_attributes = plot_phases
+        tmesh.facet_attributes = facet_phases
 
         tmesh.plot(facecolors=cs, index_by='attribute', material=phase_names,
                    **edge_kwargs)
@@ -925,22 +903,8 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         tmesh.element_attributes = old_e_att
         tmesh.facet_attributes = old_f_att
     else:
-        fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
-        tmesh.plot(facecolors=fcs, index_by='attribute', **edge_kwargs)
-
-    # format axes
-    lims = np.array([np.min(tmesh.points, 0), np.max(tmesh.points, 0)]).T
-    if n_dim == 2:
-        plt.axis('square')
-        plt.xlim(lims[0])
-        plt.ylim(lims[1])
-
-    else:
-        for x in lims[0]:
-            for y in lims[1]:
-                for z in lims[2]:
-                    ax.plot([x], [y], [z])
-        ax.set_aspect('equal')
+        tmesh.plot(facecolors=facet_colors, index_by='attribute',
+                   **edge_kwargs)
 
     # save plot
     for fname in plot_files:
@@ -949,58 +913,10 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     plt.close('all')
 
 
-def _tri_colors(tmesh, seeds, pmesh, phases, color_by, colormap, n_dim):
-    seed_colors = _seed_colors(seeds, phases, color_by, colormap)
-
-    if n_dim == 2:
-        return [seed_colors[n] for n in tmesh.element_attributes]
-
-    else:
-        facet_neighbors = np.array(pmesh.facet_neighbors)
-        facet_is_ext = np.any(facet_neighbors < 0, axis=1)
-        facet_is_cand = np.copy(facet_is_ext)
-        facet_is_analyzed = np.copy(facet_is_ext)
-
-        while np.any(facet_is_cand):
-            # Find new candidate facets
-            for neighs in facet_neighbors[facet_is_cand]:
-                for cell_num in neighs:
-                    if cell_num < 0:
-                        continue
-                    s_num = pmesh.seed_numbers[cell_num]
-                    p_num = seeds[s_num].phase
-                    p_type = phases[p_num].get('material_type', 'solid')
-                    if p_type in _misc.kw_void:
-                        facet_is_cand[pmesh.regions[cell_num]] = True
-
-            # Add candidates to list of external facets
-            facet_is_ext = facet_is_ext | facet_is_cand
-
-            # Remove previously analyzed facets from candidate list
-            facet_is_cand = facet_is_cand & ~facet_is_analyzed
-
-            # Update list of analyzed facets
-            facet_is_analyzed = facet_is_analyzed | facet_is_cand
-
-        facet_neighbors[facet_is_ext]
-
-        elem_fcs = []
-        for facet_num in tmesh.facet_attributes:
-            facet_color = 'none'
-            if facet_is_ext[facet_num]:
-                cell_nums = facet_neighbors[facet_num]
-                for cell_num in cell_nums:
-                    if cell_num < 0:
-                        continue
-                    seed_num = pmesh.seed_numbers[cell_num]
-                    phase_num = seeds[seed_num].phase
-
-                    phase = phases[phase_num]
-                    phase_type = phase.get('material_type', 'solid')
-                    if phase_type not in _misc.kw_void:
-                        facet_color = seed_colors[seed_num]
-            elem_fcs.append(facet_color)
-        return elem_fcs
+def _f_plottable(n_pair, vis, invis):
+    if set(n_pair) <= vis or set(n_pair) <= invis:
+        return False
+    return True
 
 
 # --------------------------------------------------------------------------- #

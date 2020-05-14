@@ -762,6 +762,25 @@ class TriMesh(object):
             else:
                 plt.gca().legend(handles=handles, loc=loc)
 
+        # Adjust Axes
+        mins = np.array(self.points).min(axis=0)
+        maxs = np.array(self.points).max(axis=0)
+        xlim = plt.gca().get_xlim()
+        ylim = plt.gca().get_ylim()
+        xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
+        ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
+        if n_dim == 2:
+            plt.axis('square')
+            plt.gca().set_xlim(xlim)
+            plt.gca().set_ylim(ylim)
+        if n_dim == 3:
+            zlim = plt.gca().get_zlim()
+            zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
+            plt.gca().set_xlim(xlim)
+            plt.gca().set_ylim(ylim)
+            plt.gca().set_zlim(zlim)
+            ax.set_aspect('equal')
+
 
 def facet_check(neighs, polymesh, phases):
     if any([n < 0 for n in neighs]):

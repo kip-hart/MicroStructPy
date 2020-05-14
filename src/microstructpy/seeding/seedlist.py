@@ -550,6 +550,26 @@ class SeedList(object):
             else:
                 plt.gca().legend(handles=handles, loc=loc)
 
+        # Adjust Axes
+        seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
+        mins = np.array(seed_lims)[:, 0::2].min(axis=0)
+        maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
+        xlim = plt.gca().get_xlim()
+        ylim = plt.gca().get_ylim()
+        xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
+        ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
+        if n == 2:
+            plt.axis('square')
+            plt.gca().set_xlim(xlim)
+            plt.gca().set_ylim(ylim)
+        if n == 3:
+            zlim = plt.gca().get_zlim()
+            zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
+            plt.gca().set_xlim(xlim)
+            plt.gca().set_ylim(ylim)
+            plt.gca().set_zlim(zlim)
+            ax.set_aspect('equal')
+
     def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
 
@@ -656,6 +676,26 @@ class SeedList(object):
                 ax.legend(handles=handles, loc=loc)
             else:
                 plt.gca().legend(handles=handles, loc=loc)
+
+        # Adjust Axes
+        seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
+        mins = np.array(seed_lims)[:, 0::2].min(axis=0)
+        maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
+        xlim = plt.gca().get_xlim()
+        ylim = plt.gca().get_ylim()
+        xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
+        ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
+        if n == 2:
+            plt.axis('square')
+            plt.gca().set_xlim(xlim)
+            plt.gca().set_ylim(ylim)
+        if n == 3:
+            zlim = plt.gca().get_zlim()
+            zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
+            plt.gca().set_xlim(xlim)
+            plt.gca().set_ylim(ylim)
+            plt.gca().set_zlim(zlim)
+            ax.set_aspect('equal')
 
     # ----------------------------------------------------------------------- #
     # Position Function                                                       #
