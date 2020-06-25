@@ -614,6 +614,10 @@ class PolyMesh(object):
                     neighbor_pair = (adj_cell_num, cell_num)
                     s_lcl = face_data['vertices']
                     s_glbl = [local_kp_conn[(cell_num, kp)] for kp in s_lcl]
+                    if adj_cell_num < 0:
+                        pts_f = [pts_global[kp] for kp in s_glbl]
+                        if not _is_outward(pts_f, adj_cell_num):
+                            s_glbl.reverse()
 
                     face_num = len(facet_list)
                     facet_list.append(s_glbl)
@@ -1051,3 +1055,29 @@ def _loop_area(pts, loop):
         det = xi * yip1 - xip1 * yi
         double_area += det
     return 0.5 * np.abs(double_area)
+
+
+def _is_outward(pt_list, voropp_face_num):
+    n_dim = len(pt_list[0])
+
+    voropp_sgn = 1-2*(voropp_face_num % 2)
+    voropp_axis = int((-voropp_face_num - 1)/2)
+    face_vec = voropp_sgn * np.eye(n_dim)[voropp_axis]
+
+    if n_dim == 2:
+        pt1 = pt_list[0]
+        pt2 = pt_list[1]
+        rel_pos = np.array(pt2) - np.array(pt1)
+        n_vec = np.array([-rel_pos[1], rel_pos[0]])
+    elif n_dim == 3:
+        pt1 = pt_list[0]
+        pt2 = pt_list[1]
+        pt3 = pt_list[2]
+        r1 = np.array(pt2) - np.array(pt1)
+        r2 = np.array(pt3) - np.array(pt1)
+        n_vec = np.cross(r1, r2)
+    else:
+        raise ValueError('Function does not support {}D.'.format(n_dim))
+
+    n_u = n_vec / np.linalg.norm(n_vec)
+    return np.dot(n_u, face_vec) > 0
