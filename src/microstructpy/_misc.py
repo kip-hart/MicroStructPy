@@ -19,6 +19,12 @@ demo_needs = {'basalt_circle.xml': ['aphanitic_cdf.csv', 'olivine_cdf.csv'],
 
 mpl_plural_kwargs = {'edgecolors', 'facecolors', 'linewidths', 'antialiaseds',
                      'offsets'}
+plt_3d_adj = {
+    'left': 0.4,
+    'right': 1,
+    'bottom': 0,
+    'top': 0.8,
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -163,3 +169,21 @@ def tangent_sphere(points, radii=None, simplices=None):
     # return results
     spheres = np.hstack((posc, rc.reshape(-1, 1)))
     return np.squeeze(spheres)
+
+
+def axisEqual3D(ax):
+    '''From stackoverflow: https://stackoverflow.com/a/19248731'''
+    extents = np.array([getattr(ax, 'get_{}lim'.format(d))() for d in 'xyz'])
+    sz = extents[:, 1] - extents[:, 0]
+    centers = np.mean(extents, axis=1)
+    maxsize = max(abs(sz))
+    r = maxsize/2
+    for ctr, dim in zip(centers, 'xyz'):
+        getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
+
+
+def ax_objects(ax):
+    n = 0
+    for att in ['collections', 'images', 'lines', 'patches', 'texts']:
+        n += len(getattr(ax, att))
+    return n

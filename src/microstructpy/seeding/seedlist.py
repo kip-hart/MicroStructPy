@@ -20,6 +20,7 @@ import scipy.stats
 from matplotlib import collections
 from matplotlib import patches
 from matplotlib.patches import Rectangle
+from mpl_toolkits.mplot3d import Axes3D
 from pyquaternion import Quaternion
 from scipy.spatial import distance
 
@@ -404,8 +405,21 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
+        ax = plt.gcf().gca(projection={2: None, 3: Axes3D.name}[n])
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
 
         if n == 3:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
+
             for seed, args in zip(self, seed_args):
                 seed.plot(**args)
 
@@ -545,30 +559,24 @@ class SeedList(object):
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
             handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            if n == 2:
-                ax.legend(handles=handles, loc=loc)
-            else:
-                plt.gca().legend(handles=handles, loc=loc)
+            ax.legend(handles=handles, loc=loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
         mins = np.array(seed_lims)[:, 0::2].min(axis=0)
         maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
         if n == 2:
             plt.axis('square')
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
         if n == 3:
-            zlim = plt.gca().get_zlim()
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
-            plt.gca().set_zlim(zlim)
-            plt.gca().set_aspect('equal')
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
     def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
@@ -614,6 +622,14 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
+        ax = plt.gcf().gca(projection={2: None, 3: Axes3D.name}[n])
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
 
         if n == 3:
             for seed, args in zip(self, seed_args):
@@ -681,21 +697,18 @@ class SeedList(object):
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
         mins = np.array(seed_lims)[:, 0::2].min(axis=0)
         maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
         if n == 2:
             plt.axis('square')
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
         if n == 3:
-            zlim = plt.gca().get_zlim()
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
-            plt.gca().set_zlim(zlim)
-            ax.set_aspect('equal')
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
     # ----------------------------------------------------------------------- #
     # Position Function                                                       #

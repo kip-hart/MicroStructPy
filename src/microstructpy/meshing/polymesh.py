@@ -671,6 +671,14 @@ class PolyMesh(object):
 
         """
         n_dim = len(self.points[0])
+        ax = plt.gcf().gca(projection={2: None, 3: Axes3D.name}[n_dim])
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
         if n_dim == 2:
             # create vertex loops for each poly
             vloops = [kp_loop([self.facets[f] for f in r]) for r in
@@ -695,10 +703,13 @@ class PolyMesh(object):
                     plt_value = value
                 plt_kwargs[key] = plt_value
             pc = collections.PolyCollection(xy, **plt_kwargs)
-            ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
         elif n_dim == 3:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
             self.plot_facets(index_by=index_by, **kwargs)
 
         else:
@@ -728,24 +739,24 @@ class PolyMesh(object):
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
             handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            if n_dim == 2:
-                ax.legend(handles=handles, loc=loc)
-            else:
-                plt.gca().legend(handles=handles, loc=loc)
+            ax.legend(handles=handles, loc=loc)
 
         # Adjust Axes
         mins = np.array(self.points).min(axis=0)
         maxs = np.array(self.points).max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
-        plt.gca().set_xlim(xlim)
-        plt.gca().set_ylim(ylim)
-        if n_dim == 3:
-            zlim = plt.gca().get_zlim()
+        if n_dim == 2:
+            plt.axis('square')
+            plt.xlim(xlim)
+            plt.ylim(ylim)
+        elif n_dim == 3:
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_zlim(zlim)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+
+            _misc.axisEqual3D(ax)
 
     def plot_facets(self, index_by='seed', hide_interior=True, **kwargs):
         """Plot PolyMesh facets.
@@ -798,18 +809,26 @@ class PolyMesh(object):
                 f_kwargs[key] = value
 
         n_dim = len(self.points[0])
+        ax = plt.gcf().gca(projection={2: None, 3: Axes3D.name}[n_dim])
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
         if n_dim == 2:
             xy = [np.array([self.points[kp] for kp in f]) for f in self.facets]
 
             pc = collections.LineCollection(xy, **f_kwargs)
-            ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
         else:
-            if len(plt.gcf().axes) == 0:
-                ax = plt.axes(projection=Axes3D.name)
+
+            if ax.has_data:
+                zlim = ax.get_zlim()
             else:
-                ax = plt.gca()
+                zlim = [float('inf'), -float('inf')]
 
             if hide_interior:
                 f_mask = [min(fn) < 0 for fn in self.facet_neighbors]
@@ -832,21 +851,20 @@ class PolyMesh(object):
         # Adjust Axes
         mins = np.array(self.points).min(axis=0)
         maxs = np.array(self.points).max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
+
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
         if n_dim == 2:
             plt.axis('square')
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
+            plt.xlim(xlim)
+            plt.ylim(ylim)
         if n_dim == 3:
-            zlim = plt.gca().get_zlim()
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
-            plt.gca().set_zlim(zlim)
-            plt.gca().set_aspect('equal')
+
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
     # ----------------------------------------------------------------------- #
     # Mesh Equality                                                           #

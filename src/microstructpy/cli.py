@@ -614,7 +614,6 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
             ax.get_yaxis().set_visible(False)
         else:
             ax._axis3don = False
-    fig.add_axes(ax)
 
     # Plot seeds
     edge_kwargs.setdefault('edgecolors', {2: 'k', 3: 'none'}[n_dim])
@@ -624,9 +623,26 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
     else:
         seeds.plot(facecolors=seed_colors, **edge_kwargs)
 
+    # Crop to Domain
+    d_lims = domain.limits
+    if n_dim == 2:
+        plt.axis('square')
+        plt.xlim(d_lims[0])
+        plt.ylim(d_lims[1])
+    elif n_dim == 3:
+        plt.gca().set_xlim(d_lims[0])
+        plt.gca().set_ylim(d_lims[1])
+        plt.gca().set_zlim(d_lims[2])
+
+        _misc.axisEqual3D(plt.gca())
+
     # Save plot
     for fname in plot_files:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        if n_dim == 3:
+            fig.subplots_adjust(**_misc.plt_3d_adj)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0.15)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
     plt.close('all')
 
@@ -747,7 +763,11 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
 
     # save plot
     for fname in plot_files:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        if n_dim == 3:
+            fig.subplots_adjust(**_misc.plt_3d_adj)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0.15)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
     plt.close('all')
 
 
@@ -848,7 +868,6 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
             ax.get_yaxis().set_visible(False)
         else:
             ax._axis3don = False
-    fig.add_axes(ax)
 
     # Determine which facets are visible
     vis_regions = set()
@@ -909,7 +928,11 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
     # save plot
     for fname in plot_files:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        if n_dim == 3:
+            fig.subplots_adjust(**_misc.plt_3d_adj)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0.15)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
     plt.close('all')
 
