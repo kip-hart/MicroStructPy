@@ -402,7 +402,10 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
-        ax = plt.gcf().gca(projection={2: None, 3: Axes3D.name}[n])
+        if n == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
         n_obj = _misc.ax_objects(ax)
         if n_obj > 0:
             xlim = ax.get_xlim()
@@ -619,7 +622,10 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
-        ax = plt.gcf().gca(projection={2: None, 3: Axes3D.name}[n])
+        if n == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
         n_obj = _misc.ax_objects(ax)
         if n_obj > 0:
             xlim = ax.get_xlim()
