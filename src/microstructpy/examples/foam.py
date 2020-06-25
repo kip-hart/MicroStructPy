@@ -14,12 +14,12 @@ def main():
         os.makedirs(dirname)
 
     # Define Domain
-    domain = msp.geometry.Square(side_length=10)
+    domain = msp.geometry.Square(side_length=8)
 
     # Create Void Tessellation
     void_mat = {'material_type': 'void',
                 'shape': 'circle',
-                'size': scipy.stats.lognorm(scale=1, s=0.3)
+                'size': scipy.stats.lognorm(scale=1, s=0.2)
                 }
 
     void_a = 0.7 * domain.area
