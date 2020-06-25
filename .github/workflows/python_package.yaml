@@ -22,10 +22,8 @@ jobs:
         pip install flake8 pytest
     - name: Install MeshPy
       run: |
-        pip install scipy
-        EXTRA_INSTALL="numpy pybind11"
-        curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
-        . ./build-and-test-py-project.sh
+        pip install numpy scipy pybind11
+        pip install meshpy
     - name: Install package
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
