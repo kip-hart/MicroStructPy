@@ -635,6 +635,11 @@ class SeedList(object):
             ylim = [float('inf'), -float('inf')]
 
         if n == 3:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
+
             for seed, args in zip(self, seed_args):
                 seed.plot_breakdown(**args)
 
