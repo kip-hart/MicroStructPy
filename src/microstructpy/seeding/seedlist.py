@@ -20,6 +20,7 @@ import scipy.stats
 from matplotlib import collections
 from matplotlib import patches
 from matplotlib.patches import Rectangle
+from mpl_toolkits.mplot3d import Axes3D
 from pyquaternion import Quaternion
 from scipy.spatial import distance
 
@@ -261,15 +262,12 @@ class SeedList(object):
     def __getitem__(self, i):
         if isinstance(i, slice):
             return SeedList(self.seeds[i])
-        elif np.issubdtype(type(i), np.integer):
+
+        try:
             return self.seeds[i]
-        elif all([np.issubdtype(type(b), np.bool_) for b in i]):
-            return SeedList([s for s, b in zip(self.seeds, i) if b])
-        elif all([np.issubdtype(type(k), np.integer) for k in i]):
-            return SeedList([self.seeds[k] for k in i])
-        else:
-            print(i.dtype)
-            raise ValueError('Cannot index with type ' + str(type(i)))
+        except TypeError:
+            indices = np.arange(len(self))[i]
+            return SeedList([self.seeds[ind] for ind in indices])
 
     def __setitem__(self, i, s):
         try:
@@ -404,8 +402,24 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
+        if n == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
 
         if n == 3:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
+
             for seed, args in zip(self, seed_args):
                 seed.plot(**args)
 
@@ -545,30 +559,24 @@ class SeedList(object):
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
             handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            if n == 2:
-                ax.legend(handles=handles, loc=loc)
-            else:
-                plt.gca().legend(handles=handles, loc=loc)
+            ax.legend(handles=handles, loc=loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
         mins = np.array(seed_lims)[:, 0::2].min(axis=0)
         maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
         if n == 2:
             plt.axis('square')
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
         if n == 3:
-            zlim = plt.gca().get_zlim()
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
-            plt.gca().set_zlim(zlim)
-            plt.gca().set_aspect('equal')
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
     def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
@@ -614,8 +622,24 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
+        if n == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
 
         if n == 3:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
+
             for seed, args in zip(self, seed_args):
                 seed.plot_breakdown(**args)
 
@@ -681,21 +705,18 @@ class SeedList(object):
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
         mins = np.array(seed_lims)[:, 0::2].min(axis=0)
         maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
         if n == 2:
             plt.axis('square')
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
         if n == 3:
-            zlim = plt.gca().get_zlim()
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
-            plt.gca().set_zlim(zlim)
-            ax.set_aspect('equal')
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
     # ----------------------------------------------------------------------- #
     # Position Function                                                       #
@@ -776,20 +797,21 @@ class SeedList(object):
             distribs.append(pos_dists.get(i, u_dist))
 
         # Add hold seeds
+        n_seeds = len(self)
         tree = aabbtree.AABBTree()
-        for i in range(len(self)):
+        for i in range(n_seeds):
             if hold[i]:
                 # add to tree
                 aabb = aabbtree.AABB(self[i].geometry.limits)
                 tree.add(aabb, i)
 
         positioned = np.array(hold)
-        i_sort = np.flip(np.argsort([s.volume for s in self]))
+        vols = np.array([s.volume for s in self])
+        i_sort = np.flip(np.argsort(vols))
         posd_sort = positioned[i_sort]
         i_position = i_sort[~posd_sort]
 
         # allowable overlap, relative to radius
-        vols = np.array([s.volume for s in self])
         cv = scipy.stats.variation(vols)
         if domain.n_dim == 2 and rtol == 'fit':
             numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
@@ -803,6 +825,7 @@ class SeedList(object):
         # position the remaining seeds
         i_reject = []
         np.random.seed(rng_seed)
+        n_samples = 100
 
         for k, i in enumerate(i_position):
             if verbose:
@@ -813,21 +836,25 @@ class SeedList(object):
 
             searching = True
             n_attempts = 0
+            i_sample = 0
+            pts = sample_pos_within(pos_dist, n_samples, domain)
             while searching and n_attempts < max_attempts:
-                pt = sample_pos(pos_dist)
+                pt = pts[i_sample]
 
-                if domain.within(pt):
-                    seed.position = pt
-                    n_attempts += 1
-                else:
-                    continue
+                seed.position = pt
+                n_attempts += 1
+                i_sample += 1
+
+                if i_sample == n_samples:
+                    pts = sample_pos_within(pos_dist, n_samples, domain)
+                    i_sample = 0
 
                 bkdwn = np.array(seed.breakdown)
                 cens = bkdwn[:, :-1]
                 rads = bkdwn[:, -1].reshape(-1, 1)
 
                 aabb = aabbtree.AABB(seed.geometry.limits)
-                olap_inds = tree.overlap_values(aabb)
+                olap_inds = tree.overlap_values(aabb, method='BFS')
                 olap_seeds = self[olap_inds]
                 clears = True
                 for olap_seed in olap_seeds:
@@ -835,7 +862,12 @@ class SeedList(object):
                     o_cens = o_bkdwn[:, :-1]
                     o_rads = o_bkdwn[:, -1].reshape(1, -1)
 
-                    dists = distance.cdist(cens, o_cens)
+                    if len(rads) > 1:
+                        dists = distance.cdist(cens, o_cens)
+                    else:
+                        rel_pos = o_cens - cens
+                        rp2 = rel_pos * rel_pos
+                        dists = np.sqrt(np.sum(rp2, axis=1))
                     tol = rtol * np.minimum(rads, o_rads)
                     total_dists = dists + tol - rads - o_rads
                     if np.any(total_dists < 0):
@@ -854,12 +886,11 @@ class SeedList(object):
                 aabb = aabbtree.AABB(seed.geometry.limits)
                 tree.add(aabb, i)
 
-        keep_mask = np.array(len(self) * [True])
+        keep_mask = np.array(n_seeds * [True])
         keep_mask[i_reject] = False
 
-        reject_seeds = self[~keep_mask]
-        self.seeds = self[keep_mask].seeds
-        if len(reject_seeds) > 0:
+        if ~np.all(keep_mask):
+            reject_seeds = self[~keep_mask]
             f = 'seed_position_reject.log'
             reject_seeds.write(f)
 
@@ -867,6 +898,8 @@ class SeedList(object):
             w_str += ' Their data has beeen written to ' + f + ' and their'
             w_str += ' indices were ' + str(i_reject) + '.'
             warnings.warn(w_str, RuntimeWarning)
+
+        self.seeds = self[keep_mask].seeds
 
 
 def sample_pos(distribution, n=1):
@@ -900,17 +933,28 @@ def sample_pos(distribution, n=1):
     Returns:
         list: A sample of the distribution.
     """  # NOQA : E501
-    if type(distribution) is list:
+    try:
+        pos = distribution.rvs(n)
+    except AttributeError:
         pos = np.full((n, len(distribution)), 0, dtype='float')
         for j, coord_dist in enumerate(distribution):
             try:
                 pos[:, j] = coord_dist.rvs(n)
             except AttributeError:
                 pos[:, j] = coord_dist
-    else:
-        pos = distribution.rvs(n)
 
     if n == 1:
         return pos[0]
     else:
         return pos
+
+
+def sample_pos_within(distribution, n, domain):
+    pos = []
+    while len(pos) < n:
+        samples = sample_pos(distribution, n)
+        mask = domain.within(samples)
+        pos.extend(samples[mask])
+    if n == 1:
+        return pos
+    return np.array(pos[:n])

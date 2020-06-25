@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.3.0`_ - 2020-06-25
+--------------------------
+Added
+'''''
+- Option to reduce the presence of short edges in polygonal meshes.
+
+Changed
+'''''''
+- Optimized seed positioning algorithm by using breadth-first search
+  in the AABB tree.
+- Facets in polygonal meshes are now always defined with a positive
+  outward normal vector.
+
+Fixed
+'''''
+- Plotting of 3D meshes. 
+- Documentation for empirical PDFs.
+- Minor errors in examples.
+
 `1.2.2`_ - 2020-05-14
 --------------------------
 Fixed
@@ -88,7 +107,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.2.2...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.0...HEAD
+.. _`1.3.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.2.2...v1.3.0
 .. _`1.2.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.2.1...v1.2.2
 .. _`1.2.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.2.0...v1.2.1
 .. _`1.2.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.1.2...v1.2.0

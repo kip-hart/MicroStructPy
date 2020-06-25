@@ -174,7 +174,8 @@ def read_input(filename):
 
 
 def run(phases, domain, verbose=False, restart=True, directory='.',
-        filetypes={}, rng_seeds={}, plot_axes=True, rtol='fit',
+        filetypes={}, rng_seeds={}, plot_axes=True, rtol='fit', edge_opt=False,
+        edge_opt_n_iter=100,
         mesh_max_volume=float('inf'), mesh_min_angle=0,
         mesh_max_edge_length=float('inf'), verify=False, color_by='material',
         colormap='viridis', seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
@@ -243,10 +244,18 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
             The default value is ``'fit'``, which uses the mean and variance
             of the size distribution to estimate a value for rtol.
+        edge_opt (bool): *(optional)* This option will maximize the minimum
+            edge length in the PolyMesh. The seeds associated with the
+            shortest edge are displaced randomly to find improvement and
+            this process iterates until `n_iter` attempts have been made
+            for a given edge. Defaults to False.
+        edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
+            edge during optimization. Ignored if `edge_opt` set to False.
+            Defaults to 100.
         mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
             of a mesh cell in the triangular mesh. Default is infinity,
             which turns off the maximum volume quality setting.
-            Value should be stritly positive.
+            Value should be strictly positive.
         mesh_min_angle (float): *(optional)* The minimum interior angle,
             in degrees,  of a cell in the triangular mesh. For 3D meshes,
             this is the dihedral angle between faces of the tetrahedron.
@@ -384,7 +393,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         if verbose:
             print('Creating polygon mesh.')
 
-        pmesh = PolyMesh.from_seeds(seeds, domain)
+        pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt, edge_opt_n_iter,
+                                    verbose)
 
     # Write polymesh
     poly_types = filetypes.get('poly', [])
@@ -614,7 +624,6 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
             ax.get_yaxis().set_visible(False)
         else:
             ax._axis3don = False
-    fig.add_axes(ax)
 
     # Plot seeds
     edge_kwargs.setdefault('edgecolors', {2: 'k', 3: 'none'}[n_dim])
@@ -624,9 +633,26 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
     else:
         seeds.plot(facecolors=seed_colors, **edge_kwargs)
 
+    # Crop to Domain
+    d_lims = domain.limits
+    if n_dim == 2:
+        plt.axis('square')
+        plt.xlim(d_lims[0])
+        plt.ylim(d_lims[1])
+    elif n_dim == 3:
+        plt.gca().set_xlim(d_lims[0])
+        plt.gca().set_ylim(d_lims[1])
+        plt.gca().set_zlim(d_lims[2])
+
+        _misc.axisEqual3D(plt.gca())
+
     # Save plot
     for fname in plot_files:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        if n_dim == 3:
+            fig.subplots_adjust(**_misc.plt_3d_adj)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0.15)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
     plt.close('all')
 
@@ -747,7 +773,11 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
 
     # save plot
     for fname in plot_files:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        if n_dim == 3:
+            fig.subplots_adjust(**_misc.plt_3d_adj)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0.15)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
     plt.close('all')
 
 
@@ -848,7 +878,6 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
             ax.get_yaxis().set_visible(False)
         else:
             ax._axis3don = False
-    fig.add_axes(ax)
 
     # Determine which facets are visible
     vis_regions = set()
@@ -888,18 +917,27 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     # plot triangle mesh
     edge_kwargs.setdefault('linewidths', {2: 0.5, 3: 0.1}[n_dim])
     edge_kwargs.setdefault('edgecolors', 'k')
-    if given_names and color_by in ('material', 'material number'):
+    if color_by in ('material', 'material number'):
         n = len(phases)
+        if n_dim == 2:
+            cs = seed_colors
+        else:
+            cs = facet_colors
+            cs.append('none')
+
         cs = [_phase_color_by(i, phases, color_by, colormap) for i in range(n)]
         cs.append('none')
 
         old_e_att = np.copy(tmesh.element_attributes)
         old_f_att = np.copy(tmesh.facet_attributes)
         tmesh.element_attributes = [seeds[i].phase for i in old_e_att]
-        tmesh.facet_attributes = facet_phases
+        tmesh.facet_attributes = [facet_phases[a] for a in old_f_att]
 
-        tmesh.plot(facecolors=cs, index_by='attribute', material=phase_names,
-                   **edge_kwargs)
+        if given_names:
+            tmesh.plot(facecolors=cs, index_by='attribute',
+                       material=phase_names, **edge_kwargs)
+        else:
+            tmesh.plot(facecolors=cs, index_by='attribute', **edge_kwargs)
 
         tmesh.element_attributes = old_e_att
         tmesh.facet_attributes = old_f_att
@@ -909,7 +947,11 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
     # save plot
     for fname in plot_files:
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        if n_dim == 3:
+            fig.subplots_adjust(**_misc.plt_3d_adj)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0.15)
+        else:
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
     plt.close('all')
 
@@ -943,8 +985,8 @@ def dict_convert(dictionary, filepath='.'):
     Second, if the value of ``dist_type`` is ``histogram``, then the remaining
     key should also be ``filename`` and its value should be the path to a CSV
     file.
-    For the histogram, the first row of this CDF should be the *n+1* bin
-    locations and the second row should be the *n* bin heights.
+    For the histogram, the first row of this CDF should be the *n* bin heights
+    and the second row should be the *n+1* bin locations.
 
     Additionally, if a key in the dictionary contains ``filename`` or
     ``directory`` and the value associated with that key is a relative path,

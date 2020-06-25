@@ -411,7 +411,8 @@ class PolyMesh(object):
     # Construct from Seed List                                                #
     # ----------------------------------------------------------------------- #
     @classmethod
-    def from_seeds(cls, seedlist, domain):
+    def from_seeds(cls, seedlist, domain, edge_opt=False, n_iter=100,
+                   verbose=False):
         """Create from :class:`.SeedList` and a domain.
 
         This function creates a polygon/polyhedron mesh from a seed list and
@@ -423,10 +424,25 @@ class PolyMesh(object):
         are clipped to the domain boundary.
         Currently non-rectangular domains in 3D are not supported.
 
+        This function also includes the option to maximize the shortest edges
+        in the polygonal/polyhedral mesh. Short edges cause numerical
+        issues in finite element analysis - setting `edge_opt` to True can
+        improve mesh quality with minimal changes to the microstructure.
+
         Args:
             seedlist (SeedList): A list of seeds in the microstructure.
             domain (from :mod:`microstructpy.geometry`): The domain to be
                 filled by the seed.
+            edge_opt (bool): *(optional)* This option will maximize the minimum
+                edge length in the PolyMesh. The seeds associated with the
+                shortest edge are displaced randomly to find improvement and
+                this process iterates until `n_iter` attempts have been made
+                for a given edge. Defaults to False.
+            n_iter (int): *(optional)* Maximum number of iterations per edge
+                during optimization. Ignored if `edge_opt` set to False.
+                Defaults to 100.
+            verbose (bool): *(optional)* Print status of edge optimization to
+                screen. Defaults to False.
 
         Returns:
             PolyMesh: A polygon/polyhedron mesh.
@@ -614,6 +630,10 @@ class PolyMesh(object):
                     neighbor_pair = (adj_cell_num, cell_num)
                     s_lcl = face_data['vertices']
                     s_glbl = [local_kp_conn[(cell_num, kp)] for kp in s_lcl]
+                    if adj_cell_num < 0:
+                        pts_f = [pts_global[kp] for kp in s_glbl]
+                        if not _is_outward(pts_f, adj_cell_num):
+                            s_glbl.reverse()
 
                     face_num = len(facet_list)
                     facet_list.append(s_glbl)
@@ -629,9 +649,82 @@ class PolyMesh(object):
         # Create volume list
         vols = [cell['volume'] for cell in voro]
 
-        # return mesh
-        return cls(pts_global, facet_list, region_list, bkdwn2seed, phase_nums,
-                   facet_neighbor_list, vols)
+        # Create initial mesh
+        pmesh = cls(pts_global, facet_list, region_list, bkdwn2seed,
+                    phase_nums, facet_neighbor_list, vols)
+
+        # short edge optimization
+        if edge_opt:
+            seed2bkdwn = {i: [] for i in range(len(seedlist))}
+            for i, n in enumerate(pmesh.seed_numbers):
+                seed2bkdwn[n].append(i)
+
+            # Find the shorted edge
+            edge_lens = _edge_lengths(pmesh)
+            min_edge = _shortest_edge(edge_lens)
+            min_len = edge_lens[min_edge]['length']
+
+            # Format verbose print string
+            n_kps = len(pmesh.points)
+            n_kp_space = int(np.log10(n_kps)) + 1
+            n_iter_space = int(np.log10(n_iter))
+            v_fmt = 'min length: {0:.3e} | '
+            v_fmt += 'edge: {1[0]:' + str(n_kp_space) + 'd}, '
+            v_fmt += '{1[1]:' + str(n_kp_space) + 'd} | '
+            v_fmt += 'n iter: {2:' + str(n_iter_space) + 'd} / '
+            v_fmt += str(n_iter)
+
+            i_n_attempts = 0
+            while i_n_attempts < n_iter:
+                print(v_fmt.format(min_len, min_edge, i_n_attempts))
+                # Create Displacement
+                max_step_size = float('inf')
+                step_fracs = 2 * np.random.rand(3) - 1  # [-1, 1]
+                new_cens = np.copy(cens)
+
+                e_neighs = edge_lens[min_edge]['regions']
+                edge_pts = np.array(pmesh.points)[list(min_edge)]
+                for region_num in e_neighs:
+                    if region_num >= 0:
+                        step_size = 0.1 * rads[region_num]
+                        max_step_size = min(max_step_size, step_size)
+                for f, region_num in zip(step_fracs, e_neighs):
+                    if region_num >= 0:
+                        e_norm_vec = _point_line_vec(cens[region_num],
+                                                     edge_pts)
+                        step = f * max_step_size * e_norm_vec
+                        new_cens[region_num] += step
+
+                # Update Seeds
+                new_bkdwns = [list(c) + [r] for c, r in zip(new_cens, rads)]
+                for i, seed in enumerate(seedlist):
+                    seed.breakdown = [new_bkdwns[j] for j in seed2bkdwn[i]]
+
+                # Create New Polygonal Mesh
+                try:
+                    new_pmesh = cls.from_seeds(seedlist, domain,
+                                               edge_opt=False)
+                except AssertionError:
+                    i_n_attempts += 1
+                    continue
+
+                new_edge_lens = _edge_lengths(new_pmesh)
+                new_min_edge = _shortest_edge(new_edge_lens)
+                new_min_len = new_edge_lens[new_min_edge]['length']
+
+                if new_min_len > min_len:
+                    if new_min_edge != min_edge:
+                        i_n_attempts = 0
+                    else:
+                        i_n_attempts += 1
+                    edge_lens = new_edge_lens
+                    pmesh = new_pmesh
+                    min_len = new_min_len
+                    min_edge = new_min_edge
+                    cens = new_cens
+                else:
+                    i_n_attempts += 1
+        return pmesh
 
     # ----------------------------------------------------------------------- #
     # Plot Mesh                                                               #
@@ -668,6 +761,17 @@ class PolyMesh(object):
         """
         n_dim = len(self.points[0])
         if n_dim == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
+        if n_dim == 2:
             # create vertex loops for each poly
             vloops = [kp_loop([self.facets[f] for f in r]) for r in
                       self.regions]
@@ -691,10 +795,13 @@ class PolyMesh(object):
                     plt_value = value
                 plt_kwargs[key] = plt_value
             pc = collections.PolyCollection(xy, **plt_kwargs)
-            ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
         elif n_dim == 3:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
             self.plot_facets(index_by=index_by, **kwargs)
 
         else:
@@ -724,24 +831,24 @@ class PolyMesh(object):
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
             handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            if n_dim == 2:
-                ax.legend(handles=handles, loc=loc)
-            else:
-                plt.gca().legend(handles=handles, loc=loc)
+            ax.legend(handles=handles, loc=loc)
 
         # Adjust Axes
         mins = np.array(self.points).min(axis=0)
         maxs = np.array(self.points).max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
-        plt.gca().set_xlim(xlim)
-        plt.gca().set_ylim(ylim)
-        if n_dim == 3:
-            zlim = plt.gca().get_zlim()
+        if n_dim == 2:
+            plt.axis('square')
+            plt.xlim(xlim)
+            plt.ylim(ylim)
+        elif n_dim == 3:
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_zlim(zlim)
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+
+            _misc.axisEqual3D(ax)
 
     def plot_facets(self, index_by='seed', hide_interior=True, **kwargs):
         """Plot PolyMesh facets.
@@ -795,17 +902,28 @@ class PolyMesh(object):
 
         n_dim = len(self.points[0])
         if n_dim == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
+        if n_dim == 2:
             xy = [np.array([self.points[kp] for kp in f]) for f in self.facets]
 
             pc = collections.LineCollection(xy, **f_kwargs)
-            ax = plt.gca()
             ax.add_collection(pc)
             ax.autoscale_view()
         else:
-            if len(plt.gcf().axes) == 0:
-                ax = plt.axes(projection=Axes3D.name)
+
+            if ax.has_data:
+                zlim = ax.get_zlim()
             else:
-                ax = plt.gca()
+                zlim = [float('inf'), -float('inf')]
 
             if hide_interior:
                 f_mask = [min(fn) < 0 for fn in self.facet_neighbors]
@@ -828,21 +946,20 @@ class PolyMesh(object):
         # Adjust Axes
         mins = np.array(self.points).min(axis=0)
         maxs = np.array(self.points).max(axis=0)
-        xlim = plt.gca().get_xlim()
-        ylim = plt.gca().get_ylim()
+
         xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
         ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
         if n_dim == 2:
             plt.axis('square')
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
+            plt.xlim(xlim)
+            plt.ylim(ylim)
         if n_dim == 3:
-            zlim = plt.gca().get_zlim()
             zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            plt.gca().set_xlim(xlim)
-            plt.gca().set_ylim(ylim)
-            plt.gca().set_zlim(zlim)
-            plt.gca().set_aspect('equal')
+
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
     # ----------------------------------------------------------------------- #
     # Mesh Equality                                                           #
@@ -1051,3 +1168,73 @@ def _loop_area(pts, loop):
         det = xi * yip1 - xip1 * yi
         double_area += det
     return 0.5 * np.abs(double_area)
+
+
+def _is_outward(pt_list, voropp_face_num):
+    n_dim = len(pt_list[0])
+
+    voropp_sgn = 1-2*(voropp_face_num % 2)
+    voropp_axis = int((-voropp_face_num - 1)/2)
+    face_vec = voropp_sgn * np.eye(n_dim)[voropp_axis]
+
+    if n_dim == 2:
+        pt1 = pt_list[0]
+        pt2 = pt_list[1]
+        rel_pos = np.array(pt2) - np.array(pt1)
+        n_vec = np.array([-rel_pos[1], rel_pos[0]])
+    elif n_dim == 3:
+        pt1 = pt_list[0]
+        pt2 = pt_list[1]
+        pt3 = pt_list[2]
+        r1 = np.array(pt2) - np.array(pt1)
+        r2 = np.array(pt3) - np.array(pt1)
+        n_vec = np.cross(r1, r2)
+    else:
+        raise ValueError('Function does not support {}D.'.format(n_dim))
+
+    n_u = n_vec / np.linalg.norm(n_vec)
+    return np.dot(n_u, face_vec) > 0
+
+
+def _edge_lengths(pmesh):
+    edge_lens = {}  # (kp1, kp2): {'length': #, 'regions': set()}
+    for i, f in enumerate(pmesh.facets):
+        n = len(f)
+        facet_kp_pairs = [(f[k], f[(k + 1) % n]) for k in range(n)]
+        for pair in facet_kp_pairs:
+            key = tuple(sorted(pair))
+            if key not in edge_lens:  # calculate edge length
+                pt1 = pmesh.points[key[0]]
+                pt2 = pmesh.points[key[1]]
+                rel_pos = np.array(pt2) - np.array(pt1)
+                edge_len = np.linalg.norm(rel_pos)
+                edge_lens[key] = {
+                    'length': edge_len,
+                    'regions': set(),
+                    }
+            neighs = pmesh.facet_neighbors[i]
+            edge_lens[key]['regions'] |= set(neighs)
+    return edge_lens
+
+
+def _shortest_edge(edge_lens):
+    min_len = float('inf')
+    min_pair = (-1, -1)
+    for pair in edge_lens:
+        length = edge_lens[pair]['length']
+        if length < min_len:
+            min_len = length
+            min_pair = pair
+    return min_pair
+
+
+def _point_line_vec(pt, line_pts):
+    ptA, ptB = line_pts
+    n_vec = (ptB - ptA) / np.linalg.norm(ptB - ptA)
+
+    rel_pos = ptA - pt
+    proj = np.dot(rel_pos, n_vec) * n_vec
+    dist_vec = rel_pos - proj
+
+    u_vec = dist_vec / np.linalg.norm(dist_vec)
+    return u_vec

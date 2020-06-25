@@ -150,12 +150,12 @@ the complete list of available distributions and their input parameters.
 
 In the case that the distribution type is "pdf" then the only other field
 should be ``filename``.
-For a PDF, the file should contain two lines: the first has the (n+1) bin
-locations and the second has the (n) bin heights.
+For a PDF, the file should contain two lines: the first has the (n) bin
+heights and the second has the (n+1) bin locations.
 A PDF file could contain, for example::
 
-    1, 2, 2.5
     0.5, 1
+    1, 2, 2.5
 
 For a CDF, the file should have two columns: the first being the size and the
 second being the CDF value.
