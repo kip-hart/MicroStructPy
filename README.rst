@@ -137,7 +137,7 @@ See the `Contributing Guidelines`_ for more details.
 Publications
 ------------
 
-If you use MicroStructPy in you work, please use the following citation:
+If you use MicroStructPy in you work, please consider including this citation:
 
 K. A. Hart and J. J. Rimoli, Generation of statistically representative
 microstructures with direct grain geomety control,
