@@ -15,9 +15,9 @@ Added
 Changed
 '''''''
 - Optimized seed positioning algorithm by using breadth-first search
-in the AABB tree.
+  in the AABB tree.
 - Facets in polygonal meshes are now always defined with a positive
-outward normal vector.
+  outward normal vector.
 
 Fixed
 '''''
