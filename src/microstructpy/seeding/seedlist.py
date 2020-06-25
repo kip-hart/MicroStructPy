@@ -262,15 +262,12 @@ class SeedList(object):
     def __getitem__(self, i):
         if isinstance(i, slice):
             return SeedList(self.seeds[i])
-        elif np.issubdtype(type(i), np.integer):
+
+        try:
             return self.seeds[i]
-        elif all([np.issubdtype(type(b), np.bool_) for b in i]):
-            return SeedList([s for s, b in zip(self.seeds, i) if b])
-        elif all([np.issubdtype(type(k), np.integer) for k in i]):
-            return SeedList([self.seeds[k] for k in i])
-        else:
-            print(i.dtype)
-            raise ValueError('Cannot index with type ' + str(type(i)))
+        except TypeError:
+            indices = np.arange(len(self))[i]
+            return SeedList([self.seeds[ind] for ind in indices])
 
     def __setitem__(self, i, s):
         try:
