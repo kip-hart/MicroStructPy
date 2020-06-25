@@ -127,13 +127,6 @@ top-level directory of the MicroStructPy repository::
 
 Once built, the documentation will be in ``docs/build/``.
 
-Contributing
-------------
-
-Contributions to the project are welcome.
-Please use the GitHub pull request and issue submission features.
-See the `Contributing Guidelines`_ for more details.
-
 Publications
 ------------
 
@@ -144,6 +137,13 @@ microstructures with direct grain geomety control,
 *Computer Methods in Applied Mechanics and Engineering*,
 in press.
 (`BibTex <https://github.com/kip-hart/MicroStructPy/raw/paper-update/docs/publications/cmame2020.bib>`_)
+
+Contributing
+------------
+
+Contributions to the project are welcome.
+Please use the GitHub pull request and issue submission features.
+See the `Contributing Guidelines`_ for more details.
 
 
 License and Attributions
