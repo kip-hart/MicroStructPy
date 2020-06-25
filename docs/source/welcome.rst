@@ -107,6 +107,11 @@ The same results can be produced using this script:
         plt.show()
 
 
+.. include:: ../../README.rst
+    :start-after: begin-publications
+    :end-before: end-publications
+
+
 License and Attribution
 -----------------------
 
