@@ -975,8 +975,8 @@ def dict_convert(dictionary, filepath='.'):
     Second, if the value of ``dist_type`` is ``histogram``, then the remaining
     key should also be ``filename`` and its value should be the path to a CSV
     file.
-    For the histogram, the first row of this CDF should be the *n+1* bin
-    locations and the second row should be the *n* bin heights.
+    For the histogram, the first row of this CDF should be the *n* bin heights
+    and the second row should be the *n+1* bin locations.
 
     Additionally, if a key in the dictionary contains ``filename`` or
     ``directory`` and the value associated with that key is a relative path,
