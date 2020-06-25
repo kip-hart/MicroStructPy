@@ -174,7 +174,8 @@ def read_input(filename):
 
 
 def run(phases, domain, verbose=False, restart=True, directory='.',
-        filetypes={}, rng_seeds={}, plot_axes=True, rtol='fit',
+        filetypes={}, rng_seeds={}, plot_axes=True, rtol='fit', edge_opt=False,
+        edge_opt_n_iter=100,
         mesh_max_volume=float('inf'), mesh_min_angle=0,
         mesh_max_edge_length=float('inf'), verify=False, color_by='material',
         colormap='viridis', seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
@@ -243,10 +244,18 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
             The default value is ``'fit'``, which uses the mean and variance
             of the size distribution to estimate a value for rtol.
+        edge_opt (bool): *(optional)* This option will maximize the minimum
+            edge length in the PolyMesh. The seeds associated with the
+            shortest edge are displaced randomly to find improvement and
+            this process iterates until `n_iter` attempts have been made
+            for a given edge. Defaults to False.
+        edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
+            edge during optimization. Ignored if `edge_opt` set to False.
+            Defaults to 100.
         mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
             of a mesh cell in the triangular mesh. Default is infinity,
             which turns off the maximum volume quality setting.
-            Value should be stritly positive.
+            Value should be strictly positive.
         mesh_min_angle (float): *(optional)* The minimum interior angle,
             in degrees,  of a cell in the triangular mesh. For 3D meshes,
             this is the dihedral angle between faces of the tetrahedron.
@@ -384,7 +393,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         if verbose:
             print('Creating polygon mesh.')
 
-        pmesh = PolyMesh.from_seeds(seeds, domain)
+        pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt, edge_opt_n_iter,
+                                    verbose)
 
     # Write polymesh
     poly_types = filetypes.get('poly', [])

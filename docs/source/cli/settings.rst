@@ -40,6 +40,9 @@ quality, among other things. The default settings are:
 
             <rtol> fit </rtol>
 
+            <edge_opt> False </edge_opt>
+            <edge_opt_n_iter> 100 </edge_opt_n_iter>
+
             <mesh_max_volume> inf </mesh_max_volume>
             <mesh_min_angle> 0 </mesh_min_angle>
             <mesh_max_edge_length> inf </mesh_max_edge_length>
@@ -243,6 +246,40 @@ an rtol value that maximizes the fit between input and output distributions.
 
 Acceptable values of rtol are 0 to 1 inclusive, though rtol below 0.2 will
 likely result in long runtimes.
+
+edge_opt
+--------
+
+The edge_opt field provides the option to maximize the shortest edge in the
+polygonal/polyhedral mesh.
+The default is ``<edge_opt> False </edge_opt>``, which skips the optimization
+process.
+This optimization is performed by making small adjustments to the positions of
+seeds surrounding the shortest edge, assessing if the change created an
+improvement, then either a) attempting a different change for the same edge if
+there was not improvement or b) moving on to the new shortest edge.
+The optimization algorithm exits when ``edge_opt_n_iter`` iterations have been
+performed on the same edge.
+
+This flag is useful if the polygonal/polyhedral or triangular/tetrahedral are
+used in numerical simulations, such as finite element analysis.
+A high ratio of longest edge to shortest edge leads to a high ratio in maximum
+to minimum eigenvalue in FEA stiffness matrices, which can create problems for
+the FEA solver.
+Setting ``edge_opt`` to ``True`` will reduce short edges in the polygonal mesh,
+which translates into reduced short edges in the triangular mesh.
+This optimization process, however, will increase the time to generate a
+polygonal mesh.
+To track the progress of the optimizer, set ``verbose`` to ``True``.
+
+edge_opt_n_iter
+---------------
+
+This field specifies how many times the optimizer should attempt to increase
+the length of the shortest edge in the polygonal mesh.
+The default is ``<edge_opt_n_iter> 100 </edge_opt_n_iter>``, which limits the
+optimizer to 100 attempts per edge.
+This field is ignored if ``edge_opt`` is set to ``False``.
 
 mesh_max_volume
 ---------------
