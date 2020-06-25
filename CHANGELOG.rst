@@ -8,10 +8,22 @@ and this project adheres to `Semantic Versioning`_.
 
 `Unreleased`_ - 2020-06-25
 --------------------------
+Added
+'''''
+- Option to reduce the presence of short edges in polygonal meshes.
+
 Changed
--------
+'''''''
+- Optimized seed positioning algorithm by using breadth-first search
+in the AABB tree.
 - Facets in polygonal meshes are now always defined with a positive
 outward normal vector.
+
+Fixed
+'''''
+- Plotting of 3D meshes. 
+- Documentation for empirical PDFs.
+- Minor errors in examples.
 
 `1.2.2`_ - 2020-05-14
 --------------------------
