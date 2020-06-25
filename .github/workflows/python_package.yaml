@@ -22,7 +22,7 @@ jobs:
         pip install flake8 pytest
     - name: Install MeshPy
       run: |
-        sudo apt-get install gfortran libopenblas-dev liblapack-dev
+        pip install scipy
         EXTRA_INSTALL="numpy pybind11"
         curl -L -O -k https://gitlab.tiker.net/inducer/ci-support/raw/master/build-and-test-py-project.sh
         . ./build-and-test-py-project.sh
