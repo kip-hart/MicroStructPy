@@ -69,7 +69,8 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
             facet_colors.append(line_color)
 
     lw = k_lw * init_size / 100
-    pmesh.plot_facets(colors=facet_colors, linewidth=lw, capstyle='round')
+    pmesh.plot_facets(index_by='facet', colors=facet_colors,
+                      linewidth=lw, capstyle='round')
 
     pts = np.array(pmesh.points)
     rs = np.sqrt(np.sum(pts * pts, axis=1))
@@ -106,7 +107,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     # Create the Logo
     logo_im = np.copy(plt_im)
 
-    xx, yy = np.meshgrid(*[np.arange(n) for n in logo_im.shape])
+    xx, yy = np.meshgrid(*[np.arange(n) for n in logo_im.shape[:2]])
     zz = - 0.2 * xx + 0.9 * yy
     ss = (zz - zz.min()) / (zz.max() - zz.min())
 
