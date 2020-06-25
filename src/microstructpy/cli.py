@@ -907,18 +907,27 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     # plot triangle mesh
     edge_kwargs.setdefault('linewidths', {2: 0.5, 3: 0.1}[n_dim])
     edge_kwargs.setdefault('edgecolors', 'k')
-    if given_names and color_by in ('material', 'material number'):
+    if color_by in ('material', 'material number'):
         n = len(phases)
+        if n_dim == 2:
+            cs = seed_colors
+        else:
+            cs = facet_colors
+            cs.append('none')
+
         cs = [_phase_color_by(i, phases, color_by, colormap) for i in range(n)]
         cs.append('none')
 
         old_e_att = np.copy(tmesh.element_attributes)
         old_f_att = np.copy(tmesh.facet_attributes)
         tmesh.element_attributes = [seeds[i].phase for i in old_e_att]
-        tmesh.facet_attributes = facet_phases
+        tmesh.facet_attributes = [facet_phases[a] for a in old_f_att]
 
-        tmesh.plot(facecolors=cs, index_by='attribute', material=phase_names,
-                   **edge_kwargs)
+        if given_names:
+            tmesh.plot(facecolors=cs, index_by='attribute',
+                       material=phase_names, **edge_kwargs)
+        else:
+            tmesh.plot(facecolors=cs, index_by='attribute', **edge_kwargs)
 
         tmesh.element_attributes = old_e_att
         tmesh.facet_attributes = old_f_att
