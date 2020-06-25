@@ -13,17 +13,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install test dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
-    - name: Install MeshPy
-      run: |
-        pip install numpy scipy pybind11
-        pip install meshpy
     - name: Install package
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
