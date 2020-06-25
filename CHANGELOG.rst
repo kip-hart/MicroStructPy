@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_ - 2020-06-25
+--------------------------
+Changed
+-------
+- Facets in polygonal meshes are now always defined with a positive
+outward normal vector.
+
 `1.2.2`_ - 2020-05-14
 --------------------------
 Fixed
