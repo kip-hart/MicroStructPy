@@ -134,6 +134,16 @@ Contributions to the project are welcome.
 Please use the GitHub pull request and issue submission features.
 See the `Contributing Guidelines`_ for more details.
 
+Publications
+------------
+
+If you use MicroStructPy in you work, please use the following citation:
+
+K. A. Hart and J. J. Rimoli, Generation of statistically representative
+microstructures with direct grain geomety control,
+*Computer Methods in Applied Mechanics and Engineering*,
+in press.
+
 License and Attributions
 ------------------------
 
