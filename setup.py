@@ -82,8 +82,8 @@ setup(
         'multi-sphere'
     ],
     install_requires=[
-        'aabbtree',
-        'matplotlib>=2.2.0,<3.1.0',
+        'aabbtree>=2.5.0',
+        'matplotlib>=3.0.0',
         'pybind11',  # must come before meshpy for successful install
         'lsq-ellipse',
         'meshpy>=2018.2.1',
