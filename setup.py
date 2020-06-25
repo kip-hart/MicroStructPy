@@ -13,7 +13,6 @@ from setuptools import find_packages
 from setuptools import setup
 
 desc = 'Microstructure modeling, mesh generation, analysis, and visualization.'
-vs_fname = ('src/microstructpy', '_vs.py')
 
 
 def read(*fname):
@@ -26,18 +25,12 @@ def find_version(*fname):
         if line.startswith('__version__') and '=' in line:
             ver_str = line.split('=')[-1].strip().strip('\"').strip('\'')
             break
-
-    for line in read(*vs_fname).split('\n'):
-        if '+' in line:
-            tag = line.split('+')[-1].strip().strip('\"').strip('\'')
-            ver_str += '+' + tag
-            break
     return ver_str
 
 
 setup(
     name='microstructpy',
-    version=find_version('src/microstructpy', '__init__.py'),
+    version=find_version('src', 'microstructpy', '__init__.py'),
     license='MIT License',
     description=desc,
     long_description=read('README.rst'),
