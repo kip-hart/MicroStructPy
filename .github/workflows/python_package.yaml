@@ -33,7 +33,7 @@ jobs:
         flake8 src tests setup.py --exclude=__init__.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest --cov=.
+        pytest --cov=src tests/
     - name: Coveralls
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
