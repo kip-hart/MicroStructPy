@@ -57,7 +57,7 @@ jobs:
         pip install flake8 pytest
     - name: Install package
       run: |
-        brew install pkg-config
+        if [-z pip list | grep -F matplotlib]; then brew install pkg-config; fi
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
     - name: Lint with flake8
