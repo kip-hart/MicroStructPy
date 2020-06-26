@@ -87,5 +87,22 @@ jobs:
         python setup.py sdist check --strict --metadata
         check-manifest
         twine check dist/*
-
-  
+        
+  docs-checks:
+    name: docs check for ${{ matrix.doc-types }}
+    strategy:
+      matrix:
+        doc-type: [html, latex, epub]
+    
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install docs dependencies
+      run: |
+        python -m pip install -r docs/requirements.txt
+    - name: Build ${{ matrix.doc-types }} documentation
+      run: sphinx-build -Wnb ${{ matrix.doc-types }} docs/source/ docs/build-${{ matrix.doc-types }}/
