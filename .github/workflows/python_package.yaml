@@ -36,8 +36,7 @@ jobs:
         
   pytest-macOS:
 
-    runs-on:
-      matrix: macos-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2
