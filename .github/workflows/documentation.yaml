@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:   
   docs-checks:
-    name: docs check for ${{ matrix.doc-type }}
+    name: ${{ matrix.doc-type }}
     strategy:
       matrix:
         doc-type: [html, latex, epub]
