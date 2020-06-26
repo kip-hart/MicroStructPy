@@ -871,8 +871,8 @@ class PolyMesh(object):
                 regions with ``phase`` equal to 1 in red. The facet option is
                 only available for 3D plots. Defaults to 'seed'.
             hide_interior (bool): If True, removes interior facets from the
-            output plot. This avoids occasional matplotlib issue where
-            interior facets are shown in output plots.
+                output plot. This avoids occasional matplotlib issue where
+                interior facets are shown in output plots.
             **kwargs (dict): Keyword arguments for matplotlib.
 
         """
