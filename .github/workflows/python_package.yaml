@@ -89,7 +89,7 @@ jobs:
         twine check dist/*
         
   docs-checks:
-    name: docs check for ${{ matrix.doc-types }}
+    name: docs check for ${{ matrix.doc-type }}
     strategy:
       matrix:
         doc-type: [html, latex, epub]
@@ -104,5 +104,5 @@ jobs:
     - name: Install docs dependencies
       run: |
         python -m pip install -r docs/requirements.txt
-    - name: Build ${{ matrix.doc-types }} documentation
-      run: sphinx-build -Wnb ${{ matrix.doc-types }} docs/source/ docs/build-${{ matrix.doc-types }}/
+    - name: Build ${{ matrix.doc-type }} documentation
+      run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
