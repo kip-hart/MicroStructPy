@@ -129,12 +129,29 @@ top-level directory of the MicroStructPy repository::
 
 Once built, the documentation will be in ``docs/build/``.
 
+.. begin-publications
+
+Publications
+------------
+
+If you use MicroStructPy in you work, please consider including this citation
+in your bibliography:
+
+K. A. Hart and J. J. Rimoli, Generation of statistically representative
+microstructures with direct grain geomety control,
+*Computer Methods in Applied Mechanics and Engineering*,
+in press.
+(`BibTex <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/cmame2020.bib>`_)
+
+.. end-publications
+
 Contributing
 ------------
 
 Contributions to the project are welcome.
 Please use the GitHub pull request and issue submission features.
 See the `Contributing Guidelines`_ for more details.
+
 
 License and Attributions
 ------------------------
