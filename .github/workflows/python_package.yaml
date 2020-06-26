@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   pytest:
+    name: pytest for py${{ matrix.python-version }}
 
     runs-on: ubuntu-latest
     strategy:
@@ -35,6 +36,7 @@ jobs:
         pytest
         
   pytest-macOS:
+    name: pytest on macOS
 
     runs-on: macos-latest
 
@@ -64,6 +66,7 @@ jobs:
         pytest
         
   package-checks:
+    name: package checks
 
     runs-on: ubuntu-latest
     steps:
