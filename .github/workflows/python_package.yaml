@@ -117,7 +117,7 @@ jobs:
         pip install setuptools wheel check-manifest isort twine
     - name: Check package import order
       run: |
-        isort --verbose --check-only --diff --recursive src tests setup.py
+        isort --verbose --check-only --diff src tests setup.py
     - name: Check package contents
       run: |
         python setup.py sdist check --strict --metadata
