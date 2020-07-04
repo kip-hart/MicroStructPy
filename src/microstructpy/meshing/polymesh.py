@@ -317,7 +317,7 @@ class PolyMesh(object):
                 for facets in self.regions:
                     vloop = kp_loop([self.facets[f] for f in facets])
                     n_kp = len(vloop)
-                    
+
                     v1 = pts[vloop[1]] - pts[vloop[0]]
                     v2 = pts[vloop[2]] - pts[vloop[0]]
                     cross_p = np.cross(v1, v2)
@@ -339,7 +339,7 @@ class PolyMesh(object):
                 for pt in self.points:
                     vtk_s += ' '.join(['{: e}'.format(x) for x in pt]) + '\n'
                 vtk_s += '\n'
-                
+
                 # Cells
                 n_cells = len(self.regions)
                 cells = 'CELLS {} '.format(n_cells) + '{}\n'
@@ -363,7 +363,7 @@ class PolyMesh(object):
                         norm_vec = np.cross(v1, v2)
                         cen_rel = cen - pts[facet[0]]
                         dot_p = np.dot(norm_vec, cen_rel)
-                        
+
                         line += ' {} '.format(f_len)
                         if dot_p < 0:
                             line += ' '.join([str(kp) for kp in facet])
