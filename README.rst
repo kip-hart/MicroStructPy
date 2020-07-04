@@ -1,13 +1,15 @@
 MicroStructPy - Microstructure Mesh Generation in Python
 ========================================================
 
-|s-travis|
+|s-ci|
 |s-license|
 |s-doi|
 
-|l-github| `Repository`_
-|l-rtd| `Documentation`_
-|l-pypi| `PyPI`_
+|l-github| `Repository <https://github.com/kip-hart/MicroStructPy>`_
+|l-rtd| `Documentation <https://docs.microstructpy.org>`_
+|l-pypi| `PyPI <https://pypi.org/project/microstructpy/>`_
+
+.. end-badges
 
 MicroStructPy is a microstructure mesh generator written in Python.
 Features of MicroStructPy include:
@@ -127,12 +129,29 @@ top-level directory of the MicroStructPy repository::
 
 Once built, the documentation will be in ``docs/build/``.
 
+.. begin-publications
+
+Publications
+------------
+
+If you use MicroStructPy in you work, please consider including this citation
+in your bibliography:
+
+K. A. Hart and J. J. Rimoli, Generation of statistically representative
+microstructures with direct grain geomety control,
+*Computer Methods in Applied Mechanics and Engineering*,
+in press.
+(`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/cmame2020.bib>`_)
+
+.. end-publications
+
 Contributing
 ------------
 
 Contributions to the project are welcome.
 Please use the GitHub pull request and issue submission features.
 See the `Contributing Guidelines`_ for more details.
+
 
 License and Attributions
 ------------------------
@@ -145,13 +164,9 @@ advised by Prof. Julian Rimoli.
 
 .. LINKS
 
-.. _Documentation : https://microstructpy.readthedocs.io
-.. _GitHub: https://github.com/kip-hart/MicroStructPy
-.. _PyPI : https://pypi.org/project/microstructpy/
-.. _Repository: https://github.com/kip-hart/MicroStructPy
 .. _`Contributing Guidelines`: https://github.com/kip-hart/MicroStructPy/blob/dev/.github/CONTRIBUTING.md
 
-.. EXTERNAL IMAGES
+.. external-images
 
 .. |l-github| image:: https://api.iconify.design/octicon:mark-github.svg?color=black0&inline=true&height=16
     :alt: GitHub
@@ -165,9 +180,9 @@ advised by Prof. Julian Rimoli.
 
 .. SHIELDS
 
-.. |s-travis| image:: https://img.shields.io/travis/kip-hart/MicroStructPy
-    :target: https://travis-ci.org/kip-hart/MicroStructPy
-    :alt: Travis CI
+.. |s-ci| image:: https://github.com/kip-hart/MicroStructPy/workflows/CI/badge.svg
+    :target: https://github.com/kip-hart/MicroStructPy/actions
+    :alt: Continuous Integration
 
 .. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst

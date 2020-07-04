@@ -59,6 +59,8 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None)
 }
+# Suppress "WARNING: unknown mimetype for ..."
+suppress_warnings = ['epub.unknown_project_files']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
