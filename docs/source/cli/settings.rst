@@ -91,10 +91,11 @@ Below is an outline of the possible filetypes for each subfield.
 
 - seeds
 
-    **txt**
+    **txt**, **vtk**
 
-    Currently the only option is to output the seed geometries as a
-    cache txt file.
+    Currently the only options are to output the seed geometries as a
+    cache txt file or as a VTK legacy file. The VTK file can be opened
+    in ParaView, with the seeds shown as glyphs.
 
 - seeds_plot
 
@@ -105,7 +106,7 @@ Below is an outline of the possible filetypes for each subfield.
 
 - poly
 
-    **txt**, **poly** (2D only), **ply**, **vtk** (3D only)
+    **txt**, **poly** (2D only), **ply**, **vtk**
 
     A poly file contains a planar straight line graph (PSLG) and cane be read
     by Triangle.
@@ -113,7 +114,8 @@ Below is an outline of the possible filetypes for each subfield.
     Triangle website.
     The ply file contains the surfaces between grains and the boundary of the
     domain.
-    VTK legacy files also contain the polygonal surfaces between grains.
+    VTK legacy files also contain the polygonal grains in 2D and polyhedral
+    grains in 3D.
 
 - poly_plot
 
