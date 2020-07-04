@@ -70,7 +70,7 @@ Polygonal Mesh
 The polygonal mesh (or polyhedral mesh in 3D) can be written to and read
 from a ``.txt`` file.
 It can also be written to ``.poly`` files for 2D meshes, ``.vtk`` files for
-3D meshes, and ``.ply`` files for any number of dimensions.
+2D and 3D meshes, and ``.ply`` files for any number of dimensions.
 
 Text File
 +++++++++

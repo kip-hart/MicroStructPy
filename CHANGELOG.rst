@@ -10,7 +10,7 @@ and this project adheres to `Semantic Versioning`_.
 --------------------------
 Added
 '''''
-- VTK output for seed liss.
+- VTK output for seed lists and polyhedral meshes.
 
 `1.3.0`_ - 2020-06-25
 --------------------------
