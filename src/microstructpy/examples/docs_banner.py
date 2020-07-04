@@ -2,9 +2,9 @@ from __future__ import division
 
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
+from matplotlib import pyplot as plt
 
 import microstructpy as msp
 

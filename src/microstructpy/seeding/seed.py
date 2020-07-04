@@ -12,10 +12,10 @@ This module contains the class definition for the Seed class.
 from __future__ import division
 from __future__ import print_function
 
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import collections
 from matplotlib import patches
+from matplotlib import pyplot as plt
 
 from microstructpy import _misc
 from microstructpy import geometry

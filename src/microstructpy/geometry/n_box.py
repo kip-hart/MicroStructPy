@@ -8,6 +8,7 @@ This module contains the NBox class.
 # Import Modules                                                              #
 #                                                                             #
 # --------------------------------------------------------------------------- #
+
 from __future__ import division
 
 import numpy as np

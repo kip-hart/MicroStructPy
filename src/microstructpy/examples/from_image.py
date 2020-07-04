@@ -1,9 +1,9 @@
 import os
 import shutil
 
-import matplotlib.image as mpim
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import image as mpim
+from matplotlib import pyplot as plt
 
 import microstructpy as msp
 

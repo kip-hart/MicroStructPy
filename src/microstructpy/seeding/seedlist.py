@@ -14,11 +14,11 @@ from __future__ import print_function
 import warnings
 
 import aabbtree
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 from matplotlib import collections
 from matplotlib import patches
+from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 from mpl_toolkits.mplot3d import Axes3D
 from pyquaternion import Quaternion

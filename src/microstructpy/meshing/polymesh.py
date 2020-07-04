@@ -19,11 +19,11 @@ import sys
 import tempfile
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pyvoro
 from matplotlib import collections
 from matplotlib import patches
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial import distance

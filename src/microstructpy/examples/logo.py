@@ -2,9 +2,9 @@ from __future__ import division
 
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import collections
+from matplotlib import pyplot as plt
 from matplotlib.offsetbox import AnnotationBbox
 from matplotlib.offsetbox import OffsetImage
 

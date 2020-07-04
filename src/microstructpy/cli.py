@@ -17,10 +17,10 @@ import os
 import shutil
 import subprocess
 
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 import xmltodict
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from microstructpy import _misc

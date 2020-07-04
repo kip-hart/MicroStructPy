@@ -8,10 +8,11 @@ This module contains the Box class.
 # Import Modules                                                              #
 #                                                                             #
 # --------------------------------------------------------------------------- #
+
 from __future__ import division
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 

@@ -7,9 +7,9 @@ from __future__ import division
 
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.spatial.distance
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from pyquaternion import Quaternion
 

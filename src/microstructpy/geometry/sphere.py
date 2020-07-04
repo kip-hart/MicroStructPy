@@ -7,10 +7,11 @@ This module contains the Sphere class.
 # Import Modules                                                              #
 #                                                                             #
 # --------------------------------------------------------------------------- #
+
 from __future__ import division
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from microstructpy.geometry.n_sphere import NSphere
