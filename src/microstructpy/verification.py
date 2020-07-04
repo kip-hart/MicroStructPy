@@ -16,9 +16,9 @@ from __future__ import print_function
 import copy
 import os
 
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
+from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 
 import microstructpy.geometry

@@ -6,9 +6,9 @@
 from __future__ import division
 
 import ellipse as lsqel  # ellipse module in lsq-ellipse package
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
+from matplotlib import pyplot as plt
 
 __author__ = 'Kenneth (Kip) Hart'
 

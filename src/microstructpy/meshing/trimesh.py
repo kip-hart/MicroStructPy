@@ -13,12 +13,12 @@ This module contains the class definition for the TriMesh class.
 from __future__ import division
 from __future__ import print_function
 
-import matplotlib.pyplot as plt
 import meshpy.tet
 import meshpy.triangle
 import numpy as np
 from matplotlib import collections
 from matplotlib import patches
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 

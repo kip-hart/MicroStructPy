@@ -14,11 +14,11 @@ from __future__ import print_function
 import warnings
 
 import aabbtree
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 from matplotlib import collections
 from matplotlib import patches
+from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 from mpl_toolkits.mplot3d import Axes3D
 from pyquaternion import Quaternion
@@ -341,19 +341,67 @@ class SeedList(object):
     # ----------------------------------------------------------------------- #
     # Write Function                                                          #
     # ----------------------------------------------------------------------- #
-    def write(self, filename):
+    def write(self, filename, format='txt'):
         """Write seed list to a text file
 
-        This function writes out the seed list to a file. The content of this
-        file is human-readable and can be read by the
+        This function writes out the seed list to a file. The format of the
+        file can be either 'txt' or 'vtk'. The content of the 'txt' file
+        is human-readable and can be read by the
         :func:`SeedList.from_file` method.
+        The 'vtk' option creates a VTK legacy file with the grain geometries.
+
+        For grains that are non-spherical, the spherical breakdown of the seed
+        is output instead of the seed itself.
 
         Args:
             filename (str): File to write the seed list.
         """
 
-        with open(filename, 'w') as file:
-            file.write(str(self) + '\n')
+        if format == 'txt':
+            with open(filename, 'w') as file:
+                file.write(str(self) + '\n')
+        elif format == 'vtk':
+            # Unpack breakdowns
+            bkdwns = np.array([b for s in self for b in s.breakdown])
+            n_pts, n_col = bkdwns.shape
+            seed_nums = np.array([i for i, s in enumerate(self) for b in
+                                  s.breakdown])
+            centers = np.zeros((n_pts, 3))
+            centers[:, :(n_col - 1)] = bkdwns[:, :-1]
+            diameters = 2 * bkdwns[:, -1]
+
+            pt_fmt = '{: f} {: f} {: f}\n'
+            # write heading
+            vtk = '# vtk DataFile Version 2.0\n'
+            vtk += 'Tetrahedral mesh\n'
+            vtk += 'ASCII\n'
+            vtk += 'DATASET POLYDATA\n'
+
+            # Write points
+            vtk += 'POINTS ' + str(n_pts) + ' float\n'
+            vtk += ''.join([pt_fmt.format(*c) for c in centers])
+
+            # Write diameters
+            vtk += '\nPOINT_DATA ' + str(n_pts) + '\n'
+            vtk += 'SCALARS diameters double 1 \n'
+            vtk += 'LOOKUP_TABLE Diameters\n'
+            vtk += ''.join([str(d) + '\n' for d in diameters])
+
+            # Write material numbers
+            vtk += '\nSCALARS phase_numbers int 1 \n'
+            vtk += 'LOOKUP_TABLE phase_numbers\n'
+            vtk += ''.join([str(self[n].phase) + '\n' for n in seed_nums])
+
+            # Write seed numbers
+            vtk += '\nSCALARS seed_numbers int 1 \n'
+            vtk += 'LOOKUP_TABLE seed_numbers \n'
+            vtk += ''.join([str(n) + '\n' for n in seed_nums])
+
+            with open(filename, 'w') as file:
+                file.write(vtk)
+
+        else:
+            raise ValueError('Cannot write to format ' + str(format))
 
     # ----------------------------------------------------------------------- #
     # Plot Function                                                           #

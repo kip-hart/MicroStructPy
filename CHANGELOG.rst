@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Added
+'''''
+- VTK output for seed lists and polyhedral meshes.
+
 `1.3.0`_ - 2020-06-25
 --------------------------
 Added

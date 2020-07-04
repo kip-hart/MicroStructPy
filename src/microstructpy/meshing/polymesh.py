@@ -19,11 +19,11 @@ import sys
 import tempfile
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pyvoro
 from matplotlib import collections
 from matplotlib import patches
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from scipy.spatial import distance
@@ -297,31 +297,105 @@ class PolyMesh(object):
                 f.write(ply)
 
         elif format == 'vtk':
-            nv = len(self.points)
-            nd = len(self.points[0])
-            nf = len(self.facets)
-            assert nd == 3
+            vtk_s = '# vtk DataFile Version 2.0\n'
+            vtk_s += 'Polygonal Mesh\n'
+            vtk_s += 'ASCII\n'
+            if len(self.points[0]) == 2:
+                vtk_s += 'DATASET POLYDATA\n'
 
-            p_size = nf + sum([len(f) for f in self.facets])
+                # Points
+                vtk_s += 'POINTS {} float\n'.format(len(self.points))
+                for pt in self.points:
+                    vtk_s += ' '.join(['{: e}'.format(x) for x in pt]) + ' 0\n'
+                vtk_s += '\n'
 
-            vtk = '# vtk DataFile Version 2.0\n'
-            vtk += 'Polyhedron Mesh\n'
-            vtk += 'ASCII\n'
-            vtk += 'DATASET POLYDATA\n'
+                # Cells
+                n_cells = len(self.regions)
+                n_data_total = 0
+                cells = 'POLYGONS {}'.format(n_cells) + ' {}\n'
+                pts = np.array(self.points)
+                for facets in self.regions:
+                    vloop = kp_loop([self.facets[f] for f in facets])
+                    n_kp = len(vloop)
 
-            # vertices
-            vtk += 'POINTS ' + str(nv) + ' float\n'
-            vtk += ''.join([' '.join(['{: e}'.format(x) for x in pt]) + '\n'
-                            for pt in self.points])
-            vtk += '\n'
+                    v1 = pts[vloop[1]] - pts[vloop[0]]
+                    v2 = pts[vloop[2]] - pts[vloop[0]]
+                    cross_p = np.cross(v1, v2)
 
-            # faces
-            vtk += 'POLYGONS ' + str(nf) + ' ' + str(p_size) + '\n'
-            vtk += ''.join([str(len(f)) + ''.join([' ' + str(kp) for kp in f])
-                            + '\n' for f in self.facets])
+                    cells += '{} '.format(n_kp)
+                    if cross_p > 0:
+                        cells += ' '.join([str(kp) for kp in vloop])
+                    else:
+                        cells += ' '.join([str(kp) for kp in vloop[::-1]])
+                    cells += '\n'
+                    n_data_total += 1 + n_kp
+                vtk_s += cells.format(n_data_total)
 
-            with open(filename, 'w') as f:
-                f.write(vtk)
+            else:
+                vtk_s += 'DATASET UNSTRUCTURED_GRID\n'
+
+                # Points
+                vtk_s += 'POINTS {} float\n'.format(len(self.points))
+                for pt in self.points:
+                    vtk_s += ' '.join(['{: e}'.format(x) for x in pt]) + '\n'
+                vtk_s += '\n'
+
+                # Cells
+                n_cells = len(self.regions)
+                cells = 'CELLS {} '.format(n_cells) + '{}\n'
+                n_data_total = 0
+                pts = np.array(self.points)
+                for facets in self.regions:
+                    # Get region center
+                    kps = list({kp for f in facets for kp in self.facets[f]})
+                    cen = pts[kps].mean(axis=0)  # estimate of center
+
+                    # Write facets
+                    n_data_region = 1
+                    line = '{} ' + str(len(facets))
+                    for f_num in facets:
+                        facet = self.facets[f_num]
+                        f_len = len(facet)
+
+                        # Determine clockwise or counter-clockwise
+                        v1 = pts[facet[1]] - pts[facet[0]]
+                        v2 = pts[facet[2]] - pts[facet[0]]
+                        norm_vec = np.cross(v1, v2)
+                        cen_rel = cen - pts[facet[0]]
+                        dot_p = np.dot(norm_vec, cen_rel)
+
+                        line += ' {} '.format(f_len)
+                        if dot_p < 0:
+                            line += ' '.join([str(kp) for kp in facet])
+                        else:
+                            line += ' '.join([str(kp) for kp in facet[::-1]])
+                        n_data_region += 1 + f_len
+                    line += '\n'
+                    cells += line.format(n_data_region)
+                    n_data_total += 1 + n_data_region
+                vtk_s += cells.format(n_data_total)
+                vtk_s += '\n'
+
+                # Cell Types
+                vtk_s += 'CELL_TYPES {}\n'.format(n_cells)
+                vtk_s += ''.join(n_cells * ['42\n'])
+
+            # Cell Data
+            vtk_s += '\nCELL_DATA ' + str(n_cells) + '\n'
+            vtk_s += 'SCALARS seed int 1 \n'
+            vtk_s += 'LOOKUP_TABLE seed\n'
+            vtk_s += ''.join([str(a) + '\n' for a in self.seed_numbers])
+
+            vtk_s += 'SCALARS phase int 1 \n'
+            vtk_s += 'LOOKUP_TABLE phase\n'
+            vtk_s += ''.join([str(a) + '\n' for a in self.phase_numbers])
+
+            vtk_s += 'SCALARS volume float 1 \n'
+            vtk_s += 'LOOKUP_TABLE volume\n'
+            vtk_s += ''.join([str(a) + '\n' for a in self.volumes])
+
+            with open(filename, 'w') as file:
+                file.write(vtk_s)
 
         else:
             e_str = 'Cannot understand format string ' + str(format) + '.'

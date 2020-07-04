@@ -17,10 +17,10 @@ import os
 import shutil
 import subprocess
 
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 import xmltodict
+from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from microstructpy import _misc
@@ -348,9 +348,14 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         pos_dists = {i: p[kw] for i, p in enumerate(phases) if kw in p}
         seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose)
 
-        # Write seeds
-        if 'seeds' in filetypes:
-            seeds.write(seed_filename)
+    # Write seeds
+    seeds_types = filetypes.get('seeds', [])
+    if type(seeds_types) != list:
+        seeds_types = [seeds_types]
+    for seeds_type in seeds_types:
+        fname = seed_filename.rstrip('.txt') + '.' + seeds_type
+        if seeds_created or not os.path.exists(fname):
+            seeds.write(fname, format=seeds_type)
 
     # ----------------------------------------------------------------------- #
     # Plot Seeds                                                              #
@@ -403,7 +408,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     for poly_type in poly_types:
         fname = poly_filename.replace('.txt', '.' + poly_type)
-        pmesh.write(fname, poly_type)
+        if poly_created or not os.path.exists(fname):
+            pmesh.write(fname, poly_type)
 
     # ----------------------------------------------------------------------- #
     # Plot Polygon Mesh                                                       #
@@ -458,7 +464,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     for tri_type in tri_types:
         fname = tri_filename.replace('.txt', exts[tri_type])
-        tmesh.write(fname, tri_type, seeds, pmesh)
+        if tri_created or not os.path.exists(fname):
+            tmesh.write(fname, tri_type, seeds, pmesh)
 
     # ----------------------------------------------------------------------- #
     # Plot Triangular Mesh                                                    #
