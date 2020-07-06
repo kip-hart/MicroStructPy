@@ -300,9 +300,8 @@ class PolyMesh(object):
             vtk_s = '# vtk DataFile Version 2.0\n'
             vtk_s += 'Polygonal Mesh\n'
             vtk_s += 'ASCII\n'
+            vtk_s += 'DATASET UNSTRUCTURED_GRID\n'
             if len(self.points[0]) == 2:
-                vtk_s += 'DATASET POLYDATA\n'
-
                 # Points
                 vtk_s += 'POINTS {} float\n'.format(len(self.points))
                 for pt in self.points:
@@ -312,7 +311,7 @@ class PolyMesh(object):
                 # Cells
                 n_cells = len(self.regions)
                 n_data_total = 0
-                cells = 'POLYGONS {}'.format(n_cells) + ' {}\n'
+                cells = 'CELLS {}'.format(n_cells) + ' {}\n'
                 pts = np.array(self.points)
                 for facets in self.regions:
                     vloop = kp_loop([self.facets[f] for f in facets])
@@ -331,9 +330,11 @@ class PolyMesh(object):
                     n_data_total += 1 + n_kp
                 vtk_s += cells.format(n_data_total)
 
-            else:
-                vtk_s += 'DATASET UNSTRUCTURED_GRID\n'
+                # Cell Types
+                vtk_s += 'CELL_TYPES {}\n'.format(n_cells)
+                vtk_s += ''.join(n_cells * ['7\n'])
 
+            else:
                 # Points
                 vtk_s += 'POINTS {} float\n'.format(len(self.points))
                 for pt in self.points:
