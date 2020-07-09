@@ -893,6 +893,11 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
         i_phase = init_phases[i]
         o_phase = outp_phases[i]
         phase = phases[i]
+        for kw in phase:
+            if kw in ('angle', 'angle_deg') and phase[kw] == 'random':
+                phase[kw] = scipy.stats.uniform(loc=0, scale=360)
+            if kw == 'angle_rad':
+                phase[kw] = scipy.stats.uniform(loc=0, scale=2 * np.pi)
 
         err_io = {kw: _kw_errs(i_phase[kw], o_phase[kw]) for kw in i_phase}
         err_po = {kw: _kw_stats(phase[kw], o_phase[kw]) for kw in o_phase}

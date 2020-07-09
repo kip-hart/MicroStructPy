@@ -76,6 +76,8 @@ class Ellipse(object):
             self.center = (0, 0)
 
         # axes
+        if 'area' in kwargs:
+            kwargs['size'] = 2 * np.sqrt(kwargs['area'] / np.pi)
         if ('a' in kwargs) and ('b' in kwargs):
             assert kwargs['a'] > 0
             assert kwargs['b'] > 0
@@ -369,10 +371,17 @@ class Ellipse(object):
 
             if type(s_dist) in (float, int):
                 return 0.25 * np.pi * s_dist * s_dist
-            else:
-                return 0.25 * np.pi * s_dist.moment(2)
+            return 0.25 * np.pi * s_dist.moment(2)
 
-        elif ('a' in kwargs) and ('b' in kwargs):
+        if 'area' in kwargs:
+            a_dist = kwargs['area']
+            try:
+                a_exp = a_dist.moment(1)
+            except AttributeError:
+                a_exp = a_dist
+            return a_exp
+
+        if ('a' in kwargs) and ('b' in kwargs):
             exp = np.pi
             for kw in ('a', 'b'):
                 dist = kwargs[kw]
@@ -382,7 +391,8 @@ class Ellipse(object):
                     mu = dist.moment(1)
                 exp *= mu
             return exp
-        elif ('b' in kwargs) and ('aspect_ratio' in kwargs):
+
+        if ('b' in kwargs) and ('aspect_ratio' in kwargs):
             exp = np.pi
             try:
                 exp *= kwargs['b'].moment(2)
@@ -394,7 +404,8 @@ class Ellipse(object):
             except AttributeError:
                 exp *= kwargs['aspect_ratio']
             return exp
-        elif ('a' in kwargs) and ('aspect_ratio' in kwargs):
+
+        if ('a' in kwargs) and ('aspect_ratio' in kwargs):
             n = 1000
             try:
                 a = kwargs['a'].rvs(size=n)
@@ -406,10 +417,10 @@ class Ellipse(object):
             except AttributeError:
                 k = np.full(n, kwargs['aspect_ratio'])
             return np.pi * np.mean((a * a) / k)
-        else:
-            e_str = 'Could not calculate expected area from keywords '
-            e_str += str(kwargs.keys()) + '.'
-            raise KeyError(e_str)
+
+        e_str = 'Could not calculate expected area from keywords '
+        e_str += str(kwargs.keys()) + '.'
+        raise KeyError(e_str)
 
     # ----------------------------------------------------------------------- #
     # Bounding Circles                                                        #
