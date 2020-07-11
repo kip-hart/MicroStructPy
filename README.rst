@@ -140,8 +140,9 @@ in your bibliography:
 K. A. Hart and J. J. Rimoli, Generation of statistically representative
 microstructures with direct grain geomety control,
 *Computer Methods in Applied Mechanics and Engineering*,
-in press.
+370 (2020), pp. 113242.
 (`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/cmame2020.bib>`_)
+(`DOI <https://doi.org/10.1016/j.cma.2020.113242>`_)
 
 .. end-publications
 
@@ -188,6 +189,6 @@ advised by Prof. Julian Rimoli.
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
 
-.. |s-doi| image:: https://zenodo.org/badge/206468500.svg
-   :target: https://zenodo.org/badge/latestdoi/206468500
+.. |s-doi| image:: https://img.shields.io/badge/DOI-10.1016%2Fj.cma.2020.113242-blue
+   :target: https://doi.org/10.1016/j.cma.2020.113242
    :alt: DOI

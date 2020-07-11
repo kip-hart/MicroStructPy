@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Added
+'''''
+- VTK output for 2D triangular meshes.
+
+Changed
+'''''''
+- Updated reference to CMAME publication.
+
 `1.3.1`_ - 2020-07-09
 --------------------------
 Added

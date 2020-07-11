@@ -591,28 +591,35 @@ class TriMesh(object):
                     file.write(edge)
 
         elif fmt == 'vtk':
-            assert len(self.points[0]) == 3
+            n_kp = len(self.elements[0])
+            mesh_type = {3: 'Triangular', 4: 'Tetrahedral'}[n_kp]
             pt_fmt = '{: f} {: f} {: f}\n'
             # write heading
             vtk = '# vtk DataFile Version 2.0\n'
-            vtk += 'Tetrahedral mesh\n'
+            vtk += '{} mesh\n'.format(mesh_type)
             vtk += 'ASCII\n'
             vtk += 'DATASET UNSTRUCTURED_GRID\n'
 
             # Write points
             vtk += 'POINTS ' + str(len(self.points)) + ' float\n'
-            vtk += ''.join([pt_fmt.format(x, y, z) for x, y, z in self.points])
+            if len(self.points[0]) == 2:
+                vtk += ''.join([pt_fmt.format(x, y, 0) for x, y in
+                                self.points])
+            else:
+                vtk += ''.join([pt_fmt.format(x, y, z) for x, y, z in
+                                self.points])
 
             # write elements
             n_elem = len(self.elements)
-            cell_sz = 5 * n_elem
+            cell_fmt = str(n_kp) + n_kp * ' {}' + '\n'
+            cell_sz = (1 + n_kp) * n_elem
             vtk += '\nCELLS ' + str(n_elem) + ' ' + str(cell_sz) + '\n'
-            vtk += ''.join(['4 ' + ' '.join([str(k) for k in el]) + '\n' for
-                            el in self.elements])
+            vtk += ''.join([cell_fmt.format(*el) for el in self.elements])
 
             # write cell type
             vtk += '\nCELL_TYPES ' + str(n_elem) + '\n'
-            vtk += ''.join(n_elem * ['10\n'])
+            cell_type =  {3: '5', 4: '10'}[n_kp]
+            vtk += ''.join(n_elem * [cell_type + '\n'])
 
             # write element attributes
             try:
