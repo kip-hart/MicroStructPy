@@ -950,6 +950,297 @@ class SeedList(object):
         self.seeds = self[keep_mask].seeds
 
 
+def _get_n_dim(phases):
+    n_dim = None
+    for phase in phases:
+        if 'shape' in phase:
+            n_dim = geometry.factory(phase['shape']).n_dim
+    if n_dim is None:
+        e_str = 'Number of dimensions could not be determined from phase '
+        e_str += 'shapes. Consider setting the shape of a phase, or'
+        e_str += ' specifying the number of dimensions.'
+        raise ValueError(e_str)
+    return n_dim
+
+
+def _set_sample_rng_seeds(phases, rng_seeds, maxint):
+    rng_keys = list({k for p in phases for k in p} - set(_misc.gen_kws))
+    rng_keys.extend(['fraction', 'phase'])
+
+    n_keys = len(rng_keys)
+    int_step = maxint / n_keys
+    sample_seeds = {}
+    for i, k in enumerate(rng_keys):
+        rng_seed = int(rng_seeds.get(k, 0) + i * int_step)
+        sample_seeds[k] = rng_seed % maxint
+    return sample_seeds
+
+
+def _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int):
+    # compute volume of each phase
+    vol_rng = sample_rng_seeds['fraction']
+    n_phases = len(phases)
+    rel_vols = np.ones(n_phases)
+    for i, phase in enumerate(phases):
+        vol = phase.get('fraction', 1)
+        try:
+            v_sample = -1
+            while v_sample < 0:
+                v_sample = vol.rvs(random_state=vol_rng)
+                vol_rng = (vol_rng + 1) % max_int
+            rel_vols[i] = v_sample
+        except AttributeError:
+            rel_vols[i] = vol
+    vol_fracs = rel_vols / sum(rel_vols)
+
+    # Compute the average grain volume of each phase
+    if n_dim == 2:
+        shape0 = geometry.factory(phases[0]['shape'])
+        print('shape', shape0)
+        print('p0', phases[0])
+        avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
+                    for p in phases]
+    else:
+        avg_vols = [geometry.factory(p['shape']).volume_expectation(**p)
+                    for p in phases]
+    weights = vol_fracs / np.array(avg_vols)
+    pop_fracs = weights / sum(weights)
+    return pop_fracs
+
+
+def _sample_phase_args(phase, sample_rng_seeds, n_dim, maxint):
+    seed_kwargs = {}
+    for kw in set(phase) - set(_misc.gen_kws):
+        rng_seed = sample_rng_seeds[kw]
+
+        # Sample, with special cases for orientation
+        if kw not in _misc.ori_kws:
+            try:
+                val = phase[kw].rvs(random_state=rng_seed)
+            except AttributeError:
+                val = phase[kw]
+            seed_kwargs[kw] = val
+        elif (phase[kw] == 'random') and (n_dim == 2):
+            np.random.seed(rng_seed)
+            ang_dist = scipy.stats.uniform(loc=0, scale=360)
+            seed_kwargs['angle_deg'] = ang_dist.rvs(random_state=rng_seed)
+        elif phase[kw] == 'random':
+            quat_dist = scipy.stats.norm()
+            elems = quat_dist.rvs(4, random_state=rng_seed)
+            mag = np.linalg.norm(elems)
+            elems /= mag
+            val = Quaternion(elems).rotation_matrix
+            seed_kwargs[kw] = val
+        elif kw in ['rot_seq', 'rot_seq_deg', 'rot_seq_rad']:
+            seq = []
+            val = phase[kw]
+            if not isinstance(val, list):
+                val = [val]
+            for rot_i, rotation in enumerate(val):
+                rot_dict = {str(kw): rotation[kw] for kw in rotation}
+                ax = rot_dict.get('axis', 'x')
+                ang_dist = rot_dict.get('angle', 0)
+                rot_rng = (rng_seed + rot_i) % maxint
+                try:
+                    ang = ang_dist.rvs(random_state=rot_rng)
+                except AttributeError:
+                    ang = ang_dist
+                seq.append((ax, ang))
+            seed_kwargs[kw] = seq
+        else:
+            try:
+                val = phase[kw].rvs(random_state=rng_seed)
+            except AttributeError:
+                val = phase[kw]
+            seed_kwargs[kw] = val
+
+        # Update the RNG seed
+        sample_rng_seeds[kw] = (rng_seed + 1) % maxint
+    return seed_kwargs
+
+
+def _plt_args(seeds, index_by, kwargs):
+    seed_args = [{} for seed in seeds]
+    for seed_num, seed in enumerate(seeds):
+        phase_num = seed.phase
+        for key, val in kwargs.items():
+            if type(val) in (list, np.array):
+                if index_by == 'seed' and len(val) > seed_num:
+                    seed_args[seed_num][key] = val[seed_num]
+                elif index_by == 'material' and len(val) > phase_num:
+                    seed_args[seed_num][key] = val[phase_num]
+            else:
+                seed_args[seed_num][key] = val
+    return seed_args
+
+
+def _get_axes(n):
+    if n == 2:
+        ax = plt.gca()
+    else:
+        ax = plt.gcf().gca(projection=Axes3D.name)
+    n_obj = _misc.ax_objects(ax)
+    if n_obj > 0:
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+    else:
+        xlim = [float('inf'), -float('inf')]
+        ylim = [float('inf'), -float('inf')]
+
+    lims = [xlim, ylim]
+
+    if n == 3:
+        if n_obj > 0:
+            zlim = ax.get_zlim()
+        else:
+            zlim = [float('inf'), -float('inf')]
+        lims.append(zlim)
+    return ax, lims
+
+
+def _plot_2d(ax, seeds, seed_args):
+    ellipse_data = {'w': [], 'h': [], 'a': [], 'xy': []}
+    ec_kwargs = {}
+
+    rect_data = []
+    rect_kwargs = {}
+    for seed, args in zip(seeds, seed_args):
+        geom_name = type(seed.geometry).__name__.lower().strip()
+        if geom_name == 'ellipse':
+            ellipse_data['w'].append(2 * seed.geometry.a)
+            ellipse_data['h'].append(2 * seed.geometry.b)
+            ellipse_data['a'].append(seed.geometry.angle_deg)
+            ellipse_data['xy'].append(np.array(seed.position))
+
+            for key, val in args.items():
+                val_list = ec_kwargs.get(key, []) + [val]
+                ec_kwargs[key] = val_list
+
+        elif geom_name == 'circle':
+            ellipse_data['w'].append(seed.geometry.diameter)
+            ellipse_data['h'].append(seed.geometry.diameter)
+            ellipse_data['a'].append(0)
+            ellipse_data['xy'].append(np.array(seed.position))
+
+            for key, val in args.items():
+                val_list = ec_kwargs.get(key, []) + [val]
+                ec_kwargs[key] = val_list
+
+        elif geom_name in ['rectangle', 'square']:
+            w, h = seed.geometry.side_lengths
+            corner = seed.geometry.corner
+            t = seed.geometry.angle_deg
+            rect_inputs = {'width': w, 'height': h, 'angle': t, 'xy': corner}
+            rect_data.append(rect_inputs)
+
+            for key, val in args.items():
+                val_list = rect_kwargs.get(key, []) + [val]
+                rect_kwargs[key] = val_list
+
+        elif geom_name == 'nonetype':
+            pass
+
+        else:
+            e_str = 'Cannot plot groups of ' + geom_name + ' yet.'
+            raise NotImplementedError(e_str)
+
+    # abbreviate kwargs if all the same
+    for key, val in ec_kwargs.items():
+        v1 = val[0]
+        same = True
+        for v in val:
+            same &= v == v1
+        if same:
+            ec_kwargs[key] = v1
+
+    # Plot Circles and Ellipses
+    w = np.array(ellipse_data['w'])
+    h = np.array(ellipse_data['h'])
+    a = np.array(ellipse_data['a'])
+    xy = np.array(ellipse_data['xy'])
+    ec = collections.EllipseCollection(w, h, a, units='x', offsets=xy,
+                                       transOffset=ax.transData, **ec_kwargs)
+    ax.add_collection(ec)
+
+    # Plot Rectangles
+    rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
+    rc = collections.PatchCollection(rects, False, **rect_kwargs)
+    ax.add_collection(rc)
+
+    ax.autoscale_view()
+
+
+def _plot_2d_breakdowns(ax, seeds, seed_args):
+    breakdowns = np.zeros((0, 3))
+    ec_kwargs = {}
+    for seed, args in zip(seeds, seed_args):
+        breakdowns = np.concatenate((breakdowns, seed.breakdown))
+        n_c = len(seed.breakdown)
+        for key, val in args.items():
+            val_list = ec_kwargs.get(key, [])
+            val_list.extend(n_c * [val])
+            ec_kwargs[key] = val_list
+    d = 2 * breakdowns[:, -1]
+    xy = breakdowns[:, :-1]
+    a = np.full(len(breakdowns), 0)
+
+    # abbreviate kwargs if all the same
+    for key, val in ec_kwargs.items():
+        v1 = val[0]
+        same = True
+        for v in val:
+            same &= v == v1
+        if same:
+            ec_kwargs[key] = v1
+
+    ec = collections.EllipseCollection(d, d, a, units='x', offsets=xy,
+                                       transOffset=ax.transData, **ec_kwargs)
+    ax.add_collection(ec)
+    ax.autoscale_view()
+
+
+def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
+    if material:
+        p_kwargs = [{'label': m} for m in material]
+        if index_by == 'seed':
+            for seed_kwargs, seed in zip(seed_args, seeds):
+                p_kwargs[seed.phase].update(seed_kwargs)
+        else:
+            for key, val in kwargs.items():
+                if type(val) in (list, np.array):
+                    for i, elem in enumerate(val):
+                        p_kwargs[i][key] = elem
+                else:
+                    for p_kwargs_i in p_kwargs:
+                        p_kwargs_i[key] = val
+
+        # Replace plural keywords
+        for p_kw in p_kwargs:
+            for kw in _misc.mpl_plural_kwargs:
+                if kw in p_kw:
+                    p_kw[kw[:-1]] = p_kw[kw]
+                    del p_kw[kw]
+        ax.legend(handles=[patches.Patch(**p_kw) for p_kw in p_kwargs],
+                  loc=loc)
+
+
+def calc_rtol(seeds):
+    """Calculate relative overlap tolerance."""
+    cv = scipy.stats.variation([s.volume for s in seeds])
+    n_dim = seeds[0].geometry.n_dim
+    if n_dim == 2:
+        numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
+        denom = cv * cv - 1.05989 * cv + 0.365096
+        rtol = numer / denom
+    elif n_dim == 3:
+        numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
+        denom = cv * cv - 1.08469 * cv + 0.428216
+        rtol = numer / denom
+    else:
+        raise ValueError('Cannot calculate rtol for {}-D.'.format(n_dim))
+    return rtol
+
+
 def sample_pos(distribution, n=1):
     """ Sample position distribution
 

@@ -1015,42 +1015,37 @@ def dict_convert(dictionary, filepath='.'):
     .. _xmltodict: https://github.com/martinblech/xmltodict
     """
 
-    if type(dictionary) is list:
+    # Convert lists
+    if isinstance(dictionary, list):
         return [dict_convert(d) for d in dictionary]
 
-    new_dict = collections.OrderedDict()
+    # Convert strings
+    if isinstance(dictionary, str):
+        return _misc.from_str(dictionary)
+
+    # Convert Nones
+    if dictionary is None:
+        return {}
+
+    # Convert filepaths
     for key in dictionary:
         val = dictionary[key]
-        if type(val) in (dict, collections.OrderedDict):
-            new_val = dict_convert(val, filepath)
-
-            # Exception for scipy.stats distributions
-            if 'dist_type' in val:
-                new_val = _dist_convert(new_val)
-
-        elif type(val) is list:
-            if type(val[0]) is str:
-                new_val = [_misc.from_str(v) for v in val]
-            else:
-                new_val = dict_convert(val, filepath)
-
-        elif val is None:
-            new_val = {}
-
-        # Exception for filepaths
-        elif any([s in key.lower() for s in ('filename', 'directory')]):
+        if any([s in key.lower() for s in ('filename', 'directory')]):
             if not os.path.isabs(val) and filepath:
                 new_val = os.path.abspath(os.path.join(filepath, val))
             else:
                 new_val = val
+            dictionary[key] = new_val
 
-        elif type(val) is str:
-            new_val = _misc.from_str(val)
+    # Convert SciPy.stats distributions
+    if 'dist_type' in dictionary:
+        return _dist_convert(dictionary)
 
-        else:
-            err_str = 'Cannot parse type for: ' + str(type(val))
-            raise ValueError(err_str)
-
+    # Convert Dictionaries
+    new_dict = collections.OrderedDict()
+    for key in dictionary:
+        val = dictionary[key]
+        new_val = dict_convert(val, filepath)
         new_dict[key] = new_val
     return new_dict
 
@@ -1059,7 +1054,8 @@ def _dist_convert(dist_dict):
     """Convert distribution dictionary to distribution"""
 
     dist_type = dist_dict['dist_type'].strip().lower()
-    params = {k: v for k, v in dist_dict.items() if k != 'dist_type'}
+    params = {k: _misc.from_str(v) for k, v in dist_dict.items()}
+    del params['dist_type']
 
     if dist_type == 'cdf':
         cdf_filename = params['filename']

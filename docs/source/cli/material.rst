@@ -521,13 +521,13 @@ coordinates while the second has a coupled distribution.
                 <scale> 1 </scale>
             </size>
             <position>  <!-- x -->
-                <dist_type> binom </dist>
+                <dist_type> binom </dist_type>
                 <loc> 0.5 </loc>
                 <n> 9 </n>
                 <p> 0.5 </p>
             </position>
             <position> <!-- y -->
-                <dist_type> uniform </dist>
+                <dist_type> uniform </dist_type>
                 <loc> 0 </loc>
                 <scale> 10 </scale>
             </position>
