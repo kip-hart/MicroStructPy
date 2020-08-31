@@ -996,8 +996,6 @@ def _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int):
     # Compute the average grain volume of each phase
     if n_dim == 2:
         shape0 = geometry.factory(phases[0]['shape'])
-        print('shape', shape0)
-        print('p0', phases[0])
         avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
                     for p in phases]
     else:
