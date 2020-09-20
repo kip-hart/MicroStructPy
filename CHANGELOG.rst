@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.3.5`_ -  2020-09-20
+--------------------------
+Fixed
+'''''''
+- Tetrahedral mesh maximum volume setting no longer ignored.
+
 `1.3.4`_ -  2020-08-31
 --------------------------
 Removed
@@ -147,7 +153,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.4...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.5...HEAD
+.. _`1.3.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.4...v1.3.5
 .. _`1.3.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.3...v1.3.4
 .. _`1.3.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.2...v1.3.3
 .. _`1.3.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.1...v1.3.2

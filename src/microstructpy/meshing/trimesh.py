@@ -307,7 +307,7 @@ class TriMesh(object):
         else:
             opts = meshpy.tet.Options('pq')
             opts.mindihedral = min_angle
-            opts.maxvolume = float('inf')
+            opts.maxvolume = max_volume
             opts.fixedvolume = 1
             opts.regionattrib = 1
             opts.facesout = 1
