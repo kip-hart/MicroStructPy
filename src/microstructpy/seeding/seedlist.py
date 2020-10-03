@@ -995,7 +995,6 @@ def _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int):
 
     # Compute the average grain volume of each phase
     if n_dim == 2:
-        shape0 = geometry.factory(phases[0]['shape'])
         avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
                     for p in phases]
     else:
@@ -1161,7 +1160,7 @@ def _plot_2d(ax, seeds, seed_args):
     ax.add_collection(ec)
 
     # Plot Rectangles
-    rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
+    rects = [Rectangle(**rect_inps) for rect_inps in rect_data]
     rc = collections.PatchCollection(rects, False, **rect_kwargs)
     ax.add_collection(rc)
 

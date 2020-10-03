@@ -618,7 +618,7 @@ class TriMesh(object):
 
             # write cell type
             vtk += '\nCELL_TYPES ' + str(n_elem) + '\n'
-            cell_type =  {3: '5', 4: '10'}[n_kp]
+            cell_type = {3: '5', 4: '10'}[n_kp]
             vtk += ''.join(n_elem * [cell_type + '\n'])
 
             # write element attributes
