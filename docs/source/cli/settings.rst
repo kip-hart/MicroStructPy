@@ -43,9 +43,12 @@ quality, among other things. The default settings are:
             <edge_opt> False </edge_opt>
             <edge_opt_n_iter> 100 </edge_opt_n_iter>
 
-            <mesh_max_volume> inf </mesh_max_volume>
-            <mesh_min_angle> 0 </mesh_min_angle>
-            <mesh_max_edge_length> inf </mesh_max_edge_length>
+            <mesher>  Triangle/TetGen </mesher>
+
+            <mesh_size> inf </mesh_size> <!-- used with gmsh -->
+            <mesh_max_volume> inf </mesh_max_volume> <!-- used with Triangle and TetGen -->
+            <mesh_min_angle> 0 </mesh_min_angle> <!-- used with Triangle and TetGen -->
+            <mesh_max_edge_length> inf </mesh_max_edge_length> <!-- used with Triangle -->
 
             <verify> False </verify>
 

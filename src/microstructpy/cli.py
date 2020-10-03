@@ -221,10 +221,11 @@ def _include_expand(inp, filename, key):
 
 def run(phases, domain, verbose=False, restart=True, directory='.',
         filetypes={}, rng_seeds={}, plot_axes=True, rtol='fit', edge_opt=False,
-        edge_opt_n_iter=100,
+        edge_opt_n_iter=100, mesher='Triangle/TetGen',
         mesh_max_volume=float('inf'), mesh_min_angle=0,
-        mesh_max_edge_length=float('inf'), verify=False, color_by='material',
-        colormap='viridis', seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
+        mesh_max_edge_length=float('inf'), mesh_size=float('inf'),
+        verify=False, color_by='material', colormap='viridis',
+        seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
     r"""Run MicroStructPy
 
     This is the primary run function for the package. It performs these steps:
@@ -298,6 +299,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
             edge during optimization. Ignored if `edge_opt` set to False.
             Defaults to 100.
+        mesher (str): {'Triangle/TetGen' | 'Triangle'  | 'TetGen' | 'gmsh'}
+            specify the mesh generator. Default is 'Triangle/TetGen'.
         mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
             of a mesh cell in the triangular mesh. Default is infinity,
             which turns off the maximum volume quality setting.
@@ -309,6 +312,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             Value should be in the range 0-60.
         mesh_max_edge_length (float): *(optional)* The maximum edge length of
             elements along grain boundaries. Currently only supported in 2D.
+        mesh_size (float): The target size of the mesh elements. This
+            option is used with gmsh. Default is infinity, whihch turns off
+            this control.
         plot_axes (bool): *(optional)* Option to show the axes in output plots.
             When False, the plots are saved without axes and very tight
             borders. Defaults to True.
@@ -500,7 +506,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         if verbose:
             print('Creating triangular mesh.')
 
-        tmesh = TriMesh.from_polymesh(pmesh, phases, mesh_min_angle,
+        tmesh = TriMesh.from_polymesh(pmesh, phases, mesher, mesh_min_angle,
                                       mesh_max_volume, mesh_max_edge_length)
 
     # Write triangular mesh

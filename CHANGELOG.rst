@@ -11,6 +11,7 @@ and this project adheres to `Semantic Versioning`_.
 Added
 '''''''
 - References within XML input files using the ``<include>`` tag.
+- Support for gmsh.
 
 `1.3.5`_ -  2020-09-20
 --------------------------

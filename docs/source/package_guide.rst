@@ -196,9 +196,10 @@ Unstructured Meshing
 ++++++++++++++++++++
 
 The triangular/tetrahedral meshes are generated in MicroStructPy using the
-`MeshPy`_ package.
-It links with `Triangle`_ to create 2D triangular meshes and with `TetGen`_
+`MeshPy`_ and `pygmsh`_ packages.
+MeshPy links with `Triangle`_ to create 2D triangular meshes and with `TetGen`_
 to create 3D tetrahedral meshes.
+Pygmsh links with `gmsh`_ to produce both 2D and 3D meshes.
 
 A polygonal mesh, :class:`.PolyMesh`, can be converted into an unstructured
 mesh using the :meth:`.TriMesh.from_polymesh` method.
@@ -288,8 +289,10 @@ The ``max_volume`` option allows for maximum element volume controls to be
 phase-specific.
 
 
+.. _`gmsh`: https://gmsh.info
 .. _`MeshPy`: https://mathema.tician.de/software/meshpy/
 .. _`Power Diagram`: https://en.wikipedia.org/wiki/Power_diagram
+.. _`pygmsh`: https://pygmsh.readthedocs.io
 .. _`pyvoro`: https://github.com/mmalahe/pyvoro
 .. _`TetGen`: http://wias-berlin.de/software/tetgen/
 .. _`Triangle`: https://www.cs.cmu.edu/~quake/triangle.html
