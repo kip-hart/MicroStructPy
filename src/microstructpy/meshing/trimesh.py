@@ -745,7 +745,7 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
             n_int = max(1, np.ceil(n_float))
             n_subs[i] = n_int
         sub_out = meshpy.triangle.subdivide_facets(n_subs, pts, facets,
-                                                    facet_nums)
+                                                   facet_nums)
         pts, facets, facet_nums = sub_out
 
     # create groups/regions
@@ -816,11 +816,11 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     # run MeshPy
     if n_dim == 2:
         tri_mesh = meshpy.triangle.build(info,
-                                            attributes=True,
-                                            volume_constraints=True,
-                                            max_volume=max_volume,
-                                            min_angle=min_angle,
-                                            generate_faces=True)
+                                         attributes=True,
+                                         volume_constraints=True,
+                                         max_volume=max_volume,
+                                         min_angle=min_angle,
+                                         generate_faces=True)
     else:
         opts = meshpy.tet.Options('pq')
         opts.mindihedral = min_angle
@@ -858,7 +858,6 @@ def _call_gmsh(pmesh, phases, res):
     edge_keys = []
     edge_lines = []
     n_edges = 0
-    n_facets = len(pmesh.facets)
     for i, f in enumerate(pmesh.facets):
         # Determine if facet should be skipped (interior to seed)
         keep = True
@@ -996,7 +995,7 @@ def _call_gmsh(pmesh, phases, res):
     # CALL GMSH
     # ---------------------------------------------------------------------- #
     with open('minimal.geo', 'w') as file:
-            file.write(geom.get_code())
+        file.write(geom.get_code())
     mesh = pg.generate_mesh(geom)
 
     # ---------------------------------------------------------------------- #
@@ -1021,8 +1020,9 @@ def _call_gmsh(pmesh, phases, res):
         elif key.startswith('seed-'):
             seed_phys2att[phys] = int(key.split('-')[-1])
 
-    tet_atts = [seed_phys2att[k] for k in mesh.cell_data_dict['gmsh:physical'][e_key]]
-    facet_atts = [facet_phsy2att[k] for k in mesh.cell_data_dict['gmsh:physical'][f_key]]
+    atts = mesh.cell_data_dict['gmsh:physical']
+    tet_atts = [seed_phys2att[k] for k in atts[e_key]]
+    facet_atts = [facet_phsy2att[k] for k in atts[f_key]]
 
     tri_args = (pts, tets, tet_atts, facets, facet_atts)
     return tri_args
@@ -1053,6 +1053,7 @@ def _sort_element(elem_pts):
         return np.arange(4)
     else:
         raise ValueError('Cannot sort for n pts: ' + str(n_pts))
+
 
 def _sort_facets(pairs):
     remaining_inds = [i for i in range(1, len(pairs))]
