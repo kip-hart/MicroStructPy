@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_ 
+--------------------------
+Added
+'''''''
+- References within XML input files using the ``<include>`` tag.
+
 `1.3.5`_ -  2020-09-20
 --------------------------
 Fixed

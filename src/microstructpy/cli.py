@@ -145,9 +145,7 @@ def read_input(filename):
     """
     # Read in the file
     file_path = os.path.dirname(filename)
-
-    with open(filename, 'r') as file:
-        file_dict = xmltodict.parse(file.read())
+    file_dict = input2dict(filename)
 
     assert 'input' in file_dict, 'Root <input> not found in input file.'
     in_data = dict_convert(file_dict['input'], file_path)
@@ -171,6 +169,54 @@ def read_input(filename):
         kwargs['directory'] = os.path.expanduser(os.path.normpath(rel_path))
     in_data['settings'] = kwargs
     return in_data
+
+
+def input2dict(filename, root_tag='input'):
+    """Read input file into a dictionary
+
+    This function reads an input file and creates a dictionary of strings
+    contained within the file.
+
+    Args:
+        filename: Name of the input file.
+
+    Returns:
+        collections.OrderedDict: Dictionary of input strings.
+
+    """
+
+    # Read in the file
+    with open(filename, 'r') as file:
+        file_dict = xmltodict.parse(file.read())
+    tag = list(file_dict.keys())[0]
+    assert tag == root_tag, repr(tag) + ' != ' + repr(root_tag)
+
+    return _include_expand(file_dict, filename, root_tag)
+
+
+def _include_expand(inp, filename, key):
+    if isinstance(inp,  str):
+        return inp
+    if isinstance(inp, list):
+        return [_include_expand(inp_i, filename, key) for inp_i in inp]
+
+    file_path = os.path.dirname(filename)
+    exp_dict = collections.OrderedDict()
+    for inp_key, inp_val in inp.items():
+        if inp_key == 'include':
+            includes = inp_val
+            if not isinstance(includes, list):
+                includes = [includes]
+            for inc_filename in includes:
+                if os.path.isabs(inc_filename):
+                    fname = inc_filename
+                else:
+                    fname = os.path.join(file_path, inc_filename)
+                inc_dict = input2dict(fname, key)
+                exp_dict.update(inc_dict[key])
+        else:
+            exp_dict[inp_key] = _include_expand(inp_val, filename, inp_key)
+    return exp_dict
 
 
 def run(phases, domain, verbose=False, restart=True, directory='.',
