@@ -182,7 +182,7 @@ def input2dict(filename, root_tag='input'):
 
     Returns:
         collections.OrderedDict: Dictionary of input strings.
-    
+
     """
 
     # Read in the file
