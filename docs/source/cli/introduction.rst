@@ -27,6 +27,9 @@ User-generated input files can be run in a number of ways::
 
 Both relative and absolute filepaths are acceptable.
 
+The following pages describe in detail the various uses and options for the
+material, domain, and settings fields of a MicroStructPy input file.
+
 .. cli-end
 
 Command Line Procedure
@@ -81,5 +84,125 @@ Paired.
     When fields are repeated, such as including multiple materials, the order
     is preserved.
 
-The following pages describe in detail the various uses and options for the
-material, domain, and settings fields of a MicroStructPy input file.
+
+Including References to Other Input Files
+-----------------------------------------
+
+The input file can optionally *include* references to other input files.
+For example if the file ``materials.xml`` contains:
+
+.. code-block:: xml
+
+    <input>
+        <material>
+            <shape> circle </shape>
+            <size> 0.1 </size>
+        </material>
+    </input>
+
+and another file, ``domain_1.xml``, contains:
+
+.. code-block:: xml
+
+    <input>
+        <include> materials.xml </include>
+        <domain>
+            <shape> square </shape>
+            <side_length> 10 </side_length>
+        </domain>
+    </input>
+
+then MicroStructPy will read the contents of ``materials.xml`` when
+``microstructpy domain_1.xml`` is called. This functionality can allows multiple
+input files to reference the same material properties. For example, a mesh
+convergence study could keep the materials and domain definitions in a single
+file, then the input files for each mesh size would contain the run settings
+and a reference to the definitions file.
+
+This way, if a parameter such as the grain size distribution needs to be
+updated, it only needs to be changed in a single file.
+
+Advanced Usage
+++++++++++++++
+
+The ``<include>`` tag can be included at any heirarchical level of the
+input file. It can also be nested, with ``<include>`` tags in the file being
+included. For example, if the file ``fine_grained.xml`` contains:
+
+.. code-block:: xml
+
+    <material>
+        <shape> circle </shape>
+        <size> 0.1 </size>
+    </material>
+
+and the file ``materials.xml`` contains:
+
+
+
+.. code-block:: xml
+
+    <input>
+        <material>
+            <name> Fine 1 </name>
+            <include> fine_grained.xml </include>
+        </material>
+
+        <material>
+            <name> Fine 2 </name>
+            <include> fine_grained.xml </include>
+        </material>
+
+        <material>
+            <name> Coarse </name>
+            <shape> circle </shape>
+            <size> 0.3 </size>
+        </material>
+    </input>
+
+and the file ``input.xml`` contains:
+
+.. code-block:: xml
+
+    <input>
+        <include> materials.xml </include>
+        <domain>
+            <shape> square </shape>
+            <side_length> 20 </side_length>
+        </domain>
+    </input>
+
+then running ``microstructpy input.xml`` would be equivalent to running this
+file:
+
+.. code-block:: xml
+
+    <input>
+        <material>
+            <name> Fine 1 </name>
+            <shape> circle </shape>
+            <size> 0.1 </size>
+        </material>
+
+        <material>
+            <name> Fine 2 </name>
+            <shape> circle </shape>
+            <size> 0.1 </size>
+        </material>
+
+        <material>
+            <name> Coarse </name>
+            <shape> circle </shape>
+            <size> 0.3 </size>
+        </material>
+
+        <domain>
+            <shape> square </shape>
+            <side_length> 20 </side_length>
+        </domain>
+    </input>
+
+
+The ``<include>`` tag can reduce file sizes and the amount of copy/paste for
+microstructures with multiple materials of the same size distribution,
+or multiple runs with the same material.

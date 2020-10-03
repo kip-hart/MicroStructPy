@@ -1,0 +1,10 @@
+<input>
+    <include> materials.xml </include>
+    <domain>
+        <shape> square </shape>
+        <side_length> 20 </side_length>
+    </domain>
+    <settings>
+        <verbose> True </verbose>
+    </settings>
+</input>

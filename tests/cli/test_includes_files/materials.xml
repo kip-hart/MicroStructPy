@@ -1,0 +1,17 @@
+<input>
+    <material>
+        <name> Fine 1 </name>
+        <include> fine_grained.xml </include>
+    </material>
+
+    <material>
+        <name> Fine 2 </name>
+        <include> fine_grained.xml </include>
+    </material>
+
+    <material>
+        <name> Coarse </name>
+        <shape> circle </shape>
+        <size> 0.3 </size>
+    </material>
+</input>
