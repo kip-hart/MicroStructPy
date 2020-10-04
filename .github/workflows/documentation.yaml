@@ -4,24 +4,16 @@ on: [pull_request]
 
 jobs:   
   docs-checks:
-    name: ${{ matrix.doc-type }}
-    strategy:
-      matrix:
-        doc-type: [html, latex, epub]
+    name: docs check
     
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.7'
-    - name: Install docs dependencies
-      run: |
-        python -m pip install -r docs/requirements.txt
-    - name: Install package
-      run: |
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install -e .
-    - name: Build ${{ matrix.doc-type }} documentation
-      run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install Tox
+        run: pip install tox
+      - name: Run Tox
+        run: tox -e docs-dev
