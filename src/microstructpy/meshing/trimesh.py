@@ -16,6 +16,7 @@ from __future__ import print_function
 import meshpy.tet
 import meshpy.triangle
 import numpy as np
+import pygmsh as pg
 from matplotlib import collections
 from matplotlib import patches
 from matplotlib import pyplot as plt
@@ -139,8 +140,9 @@ class TriMesh(object):
         return cls(pts, elems, elem_atts, facets, facet_atts)
 
     @classmethod
-    def from_polymesh(cls, polymesh, phases=None, min_angle=0,
-                      max_volume=float('inf'), max_edge_length=float('inf')):
+    def from_polymesh(cls, polymesh, phases=None, mesher='Triangle/Tetgen',
+                      min_angle=0, max_volume=float('inf'),
+                      max_edge_length=float('inf'), mesh_size=float('inf')):
         """Create TriMesh from PolyMesh.
 
         This constuctor creates a triangle/tetrahedron mesh from a polygon
@@ -178,153 +180,30 @@ class TriMesh(object):
                 options for each phase.
                 Default is
                 ``{'material_type': 'solid', 'max_volume': float('inf')}``.
-            min_angle (float): The minimum interior angle of an element.
+            mesher (str): {'Triangle/TetGen' | 'Triangle'  | 'TetGen' | 'gmsh'}
+                specify the mesh generator. Default is 'Triangle/TetGen'.
+            min_angle (float): The minimum interior angle, in degrees, of an
+                element. This option is used with Triangle or TetGen and in 3D
+                is the minimum *dihedral* angle. Defaults to 0.
             max_volume (float): The default maximum cell volume, used if one
-                is not set for each phase.
+                is not set for each phase. This option is used with Triangle or
+                TetGen. Defaults to infinity, which turns off this control.
             max_edge_length (float): The maximum edge length of elements
-                along grain boundaries. Currently only supported in 2D.
+                along grain boundaries. This option is used  with Triangle.
+                Defaults to infinity, which turns off this control.
+            mesh_size (float): The target size of the mesh elements. This
+                option is used with gmsh. Default is infinity, whihch turns off
+                this control.
 
         """
-        # condition the phases input
-        if phases is None:
-            default_dict = {'material_type': 'solid',
-                            'max_volume': float('inf')}
-            n_phases = int(np.max(polymesh.phase_numbers)) + 1
-            phases = [default_dict for _ in range(n_phases)]
+        key = mesher.lower().strip()
+        if key in ('triangle/tetgen', 'triangle', 'tetgen'):
+            tri_args = _call_meshpy(polymesh, phases, min_angle, max_volume,
+                                    max_edge_length)
+        elif key == 'gmsh':
+            tri_args = _call_gmsh(polymesh, phases, mesh_size)
 
-        # create point and facet lists
-        kps = {}
-        pts = []
-        facets = []
-        facet_neighs = []
-        facet_nums = []
-        for i in range(len(polymesh.facets)):
-            facet = polymesh.facets[i]
-            neighs = polymesh.facet_neighbors[i]
-            if facet_check(neighs, polymesh, phases):
-                new_facet = []
-                for kp_old in facet:
-                    if kp_old not in kps:
-                        kp_new = len(pts)
-                        pts.append(polymesh.points[kp_old])
-                        kps[kp_old] = kp_new
-                    else:
-                        kp_new = kps[kp_old]
-                    new_facet.append(kp_new)
-                facets.append(new_facet)
-                facet_neighs.append(neighs)
-                facet_nums.append(i + 1)
-
-        # Subdivide facets
-        n_dim = len(pts[0])
-        if n_dim == 2:
-            n_subs = np.ones(len(facets), dtype='int')
-            for i, facet in enumerate(facets):
-                pt1 = np.array(pts[facet[0]])
-                pt2 = np.array(pts[facet[1]])
-                rel_pos = pt2 - pt1
-                n_float = np.linalg.norm(rel_pos) / max_edge_length
-                n_int = max(1, np.ceil(n_float))
-                n_subs[i] = n_int
-            sub_out = meshpy.triangle.subdivide_facets(n_subs, pts, facets,
-                                                       facet_nums)
-            pts, facets, facet_nums = sub_out
-
-        # create groups/regions
-        pts_arr = np.array(polymesh.points)
-        regions = []
-        holes = []
-
-        ungrouped = np.full(len(polymesh.regions), True, dtype='?')
-        while np.any(ungrouped):
-            cell_ind = np.argmax(ungrouped)
-
-            # compute cell center
-            facet_list = polymesh.regions[cell_ind]
-            cell_kps = set()
-            [cell_kps.update(polymesh.facets[n]) for n in facet_list]
-            cell_cen = pts_arr[list(cell_kps)].mean(axis=0)
-
-            # seed number and phase type
-            seed_num = int(polymesh.seed_numbers[cell_ind])
-            phase_num = polymesh.phase_numbers[cell_ind]
-            phase = phases[phase_num]
-            phase_type = phase.get('material_type', 'crystalline')
-            phase_vol = phase.get('max_volume', max_volume)
-
-            # get all cell numbers in group
-            cell_nums = set([cell_ind])
-            old_len = len(cell_nums)
-            searching_front = True
-            while searching_front:
-                front = set()
-                for n in cell_nums:
-                    neighs = set()
-                    for facet_num in polymesh.regions[n]:
-                        f_neighs = polymesh.facet_neighbors[facet_num]
-                        neigh_ind = [i for i in f_neighs if i != n][0]
-                        if neigh_ind < 0:
-                            continue
-                        if not facet_check(f_neighs, polymesh, phases):
-                            neighs.add(neigh_ind)
-                    assert ungrouped[list(neighs)].all()
-                    front.update(neighs)
-                cell_nums |= front
-                new_len = len(cell_nums)
-                searching_front = new_len != old_len
-                old_len = new_len
-
-            ungrouped[list(cell_nums)] = False
-
-            # update appropriate list
-            if phase_type in _misc.kw_void:
-                holes.append(cell_cen)
-            else:
-                regions.append(cell_cen.tolist() + [seed_num, phase_vol])
-
-        # build inputs
-        if n_dim == 2:
-            info = meshpy.triangle.MeshInfo()
-        else:
-            info = meshpy.tet.MeshInfo()
-
-        info.set_points(pts)
-        info.set_facets(facets, facet_nums)
-        info.set_holes(holes)
-
-        info.regions.resize(len(regions))
-        for i, r in enumerate(regions):
-            info.regions[i] = tuple(r)
-
-        # run MeshPy
-        if n_dim == 2:
-            tri_mesh = meshpy.triangle.build(info,
-                                             attributes=True,
-                                             volume_constraints=True,
-                                             max_volume=max_volume,
-                                             min_angle=min_angle,
-                                             generate_faces=True)
-        else:
-            opts = meshpy.tet.Options('pq')
-            opts.mindihedral = min_angle
-            opts.maxvolume = max_volume
-            opts.fixedvolume = 1
-            opts.regionattrib = 1
-            opts.facesout = 1
-            tri_mesh = meshpy.tet.build(info, options=opts)
-
-        # return mesh
-        tri_pts = np.array(tri_mesh.points)
-        tri_elems = np.array(tri_mesh.elements)
-        tri_e_atts = np.array(tri_mesh.element_attributes, dtype='int')
-
-        tri_faces = np.array(tri_mesh.faces)
-        tri_f_atts = np.array(tri_mesh.face_markers)
-        f_mask = tri_f_atts > 0
-        tri_f = tri_faces[f_mask]
-        tri_fa = tri_f_atts[f_mask] - 1
-
-        return cls(tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa)
+        return cls(*tri_args)
 
     # ----------------------------------------------------------------------- #
     # String and Representation Functions                                     #
@@ -815,3 +694,427 @@ def facet_check(neighs, polymesh, phases):
             add_facet = True
 
     return add_facet
+
+
+def _pt_ab(i, pt):
+    return str(i + 1) + ''.join([', ' + str(x) for x in pt]) + '\n'
+
+
+def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
+                 max_edge_length=float('inf')):
+
+    # condition the phases input
+    if phases is None:
+        default_dict = {'material_type': 'solid',
+                        'max_volume': float('inf')}
+        n_phases = int(np.max(polymesh.phase_numbers)) + 1
+        phases = [default_dict for _ in range(n_phases)]
+
+    # create point and facet lists
+    kps = {}
+    pts = []
+    facets = []
+    facet_neighs = []
+    facet_nums = []
+    for i in range(len(polymesh.facets)):
+        facet = polymesh.facets[i]
+        neighs = polymesh.facet_neighbors[i]
+        if facet_check(neighs, polymesh, phases):
+            new_facet = []
+            for kp_old in facet:
+                if kp_old not in kps:
+                    kp_new = len(pts)
+                    pts.append(polymesh.points[kp_old])
+                    kps[kp_old] = kp_new
+                else:
+                    kp_new = kps[kp_old]
+                new_facet.append(kp_new)
+            facets.append(new_facet)
+            facet_neighs.append(neighs)
+            facet_nums.append(i + 1)
+
+    # Subdivide facets
+    n_dim = len(pts[0])
+    if n_dim == 2:
+        n_subs = np.ones(len(facets), dtype='int')
+        for i, facet in enumerate(facets):
+            pt1 = np.array(pts[facet[0]])
+            pt2 = np.array(pts[facet[1]])
+            rel_pos = pt2 - pt1
+            n_float = np.linalg.norm(rel_pos) / max_edge_length
+            n_int = max(1, np.ceil(n_float))
+            n_subs[i] = n_int
+        sub_out = meshpy.triangle.subdivide_facets(n_subs, pts, facets,
+                                                   facet_nums)
+        pts, facets, facet_nums = sub_out
+
+    # create groups/regions
+    pts_arr = np.array(polymesh.points)
+    regions = []
+    holes = []
+
+    ungrouped = np.full(len(polymesh.regions), True, dtype='?')
+    while np.any(ungrouped):
+        cell_ind = np.argmax(ungrouped)
+
+        # compute cell center
+        facet_list = polymesh.regions[cell_ind]
+        cell_kps = {kp for n in facet_list for kp in polymesh.facets[n]}
+        cell_cen = pts_arr[list(cell_kps)].mean(axis=0)
+
+        # seed number and phase type
+        seed_num = int(polymesh.seed_numbers[cell_ind])
+        phase_num = polymesh.phase_numbers[cell_ind]
+        phase = phases[phase_num]
+        phase_type = phase.get('material_type', 'crystalline')
+        phase_vol = phase.get('max_volume', max_volume)
+
+        # get all cell numbers in group
+        cell_nums = set([cell_ind])
+        old_len = len(cell_nums)
+        searching_front = True
+        while searching_front:
+            front = set()
+            for n in cell_nums:
+                neighs = set()
+                for facet_num in polymesh.regions[n]:
+                    f_neighs = polymesh.facet_neighbors[facet_num]
+                    neigh_ind = [i for i in f_neighs if i != n][0]
+                    if neigh_ind < 0:
+                        continue
+                    if not facet_check(f_neighs, polymesh, phases):
+                        neighs.add(neigh_ind)
+                assert ungrouped[list(neighs)].all()
+                front.update(neighs)
+            cell_nums |= front
+            new_len = len(cell_nums)
+            searching_front = new_len != old_len
+            old_len = new_len
+
+        ungrouped[list(cell_nums)] = False
+
+        # update appropriate list
+        if phase_type in _misc.kw_void:
+            holes.append(cell_cen)
+        else:
+            regions.append(cell_cen.tolist() + [seed_num, phase_vol])
+
+    # build inputs
+    if n_dim == 2:
+        info = meshpy.triangle.MeshInfo()
+    else:
+        info = meshpy.tet.MeshInfo()
+
+    info.set_points(pts)
+    info.set_facets(facets, facet_nums)
+    info.set_holes(holes)
+
+    info.regions.resize(len(regions))
+    for i, r in enumerate(regions):
+        info.regions[i] = tuple(r)
+
+    # run MeshPy
+    if n_dim == 2:
+        tri_mesh = meshpy.triangle.build(info,
+                                         attributes=True,
+                                         volume_constraints=True,
+                                         max_volume=max_volume,
+                                         min_angle=min_angle,
+                                         generate_faces=True)
+    else:
+        opts = meshpy.tet.Options('pq')
+        opts.mindihedral = min_angle
+        opts.maxvolume = float('inf')
+        opts.fixedvolume = 1
+        opts.regionattrib = 1
+        opts.facesout = 1
+        tri_mesh = meshpy.tet.build(info, options=opts)
+
+    # return mesh
+    tri_pts = np.array(tri_mesh.points)
+    tri_elems = np.array(tri_mesh.elements)
+    tri_e_atts = np.array(tri_mesh.element_attributes, dtype='int')
+
+    tri_faces = np.array(tri_mesh.faces)
+    tri_f_atts = np.array(tri_mesh.face_markers)
+    f_mask = tri_f_atts > 0
+    tri_f = tri_faces[f_mask]
+    tri_fa = tri_f_atts[f_mask] - 1
+
+    tri_args = (tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa)
+    return tri_args
+
+
+def _call_gmsh(pmesh, phases, res):
+    if res == float('inf'):
+        res = None
+
+    amorph_seeds = _amorphous_seed_numbers(pmesh, phases)
+
+    # ---------------------------------------------------------------------- #
+    # CREATE CONNECTIVITY DATA
+    # ---------------------------------------------------------------------- #
+    # Extract edges from facets list
+    facets_info = {}
+    edges_info = {}
+    edge_keys = []
+    edge_lines = []
+    n_edges = 0
+    for i, f in enumerate(pmesh.facets):
+        # Determine if facet should be skipped (interior to seed)
+        keep = True
+        ns = pmesh.facet_neighbors[i]
+        if min(ns) >= 0:
+            keep = pmesh.seed_numbers[ns[0]] != pmesh.seed_numbers[ns[1]]
+        if not keep:
+            continue
+
+        facets_info[i] = {'facet': f, 'seeds': []}
+        n = len(f)
+        facet_kp_pairs = [(f[k], f[(k + 1) % n]) for k in range(n)]
+        edge_numbers = []
+        edge_signs = []
+        for pair in facet_kp_pairs:
+            key = tuple(sorted(pair))
+            if pair == key:
+                edge_sign = 1
+            else:
+                edge_sign = -1
+
+            if key not in edge_keys:
+                edges_info[key] = {'ind': n_edges, 'facets': [], 'seeds': []}
+                edge_keys.append(key)
+                n_edges += 1
+            edges_info[key]['facets'].append(i)
+            edge_num = edges_info[key]['ind']
+
+            # Add seeds
+            neighs = pmesh.facet_neighbors[i]
+            edges_info[key]['neighbors'] = neighs
+            for neigh_cell in neighs:
+                if neigh_cell < 0:
+                    seed_num = neigh_cell
+                else:
+                    seed_num = pmesh.seed_numbers[neigh_cell]
+                edges_info[key]['seeds'].append(seed_num)
+
+            edge_numbers.append(edge_num)
+            edge_signs.append(edge_sign)
+        facets_info[i]['neighbors'] = pmesh.facet_neighbors[i]
+        facets_info[i]['edge_numbers'] = edge_numbers
+        facets_info[i]['edge_signs'] = edge_signs
+    for cell_num, seed_num in enumerate(pmesh.seed_numbers):
+        facet_nums = [f for f in pmesh.regions[cell_num] if f in facets_info]
+        for facet_num in facet_nums:
+            facets_info[facet_num]['seeds'].append(seed_num)
+
+    # ---------------------------------------------------------------------- #
+    # CREATE GEOMETRY
+    # ---------------------------------------------------------------------- #
+    geom = pg.built_in.Geometry()
+
+    # Add points
+    pts = [geom.add_point(_pt3d(pt), res) for pt in pmesh.points]
+    n_dim = len(pmesh.points[0])
+
+    # Add edges to geometry
+    for edge in edge_keys:
+        line = geom.add_line(*[pts[kp] for kp in edge])
+        edge_lines.append(line)
+
+        if n_dim == 2:
+            lbl = 'facet-{}'.format(edges_info[edge]['facets'][0])
+            if facet_check(edges_info[edge]['neighbors'], pmesh, phases):
+                geom.add_physical(edge_lines[-1], lbl)
+
+    if n_dim == 2:
+        # Add surfaces to geometry
+        loops = []
+        surfs = []
+        seed_facets = {}
+        for i, r in enumerate(pmesh.regions):
+            s = pmesh.seed_numbers[i]
+            seed_facets.setdefault(s, set()).symmetric_difference_update(r)
+        for i in seed_facets:
+            region = list(seed_facets[i])
+            sorted_pairs = _sort_facets([pmesh.facets[f] for f in region])
+            loop = []
+            for facet in sorted_pairs:
+                key = tuple(sorted(facet))
+                if facet[0] == key[0]:
+                    sgn = 1
+                else:
+                    sgn = -1
+
+                n = edges_info[key]['ind']
+                line = edge_lines[n]
+                if sgn > 0:
+                    loop.append(line)
+                else:
+                    loop.append(-line)
+
+            loops.append(geom.add_line_loop(loop))
+            surfs.append(geom.add_plane_surface(loops[-1]))
+            p_num = pmesh.phase_numbers[i]
+            mat_type = phases[p_num].get('material_type', 'solid')
+            if mat_type not in _misc.kw_void:
+                geom.add_physical(surfs[-1], 'seed-' + str(i))
+
+    elif n_dim == 3:
+        # Add surfaces to geometry
+        loops = []
+        surfs = []
+        seed_surfs = {}
+        seed_phases = dict(zip(pmesh.seed_numbers, pmesh.phase_numbers))
+        for i in facets_info:
+            info = facets_info[i]
+            facet_seeds = info['seeds']
+            to_add = len(facet_seeds) < 2 or facet_seeds[0] != facet_seeds[1]
+            if not to_add:
+                surfs.append('')
+                continue
+
+            loop = []
+            for n, sgn in zip(info['edge_numbers'], info['edge_signs']):
+                line = edge_lines[n]
+                if sgn > 0:
+                    loop.append(line)
+                else:
+                    loop.append(-line)
+            loops.append(geom.add_line_loop(loop))
+            surfs.append(geom.add_plane_surface(loops[-1]))
+            if facet_check(info['neighbors'], pmesh, phases):
+                geom.add_physical(surfs[-1], 'facet-' + str(i))
+            for seed_num in facet_seeds:
+                if seed_num not in seed_surfs:
+                    seed_surfs[seed_num] = []
+                seed_surfs[seed_num].append(surfs[-1])
+
+        # Add volumes to geometry
+        surf_loops = []
+        volumes = []
+        for seed_num in seed_surfs:
+            surf_loop = seed_surfs[seed_num]
+            surf_loops.append(geom.add_surface_loop(surf_loop))
+            volumes.append(geom.add_volume(surf_loops[-1]))
+
+            p_num = seed_phases[seed_num]
+            mat_type = phases[p_num].get('material_type', 'solid')
+            if mat_type not in _misc.kw_void:
+                geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
+    else:
+        raise ValueError('Points cannot have dimension ' + str(n_dim) + '.')
+
+    # ---------------------------------------------------------------------- #
+    # CALL GMSH
+    # ---------------------------------------------------------------------- #
+    with open('minimal.geo', 'w') as file:
+        file.write(geom.get_code())
+    mesh = pg.generate_mesh(geom)
+
+    # ---------------------------------------------------------------------- #
+    # CREATE MICROSTRUCTPY.MESHING.TRIMESH
+    # ---------------------------------------------------------------------- #
+    f_key = {2: 'line', 3: 'triangle'}[n_dim]
+    e_key = {2: 'triangle', 3: 'tetra'}[n_dim]
+
+    pts = np.array(mesh.points)[:, :n_dim]
+    facets = mesh.cells_dict[f_key]
+
+    # Sort Element Keypoints for Positive Volume
+    tets = [e[_sort_element([mesh.points[k] for k in e])]
+            for e in mesh.cells_dict[e_key]]
+
+    facet_phsy2att = {}
+    seed_phys2att = {}
+    for key in mesh.field_data:
+        phys = mesh.field_data[key][0]
+        if key.startswith('facet-'):
+            facet_phsy2att[phys] = int(key.split('-')[-1])
+        elif key.startswith('seed-'):
+            seed_phys2att[phys] = int(key.split('-')[-1])
+
+    atts = mesh.cell_data_dict['gmsh:physical']
+    tet_atts = [seed_phys2att[k] for k in atts[e_key]]
+    tet_atts = [amorph_seeds.get(sd, sd) for sd in tet_atts]
+    facet_atts = [facet_phsy2att[k] for k in atts[f_key]]
+
+    tri_args = (pts, tets, tet_atts, facets, facet_atts)
+    return tri_args
+
+
+def _sort_element(elem_pts):
+    n_pts = len(elem_pts)
+    n_dim = n_pts - 1
+    if n_dim == 2:
+        v1 = elem_pts[1] - elem_pts[0]
+        v2 = elem_pts[2] - elem_pts[0]
+
+        cp = np.cross(v1, v2)[-1]
+        if cp < 0:
+            return np.array([0, 2, 1])
+
+        return np.arange(3)
+    elif n_dim == 3:
+        v1 = elem_pts[1] - elem_pts[0]
+        v2 = elem_pts[2] - elem_pts[0]
+        v3 = elem_pts[3] - elem_pts[0]
+
+        cp = np.cross(v1, v2)
+        dp = cp.dot(v3)
+        if dp < 0:
+            return np.array([0, 1, 3, 2])
+
+        return np.arange(4)
+    else:
+        raise ValueError('Cannot sort for n pts: ' + str(n_pts))
+
+
+def _sort_facets(pairs):
+    remaining_inds = [i for i in range(1, len(pairs))]
+    sorted_inds = [0]
+    s_pairs = [pairs[0]]
+    while remaining_inds:
+        last_kp = s_pairs[-1][-1]
+        for ind, i in enumerate(remaining_inds):
+            pair = pairs[i]
+            if last_kp in pair:
+                break
+        sorted_inds.append(i)
+        del remaining_inds[ind]
+        if last_kp == pair[0]:
+            s_pairs.append(pair)
+        else:
+            s_pairs.append(list(reversed(pair)))
+    return s_pairs
+
+
+def _amorphous_seed_numbers(pmesh, phases):
+    phase_nums = np.array(pmesh.phase_numbers)
+    is_amorph = np.array([p.get('material_type', 'solid') in _misc.kw_amorph
+                          for p in phases])
+    amorph_mask = is_amorph[phase_nums]
+
+    neighs = np.array(pmesh.facet_neighbors)
+    neighs = neighs[np.min(neighs, axis=1) >= 0]
+    neighs_mask = phase_nums[neighs[:, 0]] == phase_nums[neighs[:, 1]]
+    neighs_mask &= amorph_mask[neighs[:, 0]]
+    amorph_neighs = neighs[neighs_mask]
+
+    new_seed_numbers = np.array(pmesh.seed_numbers)
+    changes_made = True
+    while changes_made:
+        changes_made = False
+        for pair in amorph_neighs:
+            seeds = new_seed_numbers[pair]
+            if seeds[0] != seeds[1]:
+                changes_made = True
+                new_seed_numbers[pair] = np.min(seeds)
+    conv_dict = {s1: s2 for s1, s2 in zip(pmesh.seed_numbers, new_seed_numbers)
+                 if s1 != s2}
+    return conv_dict
+
+def _pt3d(pt):
+    pt3d = np.zeros(3)
+    pt3d[:len(pt)] = pt
+    return pt3d

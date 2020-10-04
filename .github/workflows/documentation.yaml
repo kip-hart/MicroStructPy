@@ -15,7 +15,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version: '3.7'
     - name: Install docs dependencies
       run: |
         python -m pip install -r docs/requirements.txt
@@ -24,4 +24,10 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
     - name: Build ${{ matrix.doc-type }} documentation
+      # there is an issue with gmsh on GitHub Actions
+      # it cannot be reproduced locally or on RTD
+      # See https://github.com/kip-hart/MicroStructPy/runs/1204718343?check_suite_focus=true#step:5:45
+      # this should be investigated at a later date
+      # in the meantime, an RTD webhook will be used to check docs builds
+      continue-on-error: true
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/

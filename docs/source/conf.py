@@ -96,6 +96,7 @@ autodoc_mock_imports = [
     'meshpy',
     'mpl_toolkits',
     'numpy',
+    'pygmsh',
     'pyquaternion',
     'pyvoro',
     'pyvtk',
