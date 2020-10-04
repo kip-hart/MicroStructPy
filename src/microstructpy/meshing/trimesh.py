@@ -849,6 +849,8 @@ def _call_gmsh(pmesh, phases, res):
     if res == float('inf'):
         res = None
 
+    amorph_seeds = _amorphous_seed_numbers(pmesh, phases)
+
     # ---------------------------------------------------------------------- #
     # CREATE CONNECTIVITY DATA
     # ---------------------------------------------------------------------- #
@@ -888,6 +890,7 @@ def _call_gmsh(pmesh, phases, res):
 
             # Add seeds
             neighs = pmesh.facet_neighbors[i]
+            edges_info[key]['neighbors'] = neighs
             for neigh_cell in neighs:
                 if neigh_cell < 0:
                     seed_num = neigh_cell
@@ -897,6 +900,7 @@ def _call_gmsh(pmesh, phases, res):
 
             edge_numbers.append(edge_num)
             edge_signs.append(edge_sign)
+        facets_info[i]['neighbors'] = pmesh.facet_neighbors[i]
         facets_info[i]['edge_numbers'] = edge_numbers
         facets_info[i]['edge_signs'] = edge_signs
     for cell_num, seed_num in enumerate(pmesh.seed_numbers):
@@ -920,7 +924,8 @@ def _call_gmsh(pmesh, phases, res):
 
         if n_dim == 2:
             lbl = 'facet-{}'.format(edges_info[edge]['facets'][0])
-            geom.add_physical(edge_lines[-1], lbl)
+            if facet_check(edges_info[edge]['neighbors'], pmesh, phases):
+                geom.add_physical(edge_lines[-1], lbl)
 
     if n_dim == 2:
         # Add surfaces to geometry
@@ -950,14 +955,19 @@ def _call_gmsh(pmesh, phases, res):
 
             loops.append(geom.add_line_loop(loop))
             surfs.append(geom.add_plane_surface(loops[-1]))
-            geom.add_physical(surfs[-1], 'seed-' + str(i))
+            p_num = pmesh.phase_numbers[i]
+            mat_type = phases[p_num].get('material_type', 'solid')
+            if mat_type not in _misc.kw_void:
+                geom.add_physical(surfs[-1], 'seed-' + str(i))
 
     elif n_dim == 3:
         # Add surfaces to geometry
         loops = []
         surfs = []
         seed_surfs = {}
+        seed_phases = {}
         for i in facets_info:
+            seed_phases[pmesh.seed_numbers[i]] = pmesh.phase_numbers[i]
             info = facets_info[i]
             facet_seeds = info['seeds']
             to_add = len(facet_seeds) < 2 or facet_seeds[0] != facet_seeds[1]
@@ -974,7 +984,8 @@ def _call_gmsh(pmesh, phases, res):
                     loop.append(-line)
             loops.append(geom.add_line_loop(loop))
             surfs.append(geom.add_plane_surface(loops[-1]))
-            geom.add_physical(surfs[-1], 'facet-' + str(i))
+            if facet_check(info['neighbors'], pmesh, phases):
+                geom.add_physical(surfs[-1], 'facet-' + str(i))
             for seed_num in facet_seeds:
                 if seed_num not in seed_surfs:
                     seed_surfs[seed_num] = []
@@ -987,7 +998,11 @@ def _call_gmsh(pmesh, phases, res):
             surf_loop = seed_surfs[seed_num]
             surf_loops.append(geom.add_surface_loop(surf_loop))
             volumes.append(geom.add_volume(surf_loops[-1]))
-            geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
+
+            p_num = seed_phases[seed_num]
+            mat_type = phases[p_num].get('material_type', 'solid')
+            if mat_type not in _misc.kw_void:
+                geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
     else:
         raise ValueError('Points cannot have dimension ' + str(n_dim) + '.')
 
@@ -1022,6 +1037,7 @@ def _call_gmsh(pmesh, phases, res):
 
     atts = mesh.cell_data_dict['gmsh:physical']
     tet_atts = [seed_phys2att[k] for k in atts[e_key]]
+    tet_atts = [amorph_seeds.get(sd, sd) for sd in tet_atts]
     facet_atts = [facet_phsy2att[k] for k in atts[f_key]]
 
     tri_args = (pts, tets, tet_atts, facets, facet_atts)
@@ -1072,3 +1088,29 @@ def _sort_facets(pairs):
         else:
             s_pairs.append(list(reversed(pair)))
     return s_pairs
+
+
+def _amorphous_seed_numbers(pmesh, phases):
+    phase_nums = np.array(pmesh.phase_numbers)
+    is_amorph = np.array([p.get('material_type', 'solid') in _misc.kw_amorph
+                          for p in phases])
+    amorph_mask = is_amorph[phase_nums]
+
+    neighs = np.array(pmesh.facet_neighbors)
+    neighs = neighs[np.min(neighs, axis=1) >= 0]
+    neighs_mask = phase_nums[neighs[:, 0]] == phase_nums[neighs[:, 1]]
+    neighs_mask &= amorph_mask[neighs[:, 0]]
+    amorph_neighs = neighs[neighs_mask]
+
+    new_seed_numbers = np.array(pmesh.seed_numbers)
+    changes_made = True
+    while changes_made:
+        changes_made = False
+        for pair in amorph_neighs:
+            seeds = new_seed_numbers[pair]
+            if seeds[0] != seeds[1]:
+                changes_made = True
+                new_seed_numbers[pair] = np.min(seeds)
+    conv_dict = {s1: s2 for s1, s2 in zip(pmesh.seed_numbers, new_seed_numbers)
+                 if s1 != s2}
+    return conv_dict
