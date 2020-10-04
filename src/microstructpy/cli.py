@@ -507,7 +507,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             print('Creating triangular mesh.')
 
         tmesh = TriMesh.from_polymesh(pmesh, phases, mesher, mesh_min_angle,
-                                      mesh_max_volume, mesh_max_edge_length)
+                                      mesh_max_volume, mesh_max_edge_length,
+                                      mesh_size)
 
     # Write triangular mesh
     tri_types = filetypes.get('tri', [])
