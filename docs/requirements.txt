@@ -1,3 +1,4 @@
+gmsh==4.6.0.post2
 matplotlib
 numpy==1.17.3
 pybind11==2.4.3
