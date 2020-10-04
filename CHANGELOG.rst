@@ -11,7 +11,7 @@ and this project adheres to `Semantic Versioning`_.
 Added
 '''''''
 - References within XML input files using the ``<include>`` tag.
-- Support for gmsh.
+- Support for gmsh. (addresses `#16`_)
 
 `1.3.5`_ -  2020-09-20
 --------------------------
@@ -181,3 +181,4 @@ Added
 .. _`Semantic Versioning`: https://semver.org/spec/v2.0.0.html
 
 .. _`#14`: https://github.com/kip-hart/MicroStructPy/issues/14
+.. _`#16`: https://github.com/kip-hart/MicroStructPy/issues/16
