@@ -1002,8 +1002,8 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         tmesh.element_attributes = old_e_att
         tmesh.facet_attributes = old_f_att
     else:
-        tmesh.plot(facecolors=facet_colors, index_by='attribute',
-                   **edge_kwargs)
+        fcs = {2: seed_colors, 3: facet_colors}[n_dim]
+        tmesh.plot(facecolors=fcs, index_by='attribute', **edge_kwargs)
 
     # save plot
     for fname in plot_files:
