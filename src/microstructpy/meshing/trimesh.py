@@ -914,7 +914,7 @@ def _call_gmsh(pmesh, phases, res):
     geom = pg.built_in.Geometry()
 
     # Add points
-    pts = [geom.add_point(pt + [0], res) for i, pt in enumerate(pmesh.points)]
+    pts = [geom.add_point(_pt3d(pt), res) for pt in pmesh.points]
     n_dim = len(pmesh.points[0])
 
     # Add edges to geometry
@@ -965,9 +965,8 @@ def _call_gmsh(pmesh, phases, res):
         loops = []
         surfs = []
         seed_surfs = {}
-        seed_phases = {}
+        seed_phases = dict(zip(pmesh.seed_numbers, pmesh.phase_numbers))
         for i in facets_info:
-            seed_phases[pmesh.seed_numbers[i]] = pmesh.phase_numbers[i]
             info = facets_info[i]
             facet_seeds = info['seeds']
             to_add = len(facet_seeds) < 2 or facet_seeds[0] != facet_seeds[1]
@@ -1114,3 +1113,8 @@ def _amorphous_seed_numbers(pmesh, phases):
     conv_dict = {s1: s2 for s1, s2 in zip(pmesh.seed_numbers, new_seed_numbers)
                  if s1 != s2}
     return conv_dict
+
+def _pt3d(pt):
+    pt3d = np.zeros(3)
+    pt3d[:len(pt)] = pt
+    return pt3d
