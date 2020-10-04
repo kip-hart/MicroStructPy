@@ -42,6 +42,9 @@ They are saved in a folder named ``minimal``, in the current directory
 The axes are turned off in these plots, creating PNG files with
 minimal whitespace.
 
+This example also demonstrates how to use gmsh to generate a mesh, using the
+``<mesher>`` and ``<mesh_size>``  tags in the input file.
+
 Finally, the seeds and grains are colored by their seed number, not by
 material.
 
