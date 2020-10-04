@@ -13,6 +13,10 @@ Added
 - References within XML input files using the ``<include>`` tag.
 - Support for gmsh. (addresses `#16`_)
 
+Fixed
+'''''''
+- Color-by seed number in CLI TriMesh plot function.
+
 `1.3.5`_ -  2020-09-20
 --------------------------
 Fixed
