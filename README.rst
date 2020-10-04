@@ -152,6 +152,10 @@ generator in Python,
 (`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/swx2020.bib>`__)
 (`DOI <https://doi.org/10.1016/j.softx.2020.100595>`__)
 
+The news article `AE Doctoral Student Kenneth A. Hart Presents MicroStructPy to the World <https://www.ae.gatech.edu/news/2020/07/ae-doctoral-student-kenneth-hart-presents-microstructpy-world>`__,
+written by the School of Aerospace Engineering at Georgia Tech,
+describes MicroStructPy for a general audience.
+
 .. end-publications
 
 Contributing
