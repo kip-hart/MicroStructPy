@@ -1084,6 +1084,7 @@ def dict_convert(dictionary, filepath='.'):
     for key in dictionary:
         val = dictionary[key]
         if any([s in key.lower() for s in ('filename', 'directory')]):
+            val = os.path.expanduser(val)
             if not os.path.isabs(val) and filepath:
                 new_val = os.path.abspath(os.path.join(filepath, val))
             else:

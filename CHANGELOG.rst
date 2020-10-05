@@ -16,6 +16,7 @@ Added
 Fixed
 '''''''
 - Color-by seed number in CLI TriMesh plot function.
+- Expansion of "~" in input filepaths.
 
 `1.3.5`_ -  2020-09-20
 --------------------------
