@@ -12,6 +12,7 @@ Added
 '''''''
 - References within XML input files using the ``<include>`` tag.
 - Support for gmsh. (addresses `#16`_)
+- Citation to SoftwareX publication.
 
 Fixed
 '''''''
