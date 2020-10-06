@@ -3,7 +3,9 @@ MicroStructPy - Microstructure Mesh Generation in Python
 
 |s-ci|
 |s-license|
-|s-doi|
+
+|s-doi1|
+|s-doi2|
 
 |l-github| `Repository <https://github.com/kip-hart/MicroStructPy>`_
 |l-rtd| `Documentation <https://docs.microstructpy.org>`_
@@ -134,15 +136,23 @@ Once built, the documentation will be in ``docs/build/``.
 Publications
 ------------
 
-If you use MicroStructPy in you work, please consider including this citation
+If you use MicroStructPy in you work, please consider including these citations
 in your bibliography:
 
 K. A. Hart and J. J. Rimoli, Generation of statistically representative
 microstructures with direct grain geomety control,
-*Computer Methods in Applied Mechanics and Engineering*,
-370 (2020), pp. 113242.
-(`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/cmame2020.bib>`_)
-(`DOI <https://doi.org/10.1016/j.cma.2020.113242>`_)
+*Computer Methods in Applied Mechanics and Engineering*, 370 (2020), 113242.
+(`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/cmame2020.bib>`__)
+(`DOI <https://doi.org/10.1016/j.cma.2020.113242>`__)
+
+K. A. Hart and J. J. Rimoli, MicroStructPy: A statistical microstructure mesh
+generator in Python, *SoftwareX*, 12 (2020), 100595.
+(`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/swx2020.bib>`__)
+(`DOI <https://doi.org/10.1016/j.softx.2020.100595>`__)
+
+The news article `AE Doctoral Student Kenneth A. Hart Presents MicroStructPy to the World <https://www.ae.gatech.edu/news/2020/07/ae-doctoral-student-kenneth-hart-presents-microstructpy-world>`__,
+written by the School of Aerospace Engineering at Georgia Tech,
+describes MicroStructPy for a general audience.
 
 .. end-publications
 
@@ -189,6 +199,10 @@ advised by Prof. Julian Rimoli.
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
 
-.. |s-doi| image:: https://img.shields.io/badge/DOI-10.1016%2Fj.cma.2020.113242-blue
+.. |s-doi1| image:: https://img.shields.io/badge/DOI-10.1016%2Fj.cma.2020.113242-blue
    :target: https://doi.org/10.1016/j.cma.2020.113242
-   :alt: DOI
+   :alt: CMAME DOI
+
+.. |s-doi2| image:: https://img.shields.io/badge/DOI-10.1016%2Fj.softx.2020.100595-blue
+   :target: https://doi.org/10.1016/j.softx.2020.100595
+   :alt: SoftwareX DOI
