@@ -141,14 +141,12 @@ in your bibliography:
 
 K. A. Hart and J. J. Rimoli, Generation of statistically representative
 microstructures with direct grain geomety control,
-*Computer Methods in Applied Mechanics and Engineering*,
-370 (2020), 113242.
+*Computer Methods in Applied Mechanics and Engineering*, 370 (2020), 113242.
 (`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/cmame2020.bib>`__)
 (`DOI <https://doi.org/10.1016/j.cma.2020.113242>`__)
 
 K. A. Hart and J. J. Rimoli, MicroStructPy: A statistical microstructure mesh
-generator in Python,
-*SoftwareX* (2020), 100595.
+generator in Python, *SoftwareX*, 12 (2020), 100595.
 (`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/swx2020.bib>`__)
 (`DOI <https://doi.org/10.1016/j.softx.2020.100595>`__)
 
