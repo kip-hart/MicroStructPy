@@ -16,6 +16,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.7'
+    - name: Setup Linux Environment
+      run: |
+        sudo apt-get install libglu1
     - name: Install docs dependencies
       run: |
         python -m pip install -r docs/requirements.txt
