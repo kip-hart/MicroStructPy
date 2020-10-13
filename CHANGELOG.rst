@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_ 
+--------------------------
+Changed
+'''''''
+- Upgraded to pygmsh v7.0.2.
+
 `1.4.0`_ 
 --------------------------
 Added
