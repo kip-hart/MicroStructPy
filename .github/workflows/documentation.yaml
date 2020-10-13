@@ -29,5 +29,5 @@ jobs:
       # See https://github.com/kip-hart/MicroStructPy/runs/1204718343?check_suite_focus=true#step:5:45
       # this should be investigated at a later date
       # in the meantime, an RTD webhook will be used to check docs builds
-      continue-on-error: true
+      # continue-on-error: true
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
