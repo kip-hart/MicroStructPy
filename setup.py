@@ -75,6 +75,9 @@ setup(
         'Laguerre tessellation',
         'multi-sphere'
     ],
+    setup_requires=[
+        'gmsh',
+    ]
     install_requires=[
         'aabbtree>=2.5.0',
         'matplotlib>=3.0.0',
