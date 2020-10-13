@@ -77,7 +77,6 @@ setup(
     ],
     install_requires=[
         'aabbtree>=2.5.0',
-        'gmsh',
         'pybind11',  # must come before meshpy for successful install
         'lsq-ellipse',
         'matplotlib>=3.0.0',
