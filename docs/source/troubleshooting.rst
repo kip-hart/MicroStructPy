@@ -14,6 +14,36 @@ Installation
 
 These are problems encountered when installing MicroStructPy.
 
+Missing library for pygmsh on Linux
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Problem Description**
+
+When running MicroStructPy for the first time on a Linux operating system,
+there is an error message like::
+
+   ...
+   src/microstructpy/meshing/trimesh.py:19: in <module>
+       import pygmsh as pg
+   /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/pygmsh/__init__.py:1: in <module>
+       from . import geo, occ
+   /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/pygmsh/geo/__init__.py:1: in <module>
+       from .geometry import Geometry
+   /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/pygmsh/geo/geometry.py:1: in <module>
+       import gmsh
+   /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/gmsh-4.6.0-Linux64-sdk/lib/gmsh.py:39: in <module>
+       lib = CDLL(libpath)
+   /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/ctypes/__init__.py:364: in __init__
+       self._handle = _dlopen(self._name, mode)
+   E   OSError: libGLU.so.1: cannot open shared object file: No such file or directory
+
+
+**Problem Solution**
+
+The libGLU library is misssing from the computer. To add it, run::
+
+  sudo apt-get install libglu1
+
+
 MeshPy fails to install
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 **Problem Description**

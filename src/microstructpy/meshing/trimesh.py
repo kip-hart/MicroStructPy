@@ -910,132 +910,128 @@ def _call_gmsh(pmesh, phases, res):
 
     # ---------------------------------------------------------------------- #
     # CREATE GEOMETRY
-    # ---------------------------------------------------------------------- #
-    geom = pg.built_in.Geometry()
+    # ---------------------------------------------------------------------- 
+    with pg.geo.Geometry() as geom:
+        # Add points
+        pts = [geom.add_point(_pt3d(pt), res) for pt in pmesh.points]
+        n_dim = len(pmesh.points[0])
 
-    # Add points
-    pts = [geom.add_point(_pt3d(pt), res) for pt in pmesh.points]
-    n_dim = len(pmesh.points[0])
+        # Add edges to geometry
+        for edge in edge_keys:
+            line = geom.add_line(*[pts[kp] for kp in edge])
+            edge_lines.append(line)
 
-    # Add edges to geometry
-    for edge in edge_keys:
-        line = geom.add_line(*[pts[kp] for kp in edge])
-        edge_lines.append(line)
+            if n_dim == 2:
+                lbl = 'facet-{}'.format(edges_info[edge]['facets'][0])
+                if facet_check(edges_info[edge]['neighbors'], pmesh, phases):
+                    geom.add_physical(edge_lines[-1], lbl)
 
         if n_dim == 2:
-            lbl = 'facet-{}'.format(edges_info[edge]['facets'][0])
-            if facet_check(edges_info[edge]['neighbors'], pmesh, phases):
-                geom.add_physical(edge_lines[-1], lbl)
+            # Add surfaces to geometry
+            loops = []
+            surfs = []
+            seed_facets = {}
+            for i, r in enumerate(pmesh.regions):
+                s = pmesh.seed_numbers[i]
+                seed_facets.setdefault(s, set()).symmetric_difference_update(r)
+            for i in seed_facets:
+                region = list(seed_facets[i])
+                sorted_pairs = _sort_facets([pmesh.facets[f] for f in region])
+                loop = []
+                for facet in sorted_pairs:
+                    key = tuple(sorted(facet))
+                    if facet[0] == key[0]:
+                        sgn = 1
+                    else:
+                        sgn = -1
 
-    if n_dim == 2:
-        # Add surfaces to geometry
-        loops = []
-        surfs = []
-        seed_facets = {}
-        for i, r in enumerate(pmesh.regions):
-            s = pmesh.seed_numbers[i]
-            seed_facets.setdefault(s, set()).symmetric_difference_update(r)
-        for i in seed_facets:
-            region = list(seed_facets[i])
-            sorted_pairs = _sort_facets([pmesh.facets[f] for f in region])
-            loop = []
-            for facet in sorted_pairs:
-                key = tuple(sorted(facet))
-                if facet[0] == key[0]:
-                    sgn = 1
-                else:
-                    sgn = -1
+                    n = edges_info[key]['ind']
+                    line = edge_lines[n]
+                    if sgn > 0:
+                        loop.append(line)
+                    else:
+                        loop.append(-line)
 
-                n = edges_info[key]['ind']
-                line = edge_lines[n]
-                if sgn > 0:
-                    loop.append(line)
-                else:
-                    loop.append(-line)
+                loops.append(geom.add_curve_loop(loop))
+                surfs.append(geom.add_plane_surface(loops[-1]))
+                p_num = pmesh.phase_numbers[i]
+                mat_type = phases[p_num].get('material_type', 'solid')
+                if mat_type not in _misc.kw_void:
+                    geom.add_physical(surfs[-1], 'seed-' + str(i))
 
-            loops.append(geom.add_line_loop(loop))
-            surfs.append(geom.add_plane_surface(loops[-1]))
-            p_num = pmesh.phase_numbers[i]
-            mat_type = phases[p_num].get('material_type', 'solid')
-            if mat_type not in _misc.kw_void:
-                geom.add_physical(surfs[-1], 'seed-' + str(i))
+        elif n_dim == 3:
+            # Add surfaces to geometry
+            loops = []
+            surfs = []
+            seed_surfs = {}
+            seed_phases = dict(zip(pmesh.seed_numbers, pmesh.phase_numbers))
+            for i in facets_info:
+                info = facets_info[i]
+                facet_seeds = info['seeds']
+                to_add = len(facet_seeds) < 2 or facet_seeds[0] != facet_seeds[1]
+                if not to_add:
+                    surfs.append('')
+                    continue
 
-    elif n_dim == 3:
-        # Add surfaces to geometry
-        loops = []
-        surfs = []
-        seed_surfs = {}
-        seed_phases = dict(zip(pmesh.seed_numbers, pmesh.phase_numbers))
-        for i in facets_info:
-            info = facets_info[i]
-            facet_seeds = info['seeds']
-            to_add = len(facet_seeds) < 2 or facet_seeds[0] != facet_seeds[1]
-            if not to_add:
-                surfs.append('')
-                continue
+                loop = []
+                for n, sgn in zip(info['edge_numbers'], info['edge_signs']):
+                    line = edge_lines[n]
+                    if sgn > 0:
+                        loop.append(line)
+                    else:
+                        loop.append(-line)
+                loops.append(geom.add_curve_loop(loop))
+                surfs.append(geom.add_plane_surface(loops[-1]))
+                if facet_check(info['neighbors'], pmesh, phases):
+                    geom.add_physical(surfs[-1], 'facet-' + str(i))
+                for seed_num in facet_seeds:
+                    if seed_num not in seed_surfs:
+                        seed_surfs[seed_num] = []
+                    seed_surfs[seed_num].append(surfs[-1])
 
-            loop = []
-            for n, sgn in zip(info['edge_numbers'], info['edge_signs']):
-                line = edge_lines[n]
-                if sgn > 0:
-                    loop.append(line)
-                else:
-                    loop.append(-line)
-            loops.append(geom.add_line_loop(loop))
-            surfs.append(geom.add_plane_surface(loops[-1]))
-            if facet_check(info['neighbors'], pmesh, phases):
-                geom.add_physical(surfs[-1], 'facet-' + str(i))
-            for seed_num in facet_seeds:
-                if seed_num not in seed_surfs:
-                    seed_surfs[seed_num] = []
-                seed_surfs[seed_num].append(surfs[-1])
+            # Add volumes to geometry
+            surf_loops = []
+            volumes = []
+            for seed_num in seed_surfs:
+                surf_loop = seed_surfs[seed_num]
+                surf_loops.append(geom.add_surface_loop(surf_loop))
+                volumes.append(geom.add_volume(surf_loops[-1]))
 
-        # Add volumes to geometry
-        surf_loops = []
-        volumes = []
-        for seed_num in seed_surfs:
-            surf_loop = seed_surfs[seed_num]
-            surf_loops.append(geom.add_surface_loop(surf_loop))
-            volumes.append(geom.add_volume(surf_loops[-1]))
+                p_num = seed_phases[seed_num]
+                mat_type = phases[p_num].get('material_type', 'solid')
+                if mat_type not in _misc.kw_void:
+                    geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
+        else:
+            raise ValueError('Points cannot have dimension ' + str(n_dim) + '.')
 
-            p_num = seed_phases[seed_num]
-            mat_type = phases[p_num].get('material_type', 'solid')
-            if mat_type not in _misc.kw_void:
-                geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
-    else:
-        raise ValueError('Points cannot have dimension ' + str(n_dim) + '.')
-
-    # ---------------------------------------------------------------------- #
-    # CALL GMSH
-    # ---------------------------------------------------------------------- #
-    mesh = pg.generate_mesh(geom)
+        mesh = geom.generate_mesh()
 
     # ---------------------------------------------------------------------- #
     # CREATE MICROSTRUCTPY.MESHING.TRIMESH
     # ---------------------------------------------------------------------- #
-    f_key = {2: 'line', 3: 'triangle'}[n_dim]
-    e_key = {2: 'triangle', 3: 'tetra'}[n_dim]
+    f_ind = {2: 0, 3: 1}[n_dim]
+    e_ind = {2: 1, 3: 2}[n_dim]
 
     pts = np.array(mesh.points)[:, :n_dim]
-    facets = mesh.cells_dict[f_key]
+    facets = mesh.cells[f_ind].data
 
     # Sort Element Keypoints for Positive Volume
-    tets = [e[_sort_element([mesh.points[k] for k in e])]
-            for e in mesh.cells_dict[e_key]]
+    tets = np.array([e[_sort_element([mesh.points[k] for k in e])]
+                     for e in mesh.cells[e_ind].data])
 
-    facet_phsy2att = {}
-    seed_phys2att = {}
-    for key in mesh.field_data:
-        phys = mesh.field_data[key][0]
-        if key.startswith('facet-'):
-            facet_phsy2att[phys] = int(key.split('-')[-1])
-        elif key.startswith('seed-'):
-            seed_phys2att[phys] = int(key.split('-')[-1])
+    tet_atts = np.array([-1 for tet in tets])
+    facet_atts = np.array([-1 for f in facets])
 
-    atts = mesh.cell_data_dict['gmsh:physical']
-    tet_atts = [seed_phys2att[k] for k in atts[e_key]]
-    tet_atts = [amorph_seeds.get(sd, sd) for sd in tet_atts]
-    facet_atts = [facet_phsy2att[k] for k in atts[f_key]]
+    n_facets = len(mesh.cells[f_ind].data)
+    for key, elem_sets in mesh.cell_sets.items():
+        set_kind, set_num_str = key.split('-')
+        att = int(set_num_str)
+        if set_kind == 'seed':
+            elem_set = elem_sets[e_ind] - n_facets
+            tet_atts[elem_set] = amorph_seeds.get(att, att)
+        elif set_kind == 'facet':
+            elem_set = elem_sets[f_ind]
+            facet_atts[elem_set] = att
 
     tri_args = (pts, tets, tet_atts, facets, facet_atts)
     return tri_args

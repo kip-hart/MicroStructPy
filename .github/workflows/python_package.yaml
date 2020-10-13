@@ -32,6 +32,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel
         pip install flake8 pytest pytest-cov coveralls
+    - name: Setup Linux Environment
+      run: |
+        sudo apt-get install libglu1
     - name: Install package
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
