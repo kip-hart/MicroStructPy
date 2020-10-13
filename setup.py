@@ -79,7 +79,7 @@ setup(
         'aabbtree>=2.5.0',
         'matplotlib>=3.0.0',
         'pybind11',  # must come before meshpy for successful install
-        'pygmsh>=7.0.1',  # 7.0.0 released without cell_data
+        'pygmsh>=7.0.2',
         'lsq-ellipse',
         'meshpy>=2018.2.1',
         'numpy>=1.13.0',
