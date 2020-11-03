@@ -48,42 +48,58 @@ def from_str(string):
     end_delims = (')', ']', '}', '>')
 
     string = string.strip()
-    if any([c in string for c in beg_delims + end_delims]) or ',' in string:
-        if string[0] in beg_delims:
-            string = string[1:]
-        if string[-1] in end_delims:
-            string = string[:-1]
-        val = []
-        n_beg = 0
-        n_end = 0
-        elem_str = ''
-        for char in string:
-            if char in beg_delims:
-                n_beg += 1
-            elif char in end_delims:
-                n_end += 1
-
-            if (char == ',') and n_beg == n_end:
-                val.append(from_str(elem_str.strip()))
-                elem_str = ''
-            else:
-                elem_str += char
-        val.append(from_str(elem_str.strip()))
-        return val
+    has_delims = False
+    for beg, end in zip(beg_delims, end_delims):
+        has_beg = string.startswith(beg)
+        has_end = string.endswith(end)
+        has_delims |= has_beg and has_end
+    if has_delims or ',' in string:
+        val = _list_from_str(string, beg_delims, end_delims)
     else:
+        val = _single_from_str(string)
+    return val
+
+
+def _list_from_str(string, beg_delims, end_delims):
+    if string[0] in beg_delims:
+        string = string[1:]
+    if string[-1] in end_delims:
+        string = string[:-1]
+    val = []
+    n_beg = 0
+    n_end = 0
+    elem_str = ''
+    for char in string:
+        if char in beg_delims:
+            n_beg += 1
+        elif char in end_delims:
+            n_end += 1
+
+        if (char == ',') and n_beg == n_end:
+            val.append(from_str(elem_str.strip()))
+            elem_str = ''
+        else:
+            elem_str += char
+    if elem_str == string and ',' in string:
+        return _single_from_str(string)
+    val.append(from_str(elem_str.strip()))
+    return val
+
+
+def _single_from_str(string):
+    try:
+        val = int(string)
+    except ValueError:
         try:
-            val = int(string)
+            val = float(string)
         except ValueError:
-            try:
-                val = float(string)
-            except ValueError:
-                if string.lower() in ('true', 'yes'):
-                    val = True
-                elif string.lower() in ('false', 'no'):
-                    val = False
-                else:
-                    val = str(string)
-        return val
+            if string.lower() in ('true', 'yes'):
+                val = True
+            elif string.lower() in ('false', 'no'):
+                val = False
+            else:
+                val = str(string)
+    return val
 
 
 # --------------------------------------------------------------------------- #
