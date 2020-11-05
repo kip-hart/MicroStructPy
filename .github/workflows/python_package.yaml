@@ -75,8 +75,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
           ${{ runner.os }}-
-    - name: Install fortran
-      run: brew install gcc
     - name: Install test dependencies
       run: |
         python -m pip install --upgrade pip
