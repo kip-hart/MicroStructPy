@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Fixed
+'''''''
+- PLY file format in 2D.
+
 `1.4.2`_ - 2020-11-3
 --------------------------
 Fixed
