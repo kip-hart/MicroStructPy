@@ -273,25 +273,42 @@ class PolyMesh(object):
             nv = len(self.points)
             nd = len(self.points[0])
             nf = len(self.facets)
+            nr = len(self.regions)
             assert nd <= 3
-            axes = ['x', 'y', 'z'][:nd]
+            
+            # Force 3D points 
+            pts = np.zeros((nv, 3))
+            pts[:, :nd] = self.points
+            axes = ['x', 'y', 'z']
 
             # header
             ply = 'ply\n'
             ply += 'format ascii 1.0\n'
             ply += 'element vertex ' + str(nv) + '\n'
             ply += ''.join(['property float32 ' + a + '\n' for a in axes])
-            ply += 'element face ' + str(nf) + '\n'
-            ply += 'property list uint8 int32 vertex_indices\n'
+            if nd == 2:
+                n_faces = nr
+            else:
+                n_faces = nf
+            ply += 'element face {}\n'.format(n_faces)
+            ply += 'property list uchar int vertex_indices\n'
             ply += 'end_header\n'
 
             # vertices
             ply += ''.join([' '.join(['{: e}'.format(x) for x in pt]) + '\n'
-                            for pt in self.points])
+                            for pt in pts])
 
             # faces
-            ply += ''.join([str(len(f)) + ''.join([' ' + str(kp) for kp in f])
-                            + '\n' for f in self.facets])
+            if nd == 2:  # regions -> faces
+                facets = np.array(self.facets)
+                ply += ''.join([str(len(r)) + ''.join([' ' + str(kp) for kp in
+                                                       kp_loop(facets[r])])
+                                + '\n' for r in self.regions])
+
+            else:  # facets -> faces
+                ply += ''.join([str(len(f)) + ''.join([' ' + str(kp)
+                                                       for kp in f])
+                                + '\n' for f in self.facets])
 
             with open(filename, 'w') as f:
                 f.write(ply)
