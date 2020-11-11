@@ -298,6 +298,7 @@ class PolyMesh(object):
             ply += ''.join([' '.join(['{: e}'.format(x) for x in pt]) + '\n'
                             for pt in pts])
 
+            # faces
             if nd == 2:  # regions -> faces
                 facets = np.array(self.facets)
                 ply += ''.join([str(len(r)) + ''.join([' ' + str(kp) for kp in
