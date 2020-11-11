@@ -287,33 +287,24 @@ class PolyMesh(object):
             ply += 'element vertex ' + str(nv) + '\n'
             ply += ''.join(['property float32 ' + a + '\n' for a in axes])
             if nd == 2:
-                ply += 'element face {}\n'.format(nr)
-                ply += 'property list uchar int vertex_indices\n'
-
-                ply += 'element edge {}\n'.format(nf)
-                ply += 'property int vertex1\n'
-                ply += 'property int vertex2\n'
+                n_faces = nr
             else:
-                ply += 'element face {}\n'.format(nf)
-                ply += 'property list uchar int vertex_index\n'
+                n_faces = nf
+            ply += 'element face {}\n'.format(n_faces)
+            ply += 'property list uchar int vertex_indices\n'
             ply += 'end_header\n'
 
             # vertices
             ply += ''.join([' '.join(['{: e}'.format(x) for x in pt]) + '\n'
                             for pt in pts])
 
-            if nd == 2:  # facets -> edges, regions -> faces
-                # faces
+            if nd == 2:  # regions -> faces
                 facets = np.array(self.facets)
                 ply += ''.join([str(len(r)) + ''.join([' ' + str(kp) for kp in
                                                        kp_loop(facets[r])])
                                 + '\n' for r in self.regions])
 
-                # edges
-                ply += ''.join([' '.join([str(kp) for kp in f]) + '\n'
-                                for f in facets])
-            else:  # facets -> faces, regions not output (arbitrary polyhedra)
-                # faces
+            else:  # facets -> faces
                 ply += ''.join([str(len(f)) + ''.join([' ' + str(kp)
                                                        for kp in f])
                                 + '\n' for f in self.facets])
