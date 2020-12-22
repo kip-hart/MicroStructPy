@@ -208,10 +208,11 @@ def _include_expand(inp, filename, key):
             if not isinstance(includes, list):
                 includes = [includes]
             for inc_filename in includes:
-                if os.path.isabs(inc_filename):
-                    fname = inc_filename
+                inc_fname = os.path.expanduser(inc_filename)
+                if os.path.isabs(inc_fname):
+                    fname = inc_fname
                 else:
-                    fname = os.path.join(file_path, inc_filename)
+                    fname = os.path.join(file_path, inc_fname)
                 inc_dict = input2dict(fname, key)
                 exp_dict.update(inc_dict[key])
         else:
