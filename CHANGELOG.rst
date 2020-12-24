@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.4.5`_ - 2020-12-24
+--------------------------
+Added
+'''''''
+- Meshing with gmsh can now use different mesh sizes in the interior and on the
+  boundary of grains. The ``<mesh_max_edge_length>`` tag specifies edge lengths
+  on the boundary and ``<mesh_size>`` on the interior.
+  If ``<mesh_max_edge_length>`` is not used, ``<mesh_size>`` is used
+  throughout.
+
 `1.4.4`_ - 2020-12-22
 --------------------------
 Fixed
@@ -190,7 +200,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.4...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.5...HEAD
+.. _`1.4.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.5...v1.4.5
 .. _`1.4.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.3...v1.4.4
 .. _`1.4.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.2...v1.4.3
 .. _`1.4.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.1...v1.4.2

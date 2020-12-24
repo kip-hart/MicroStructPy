@@ -201,7 +201,7 @@ class TriMesh(object):
             tri_args = _call_meshpy(polymesh, phases, min_angle, max_volume,
                                     max_edge_length)
         elif key == 'gmsh':
-            tri_args = _call_gmsh(polymesh, phases, mesh_size)
+            tri_args = _call_gmsh(polymesh, phases, mesh_size, max_edge_length)
 
         return cls(*tri_args)
 
@@ -845,9 +845,12 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     return tri_args
 
 
-def _call_gmsh(pmesh, phases, res):
+def _call_gmsh(pmesh, phases, res, edge_res):
     if res == float('inf'):
         res = None
+    # If edge length not specified, default to mesh size input
+    if edge_res == float('inf'):
+        edge_res = res
 
     amorph_seeds = _amorphous_seed_numbers(pmesh, phases)
 
@@ -913,7 +916,8 @@ def _call_gmsh(pmesh, phases, res):
     # ---------------------------------------------------------------------- 
     with pg.geo.Geometry() as geom:
         # Add points
-        pts = [geom.add_point(_pt3d(pt), res) for pt in pmesh.points]
+        pt_arr = np.array(pmesh.points)
+        pts = [geom.add_point(_pt3d(pt), edge_res) for pt in pmesh.points]
         n_dim = len(pmesh.points[0])
 
         # Add edges to geometry
@@ -958,12 +962,19 @@ def _call_gmsh(pmesh, phases, res):
                 mat_type = phases[p_num].get('material_type', 'solid')
                 if mat_type not in _misc.kw_void:
                     geom.add_physical(surfs[-1], 'seed-' + str(i))
+                    # Add mesh size control points to 'centers' of regions
+                    if res is not None:
+                        kps = list({kp for p in sorted_pairs for kp in p})
+                        cen = pt_arr[kps].mean(axis=0)  # estimate of center
+                        pt = geom.add_point(_pt3d(cen), res)
+                        geom.in_surface(pt, surfs[-1])
 
         elif n_dim == 3:
             # Add surfaces to geometry
             loops = []
             surfs = []
             seed_surfs = {}
+            surf_kps = {}
             seed_phases = dict(zip(pmesh.seed_numbers, pmesh.phase_numbers))
             for i in facets_info:
                 info = facets_info[i]
@@ -982,6 +993,7 @@ def _call_gmsh(pmesh, phases, res):
                         loop.append(-line)
                 loops.append(geom.add_curve_loop(loop))
                 surfs.append(geom.add_plane_surface(loops[-1]))
+                surf_kps[surfs[-1]] = set(info['facet'])
                 if facet_check(info['neighbors'], pmesh, phases):
                     geom.add_physical(surfs[-1], 'facet-' + str(i))
                 for seed_num in facet_seeds:
@@ -1001,6 +1013,12 @@ def _call_gmsh(pmesh, phases, res):
                 mat_type = phases[p_num].get('material_type', 'solid')
                 if mat_type not in _misc.kw_void:
                     geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
+                    # Add mesh size control points to 'centers' of regions
+                    if res is not None:
+                        kps = set().union(*[surf_kps[s] for s in surf_loop])
+                        cen = pt_arr[list(kps)].mean(axis=0)  # estimate center
+                        pt = geom.add_point(_pt3d(cen), res)
+                        geom.in_surface(pt, surfs[-1])
         else:
             raise ValueError('Points cannot have dimension ' + str(n_dim) + '.')
 
