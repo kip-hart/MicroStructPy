@@ -143,7 +143,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     fav_im = fav_im[inds]
     fav_im = fav_im[:, inds]
 
-    plt.imsave(favicon_filename, fav_im, dpi=dpi, format='png')
+    plt.imsave(favicon_filename, np.ascontiguousarray(fav_im), dpi=dpi, format='png')
 
     # Create the Social Banner
     fig_social, ax_social = plt.subplots()
