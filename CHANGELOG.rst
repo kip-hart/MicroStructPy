@@ -11,6 +11,7 @@ and this project adheres to `Semantic Versioning`_.
 Fixed
 '''''''
 - Logo example failing on ReadTheDocs.
+- 3D gmsh with variable mesh sizes.
 
 `1.4.5`_ - 2020-12-24
 --------------------------

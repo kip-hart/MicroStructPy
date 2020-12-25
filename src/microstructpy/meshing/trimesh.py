@@ -1018,7 +1018,7 @@ def _call_gmsh(pmesh, phases, res, edge_res):
                         kps = set().union(*[surf_kps[s] for s in surf_loop])
                         cen = pt_arr[list(kps)].mean(axis=0)  # estimate center
                         pt = geom.add_point(_pt3d(cen), res)
-                        geom.in_surface(pt, surfs[-1])
+                        geom.in_volume(pt, volumes[-1])
         else:
             raise ValueError('Points cannot have dimension ' + str(n_dim) + '.')
 
