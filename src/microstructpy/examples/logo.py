@@ -133,9 +133,9 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     doc_im = np.concatenate((logo_pad, pad_im, logo_pad), axis=1)
 
     plt.imsave(logo_filename, logo_im, dpi=dpi)
-    plt.imsave(logo_filename.replace('.svg', '.png'), logo_im, dpi=dpi)
+    plt.imsave(logo_filename.replace('.svg', '.png'), np.ascontiguousarray(logo_im), dpi=dpi)
     plt.imsave(pad_filename, pad_im, dpi=dpi)
-    plt.imsave(pad_filename.replace('.svg', '.png'), doc_im, dpi=dpi)
+    plt.imsave(pad_filename.replace('.svg', '.png'), np.ascontiguousarray(doc_im), dpi=dpi)
 
     # Create the Favicon
     fav_im = np.copy(logo_im)
