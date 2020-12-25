@@ -5,6 +5,7 @@ import os
 import numpy as np
 from matplotlib import collections
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.offsetbox import AnnotationBbox
 from matplotlib.offsetbox import OffsetImage
 
@@ -27,7 +28,6 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     path = os.path.join(file_dir, 'logo')
     if not os.path.exists(path):
         os.makedirs(path)
-    print(path)
     logo_filename = os.path.join(path, logo_basename)
     pad_filename = os.path.join(path, 'pad_' + logo_basename)
     favicon_filename = os.path.join(path, favicon_basename)
@@ -64,7 +64,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     facet_colors = []
     for neigh_pair in pmesh.facet_neighbors:
         if min(neigh_pair) < 0:
-            facet_colors.append('none')
+            facet_colors.append((0, 0, 0, 0))
         else:
             facet_colors.append(line_color)
 
@@ -99,9 +99,10 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
     # Format the Plot and Convert to Image Array
     plt.axis('square')
     plt.axis(1.01 * np.array([-1, 1, -1, 1]))
-    fig.canvas.draw()
+    canvas = FigureCanvasAgg(fig)
+    canvas.draw()
 
-    plt_im = np.array(fig.canvas.get_renderer()._renderer)
+    plt_im = np.array(canvas.buffer_rgba())
     mask = plt_im[:, :, 0] > 0.5 * 255
 
     # Create the Logo

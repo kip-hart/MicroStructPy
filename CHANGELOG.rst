@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Fixed
+'''''''
+- Logo example failing on ReadTheDocs.
+
 `1.4.5`_ - 2020-12-24
 --------------------------
 Added
