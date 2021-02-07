@@ -211,6 +211,8 @@ class Seed(object):
         str_str += str(self.geometry) + '\n'
         str_str += 'Phase: ' + str(self.phase) + '\n'
         bkdwn_str = ', '.join([str(tuple(b)) for b in self.breakdown])
+        if len(self.breakdown) == 1:
+            bkdwn_str += ','  # breakdowns will be a tuple of length 1
         str_str += 'Breakdown: (' + bkdwn_str + ')\n'
         str_str += 'Position: (' + ', '.join([str(x) for x in self.position])
         str_str += ')'
