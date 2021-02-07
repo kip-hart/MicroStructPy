@@ -44,7 +44,7 @@ def test_from_str_bool():
 def test_from_str_list():
     pairs = [('[0]', [0]),
              # ('[1, 0, a]', [1, 0, 'a']),
-             ('-2.3, true', [-2.3, True])]
+             ('[-2.3, true]', [-2.3, True])]
 
     for list_str, list_exp in pairs:
         list_act = _misc.from_str(list_str)
