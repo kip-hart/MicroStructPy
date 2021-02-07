@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.4.7`_ - 2021-02-07
+--------------------------
+Fixed
+'''''''
+- String parsing errors.
+
 `1.4.6`_ - 2021-02-07
 --------------------------
 Fixed
@@ -208,7 +214,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.6...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.7...HEAD
+.. _`1.4.7`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.6...v1.4.7
 .. _`1.4.6`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.5...v1.4.6
 .. _`1.4.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.4...v1.4.5
 .. _`1.4.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.3...v1.4.4
