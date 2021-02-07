@@ -2,6 +2,7 @@
 
 This private module contains miscellaneous functions.
 """
+
 import ast 
 
 import numpy as np
