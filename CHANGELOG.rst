@@ -8,6 +8,10 @@ and this project adheres to `Semantic Versioning`_.
 
 `1.4.7`_ - 2021-02-07
 --------------------------
+Changed
+'''''''
+- Updated numpy and matplotlib versions.
+
 Fixed
 '''''''
 - String parsing errors.
