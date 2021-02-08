@@ -2,7 +2,8 @@
 
 This private module contains miscellaneous functions.
 """
-import ast 
+
+import ast
 
 import numpy as np
 
@@ -50,7 +51,22 @@ def from_str(string):
     try:
         val = ast.literal_eval(s)
     except (ValueError, SyntaxError):
-        val = s
+        if 'true' in s.lower():
+            tmp_s = s.lower().replace('true', 'True')
+            tmp_val = from_str(tmp_s)
+            if tmp_val != tmp_s:
+                val = tmp_val
+            else:
+                val = s
+        elif 'false' in s.lower():
+            tmp_s = s.lower().replace('false', 'False')
+            tmp_val = from_str(tmp_s)
+            if tmp_val != tmp_s:
+                val = tmp_val
+            else:
+                val = s
+        else:
+            val = s
     return val
 
 

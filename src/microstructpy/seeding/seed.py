@@ -190,6 +190,8 @@ class Seed(object):
 
         if 'breakdown' in str_dict:
             breakdown = str_dict['breakdown']
+            if not isinstance(breakdown[0], tuple):
+                breakdown = (breakdown,)
             del str_dict['breakdown']
         else:
             breakdown = None

@@ -11,6 +11,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import ast
 import collections
 import glob
 import os
@@ -1075,7 +1076,10 @@ def dict_convert(dictionary, filepath='.'):
 
     # Convert strings
     if isinstance(dictionary, str):
-        return _misc.from_str(dictionary)
+        s = _misc.from_str(dictionary)
+        if isinstance(s, str) and ',' in s:
+            s = [_misc.from_str(ss) for ss in s.split(',')]
+        return s
 
     # Convert Nones
     if dictionary is None:
