@@ -645,7 +645,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
             for more details.
         domain (from :mod:`microstructpy.geometry`): Domain geometry.
         plot_files (list): *(optional)* List of files to save the output plot.
-            Defaults to saving the plot to ``polymesh.png``.
+            Defaults to saving the plot to ``seeds.png``.
         plot_axes (bool): *(optional)* Flag to turn the axes on or off.
             True shows the axes, False removes them. Defaults to True.
         color_by (str): *(optional)* {'material' | 'seed number' |
@@ -660,7 +660,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     """
     if not plot_files:
-        return
+        plot_files = ['seeds.png']
 
     phase_names = []
     given_names = False
@@ -778,7 +778,7 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
 
     """
     if not plot_files:
-        return
+        plot_files = ['polymesh.png']
 
     n_dim = len(pmesh.points[0])
 
@@ -897,7 +897,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         seeds (SeedList): List of seed geometries.
         pmesh (PolyMesh): Polygonal mesh from which ``tmesh`` was generated.
         plot_files (list): *(optional)* List of files to save the output plot.
-            Defaults to saving the plot to ``polymesh.png``.
+            Defaults to saving the plot to ``trimesh.png``.
         plot_axes (bool): *(optional)* Flag to turn the axes on or off.
             True shows the axes, False removes them. Defaults to True.
         color_by (str): *(optional)* {'material' | 'seed number' |
@@ -912,7 +912,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
 
     """
     if not plot_files:
-        return
+        plot_files = ['trimesh.png']
 
     n_dim = len(tmesh.points[0])
 

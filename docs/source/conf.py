@@ -25,7 +25,7 @@ import microstructpy
 # -- Project information -----------------------------------------------------
 
 project = 'MicroStructPy'
-copyright = '2019-2020, Georgia Tech Research Corporation'
+copyright = '2019-2021, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
