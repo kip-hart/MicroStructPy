@@ -10,7 +10,7 @@ and this project adheres to `Semantic Versioning`_.
 --------------------------
 Fixed
 '''''''
-- Default behavior of ``cli.*_plot`` functions when ``plot_files`` is not
+- Default behavior of ``cli.plot_*`` functions when ``plot_files`` is not
   specified.
 
 `1.4.7`_ - 2021-02-07
