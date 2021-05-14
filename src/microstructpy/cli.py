@@ -429,8 +429,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     if plot_files and verbose:
         print('Plotting seeds.')
 
-    plot_seeds(seeds, phases, domain, plot_files, plot_axes, color_by,
-               colormap, **seeds_kwargs)
+    if plot_files:
+        plot_seeds(seeds, phases, domain, plot_files, plot_axes, color_by,
+                   colormap, **seeds_kwargs)
 
     # ----------------------------------------------------------------------- #
     # Create Polygon Mesh                                                     #
@@ -483,8 +484,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     if plot_files and verbose:
         print('Plotting polygon mesh.')
 
-    plot_poly(pmesh, phases, plot_files, plot_axes, color_by, colormap,
-              **poly_kwargs)
+    if plot_files:
+        plot_poly(pmesh, phases, plot_files, plot_axes, color_by, colormap,
+                  **poly_kwargs)
 
     # ----------------------------------------------------------------------- #
     # Create Triangular Mesh                                                  #
@@ -540,8 +542,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     if plot_files and verbose:
         print('Plotting triangular mesh.')
 
-    plot_tri(tmesh, phases, seeds, pmesh, plot_files, plot_axes, color_by,
-             colormap, **tri_kwargs)
+    if plot_files:
+        plot_tri(tmesh, phases, seeds, pmesh, plot_files, plot_axes, color_by,
+                 colormap, **tri_kwargs)
 
     # ----------------------------------------------------------------------- #
     # Perform Verification                                                    #
@@ -659,6 +662,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
             :meth:`.SeedList.plot`.
 
     """
+    print('plot files seeds', plot_files)
     if not plot_files:
         plot_files = ['seeds.png']
 
