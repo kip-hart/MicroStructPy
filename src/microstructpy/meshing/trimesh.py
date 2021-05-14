@@ -921,14 +921,17 @@ def _call_gmsh(pmesh, phases, res, edge_res):
         n_dim = len(pmesh.points[0])
 
         # Add edges to geometry
+        phys_facets = []
+        phys_seeds = []
         for edge in edge_keys:
             line = geom.add_line(*[pts[kp] for kp in edge])
             edge_lines.append(line)
 
             if n_dim == 2:
                 lbl = 'facet-{}'.format(edges_info[edge]['facets'][0])
+                geom.add_physical(edge_lines[-1], lbl)
                 if facet_check(edges_info[edge]['neighbors'], pmesh, phases):
-                    geom.add_physical(edge_lines[-1], lbl)
+                    phys_facets.append(lbl)
 
         if n_dim == 2:
             # Add surfaces to geometry
@@ -958,10 +961,12 @@ def _call_gmsh(pmesh, phases, res, edge_res):
 
                 loops.append(geom.add_curve_loop(loop))
                 surfs.append(geom.add_plane_surface(loops[-1]))
+                lbl = 'seed-' + str(i)
+                geom.add_physical(surfs[-1], lbl)
                 p_num = pmesh.phase_numbers[i]
                 mat_type = phases[p_num].get('material_type', 'solid')
                 if mat_type not in _misc.kw_void:
-                    geom.add_physical(surfs[-1], 'seed-' + str(i))
+                    phys_seeds.append(lbl)
                     # Add mesh size control points to 'centers' of regions
                     if res is not None:
                         kps = list({kp for p in sorted_pairs for kp in p})
@@ -994,8 +999,10 @@ def _call_gmsh(pmesh, phases, res, edge_res):
                 loops.append(geom.add_curve_loop(loop))
                 surfs.append(geom.add_plane_surface(loops[-1]))
                 surf_kps[surfs[-1]] = set(info['facet'])
+                f_lbl = 'facet-' + str(i)
+                geom.add_physical(surfs[-1], 'facet-' + str(i))
                 if facet_check(info['neighbors'], pmesh, phases):
-                    geom.add_physical(surfs[-1], 'facet-' + str(i))
+                    phys_facets.append(f_lbl)
                 for seed_num in facet_seeds:
                     if seed_num not in seed_surfs:
                         seed_surfs[seed_num] = []
@@ -1008,11 +1015,13 @@ def _call_gmsh(pmesh, phases, res, edge_res):
                 surf_loop = seed_surfs[seed_num]
                 surf_loops.append(geom.add_surface_loop(surf_loop))
                 volumes.append(geom.add_volume(surf_loops[-1]))
+                lbl = 'seed-' + str(seed_num)
+                geom.add_physical(volumes[-1], lbl)
 
                 p_num = seed_phases[seed_num]
                 mat_type = phases[p_num].get('material_type', 'solid')
                 if mat_type not in _misc.kw_void:
-                    geom.add_physical(volumes[-1], 'seed-' + str(seed_num))
+                    phys_seeds.append(lbl)
                     # Add mesh size control points to 'centers' of regions
                     if res is not None:
                         kps = set().union(*[surf_kps[s] for s in surf_loop])
@@ -1040,16 +1049,27 @@ def _call_gmsh(pmesh, phases, res, edge_res):
     tet_atts = np.array([-1 for tet in tets])
     facet_atts = np.array([-1 for f in facets])
 
+    tet_set = np.array([False for tet in tets])
+    facet_set = np.array([False for f in facets])
+
     n_facets = len(mesh.cells[f_ind].data)
     for key, elem_sets in mesh.cell_sets.items():
         set_kind, set_num_str = key.split('-')
         att = int(set_num_str)
-        if set_kind == 'seed':
+        if set_kind == 'seed' and key in phys_seeds:
             elem_set = elem_sets[e_ind] - n_facets
             tet_atts[elem_set] = amorph_seeds.get(att, att)
-        elif set_kind == 'facet':
+            tet_set[elem_set] = True
+        elif set_kind == 'facet' and key in phys_facets:
             elem_set = elem_sets[f_ind]
             facet_atts[elem_set] = att
+            facet_set[elem_set] = True
+
+    tets = tets[tet_set]
+    tet_atts = tet_atts[tet_set]
+
+    facets = facets[facet_set]
+    facet_atts = facet_atts[facet_set]
 
     tri_args = (pts, tets, tet_atts, facets, facet_atts)
     return tri_args
