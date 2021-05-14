@@ -950,7 +950,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     invis_regions = set(range(-6, 0))
     f_front = set([i for i, fn in enumerate(pmesh.facet_neighbors)
                    if min(fn) < 0])
-    while f_front:
+    while f_front and n_dim > 2:
         new_front = set()
         for f in f_front:
             neighs = set(pmesh.facet_neighbors[f])
@@ -963,6 +963,8 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
                     vis_regions.add(n)
         new_front -= f_front
         f_front = new_front
+    if n_dim < 3:
+        vis_regions = set(range(len(pmesh.regions)))
 
     # Determine facet colors based on visibility
     seed_colors = _seed_colors(seeds, phases, color_by, colormap)
