@@ -189,8 +189,8 @@ class TriMesh(object):
                 is not set for each phase. This option is used with Triangle or
                 TetGen. Defaults to infinity, which turns off this control.
             max_edge_length (float): The maximum edge length of elements
-                along grain boundaries. This option is used  with Triangle.
-                Defaults to infinity, which turns off this control.
+                along grain boundaries. This option is used  with Triangle
+                and gmsh. Defaults to infinity, which turns off this control.
             mesh_size (float): The target size of the mesh elements. This
                 option is used with gmsh. Default is infinity, whihch turns off
                 this control.
