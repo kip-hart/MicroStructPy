@@ -938,9 +938,11 @@ def _call_gmsh(pmesh, phases, res, edge_res):
             loops = []
             surfs = []
             seed_facets = {}
+            seed_phases = {}
             for i, r in enumerate(pmesh.regions):
                 s = pmesh.seed_numbers[i]
                 seed_facets.setdefault(s, set()).symmetric_difference_update(r)
+                seed_phases[s] = pmesh.phase_numbers[i]
             for i in seed_facets:
                 region = list(seed_facets[i])
                 sorted_pairs = _sort_facets([pmesh.facets[f] for f in region])
@@ -963,7 +965,7 @@ def _call_gmsh(pmesh, phases, res, edge_res):
                 surfs.append(geom.add_plane_surface(loops[-1]))
                 lbl = 'seed-' + str(i)
                 geom.add_physical(surfs[-1], lbl)
-                p_num = pmesh.phase_numbers[i]
+                p_num = seed_phases[i]
                 mat_type = phases[p_num].get('material_type', 'solid')
                 if mat_type not in _misc.kw_void:
                     phys_seeds.append(lbl)
