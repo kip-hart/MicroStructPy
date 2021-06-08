@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.4.10`_ - 2021-06-08
+--------------------------
+Fixed
+'''''''
+- Bug in gmsh for multi-circle seeds.
+
 `1.4.9`_ - 2021-05-14
 --------------------------
 Fixed
@@ -231,7 +237,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.9...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.10...HEAD
+.. _`1.4.10`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.9...v1.4.10
 .. _`1.4.9`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.8...v1.4.9
 .. _`1.4.8`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.7...v1.4.8
 .. _`1.4.7`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.6...v1.4.7
