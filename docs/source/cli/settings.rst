@@ -43,7 +43,7 @@ quality, among other things. The default settings are:
             <edge_opt> False </edge_opt>
             <edge_opt_n_iter> 100 </edge_opt_n_iter>
 
-            <mesher>  Triangle/TetGen </mesher>
+            <mesher> Triangle/TetGen </mesher>
 
             <mesh_size> inf </mesh_size> <!-- used with gmsh -->
             <mesh_max_volume> inf </mesh_max_volume> <!-- used with Triangle and TetGen -->
@@ -285,6 +285,18 @@ the length of the shortest edge in the polygonal mesh.
 The default is ``<edge_opt_n_iter> 100 </edge_opt_n_iter>``, which limits the
 optimizer to 100 attempts per edge.
 This field is ignored if ``edge_opt`` is set to ``False``.
+
+mesher
+------
+
+This field specifies how to mesh the PolyMesh. If set to ``raster``, the output
+mesh will contain pixels/voxels of the PolyMesh.
+Other options include ``Triangle/Tetgen`` and ``gmsh``.
+
+mesh_size
+---------
+
+This field specifies a target element size if using the ``gmsh`` mesher.
 
 mesh_max_volume
 ---------------

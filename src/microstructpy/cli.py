@@ -29,6 +29,7 @@ from microstructpy import geometry
 from microstructpy import seeding
 from microstructpy import verification
 from microstructpy.meshing import PolyMesh
+from microstructpy.meshing import RasterMesh
 from microstructpy.meshing import TriMesh
 from microstructpy.meshing.trimesh import facet_check
 
@@ -301,7 +302,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
             edge during optimization. Ignored if `edge_opt` set to False.
             Defaults to 100.
-        mesher (str): {'Triangle/TetGen' | 'Triangle'  | 'TetGen' | 'gmsh'}
+        mesher (str): {'raster' | 'Triangle/TetGen' | 'Triangle'  | 'TetGen' |
+            'gmsh'}
             specify the mesh generator. Default is 'Triangle/TetGen'.
         mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
             of a mesh cell in the triangular mesh. Default is infinity,
@@ -491,7 +493,11 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     # ----------------------------------------------------------------------- #
     # Create Triangular Mesh                                                  #
     # ----------------------------------------------------------------------- #
-    tri_basename = 'trimesh.txt'
+    raster = mesher == 'raster'
+    if raster:
+        tri_basename = 'rastermesh.txt'
+    else:
+        tri_basename = 'trimesh.txt'
     tri_filename = os.path.join(directory, tri_basename)
     exts = {'abaqus': '.inp', 'txt': '.txt', 'str': '.txt', 'tet/tri': '',
             'vtk': '.vtk'}
@@ -499,8 +505,11 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     if restart and os.path.exists(tri_filename) and not poly_created:
         # Read triangle mesh
         if verbose:
-            print('Reading triangular mesh.')
-            print('Triangular mesh filename: ' + tri_filename)
+            if raster:
+                print('Reading raster mesh.')
+            else:
+                print('Reading triangular mesh.')
+            print('Mesh filename: ' + tri_filename)
 
         tmesh = TriMesh.from_file(tri_filename)
         tri_created = False
@@ -510,9 +519,12 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         if verbose:
             print('Creating triangular mesh.')
 
-        tmesh = TriMesh.from_polymesh(pmesh, phases, mesher, mesh_min_angle,
-                                      mesh_max_volume, mesh_max_edge_length,
-                                      mesh_size)
+        if raster:
+            tmesh = RasterMesh.from_polymesh(pmesh, mesh_size, phases)
+        else:
+            tmesh = TriMesh.from_polymesh(pmesh, phases, mesher,
+                                          mesh_min_angle, mesh_max_volume,
+                                          mesh_max_edge_length, mesh_size)
 
     # Write triangular mesh
     tri_types = filetypes.get('tri', [])
