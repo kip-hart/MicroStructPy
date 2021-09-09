@@ -759,20 +759,263 @@ class RasterMesh(TriMesh):
             
 
         """
-        # TODO convert from pseudo-code to code
-        # Pseudo-Code
         # 1. Create node and element grids
-        # 2. Compute element centers
-        # 3. Remove elements outside domain
-        # 4. For each region:
-        #   A. Create a bounding box
-        #   B. Isolate element centers with box
-        #   C. For each facet, remove centers on the wrong side
-        #   D. Assign remaining centers to region
-        # 5. Combine regions of the same seed number (remove voids)
-        # 6. Define remaining facets, inherit their attributes
+        p_pts = np.array(polymesh.points)
+        mins = p_pts.min(axis=0)
+        maxs = p_pts.max(axis=0)
+        lens = (maxs - mins)*(1 + 1e-9)
+        sides = [lb + np.arange(0, dlen, mesh_size) for lb, dlen in
+                 zip(mins, lens)]
+        mgrid = np.meshgrid(*sides)
+        nodes = np.array([g.flatten() for g in mgrid]).T
+        node_nums = np.arange(mgrid[0].size).reshape(mgrid[0].shape)
+        
+        n_dim = len(mins)
+        if n_dim == 2:
+            m, n = node_nums.shape
+            kp1 = node_nums[:(m-1), :(n-1)].flatten()
+            kp2 = node_nums[1:m, :(n-1)].flatten()
+            kp3 = node_nums[1:m, 1:n].flatten()
+            kp4 = node_nums[:(m-1), 1:n].flatten()
+            elems = np.array([kp1, kp2, kp3, kp4]).T
+        elif n_dim == 3:
+            m, n, p = node_nums.shape
+            kp1 = node_nums[:(m-1), :(n-1), :(p-1)].flatten()
+            kp2 = node_nums[1:m, :(n-1), :(p-1)].flatten()
+            kp3 = node_nums[1:m, 1:n, :(p-1)].flatten()
+            kp4 = node_nums[:(m-1), 1:n, :(p-1)].flatten()
+            kp5 = node_nums[:(m-1), :(n-1), 1:p].flatten()
+            kp6 = node_nums[1:m, :(n-1), 1:p].flatten()
+            kp7 = node_nums[1:m, 1:n, 1:p].flatten()
+            kp8 = node_nums[:(m-1), 1:n, 1:p].flatten()
+            elems = np.array([kp1, kp2, kp3, kp4, kp5, kp6, kp7, kp8]).T
 
-        raise NotImplementedError
+        else:
+            raise NotImplementedError
+
+        # 2. Compute element centers
+        cens = nodes[elems[:, 0]] + 0.5 * mesh_size
+
+        # 3. For each region:
+        i_remain = np.arange(cens.shape[0])
+        elem_regs = np.full(cens.shape[0], -1)
+        elem_atts = np.full(cens.shape[0], -1)
+        for r_num, region in enumerate(polymesh.regions):
+            # A. Create a bounding box
+            r_kps = np.unique([polymesh.facets[f] for f in region])
+            r_pts = p_pts[r_kps]
+            r_mins = r_pts.min(axis=0)
+            r_maxs = r_pts.max(axis=0)
+
+            # B. Isolate element centers with box
+            r_i_remain = np.copy(i_remain)
+            for i, lb in enumerate(r_mins):
+                ub = r_maxs[i]
+                x = cens[r_i_remain, i]
+                in_range = (x >= lb) & (x <= ub)
+                r_i_remain = r_i_remain[in_range]
+
+            # C. For each facet, remove centers on the wrong side
+            # note: regions are convex, so mean pt is on correct side of facets
+            r_cen = r_pts.mean(axis=0)
+            for f in region:
+                f_kps = polymesh.facets[f]
+                f_pts = p_pts[f_kps]
+                u_in, f_cen = _facet_in_normal(f_pts, r_cen)
+
+                rel_pos = cens[r_i_remain] - f_cen
+                dp = rel_pos.dot(u_in)
+                inside = dp >= 0
+                r_i_remain = r_i_remain[inside]
+            
+            # D. Assign remaining centers to region
+            elem_regs[r_i_remain] = r_num
+            elem_atts[r_i_remain] = polymesh.seed_numbers[r_num]
+            i_remain = np.setdiff1d(i_remain, r_i_remain)
+
+        # 4. Combine regions of the same seed number
+        if phases is not None:
+            conv_dict = _amorphous_seed_numbers(polymesh, phases)
+            elem_atts = np.array([conv_dict.get(s, s) for s in elem_atts])
+        
+        # 5. Define remaining facets, inherit their attributes
+        facets = []
+        facet_atts = []
+        for f_num, f_neighs in enumerate(polymesh.facet_neighbors):
+            n1, n2 = f_neighs
+            if n1 >= 0:
+                e1 = elems[elem_regs == n1]
+                e2 = elems[elem_regs == n2]
+
+                # Shift +x
+                e1_s = e1[:, 1]
+                e2_s = e2[:, 0]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[1, 2]]
+                    else:
+                        facet = elem[[1, 2, 6, 5]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift -x
+                e1_s = e1[:, 0]
+                e2_s = e2[:, 1]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[3, 0]]
+                    else:
+                        facet = elem[[0, 4, 7, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift +y
+                e1_s = e1[:, 3]
+                e2_s = e2[:, 0]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[2, 3]]
+                    else:
+                        facet = elem[[2, 3, 7, 6]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift -y
+                e1_s = e1[:, 0]
+                e2_s = e2[:, 3]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[0, 1]]
+                    else:
+                        facet = elem[[0, 1, 5, 4]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                if n_dim < 3:
+                    continue
+
+                # Shift +z
+                e1_s = e1[:, 4]
+                e2_s = e1[:, 0]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    facet = elem[[4, 5, 6, 7]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift -z
+                e1_s = e1[:, 0]
+                e2_s = e1[:, 4]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    facet = elem[[0, 1, 2, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -1:
+                # -x face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 0], 0]
+                mask = np.isclose(x2, mins[0])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[3, 0]]
+                    else:
+                        facet = elem[[0, 4, 7, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -2:
+                # +x face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 1], 0]
+                mask = np.isclose(x2, maxs[0])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[1, 2]]
+                    else:
+                        facet = elem[[1, 2, 6, 5]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -3:
+                # -y face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 0], 1]
+                mask = np.isclose(x2, mins[1])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[0, 1]]
+                    else:
+                        facet = elem[[0, 1, 5, 4]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -4:
+                # +y face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 2], 1]
+                mask = np.isclose(x2, maxs[1])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[2, 3]]
+                    else:
+                        facet = elem[[2, 3, 7, 6]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -5:
+                # -z face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 0], 2]
+                mask = np.isclose(x2, mins[2])
+                for elem in e2[mask]:
+                    facet = elem[[0, 1, 2, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -6:
+                # +z face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 4], 2]
+                mask = x2 == maxs[2]
+                for elem in e2[mask]:
+                    facet = elem[[4, 5, 6, 7]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+        # 6. Remove voids and excess cells
+        if phases is not None:
+            att_rm = [-1]
+            for i, phase in enumerate(phases):
+                if phase.get('material_type', 'solid') in _misc.kw_void:
+                    r_mask = np.array(polymesh.phase_numbers) == i
+                    seeds = np.unique(np.array(polymesh.seed_numbers)[r_mask])
+                    att_rm.extend(list(seeds))
+
+            # Remove elements
+            rm_mask = np.isin(elem_atts, att_rm)
+            elems = elems[~rm_mask]
+            elem_atts = elem_atts[~rm_mask]
+
+            # Re-number nodes
+            nodes_mask = np.isin(np.arange(nodes.shape[0]), elems)
+            n_remain = np.sum(nodes_mask)
+            node_n_conv = np.arange(nodes.shape[0])
+            node_n_conv[nodes_mask] = np.arange(n_remain)
+
+            nodes = nodes[nodes_mask]
+            elems = node_n_conv[elems]
+
+            f_keep = np.all(nodes_mask[facets], axis=1)
+            facets = node_n_conv[np.array(facets)[f_keep, :]]
+            facet_atts = np.array(facet_atts)[f_keep]
+
+        return cls(nodes, elems, elem_atts, facets, facet_atts)
 
     # ----------------------------------------------------------------------- #
     # String and Representation Functions                                     #
@@ -1340,3 +1583,24 @@ def _pt3d(pt):
     pt3d = np.zeros(3)
     pt3d[:len(pt)] = pt
     return pt3d
+
+
+def _facet_in_normal(pts, cen_pt):
+    n_dim = len(cen_pt)
+    if n_dim == 2:
+        ptA = pts[0]
+        ptB = pts[1]
+        vt = ptB - ptA
+        vn = np.array([-vt[1], vt[0]])
+    else:
+        ptA = pts[0]
+        ptB = pts[1]
+        ptC = pts[2]
+        v1 = ptB - ptA
+        v2 = ptC - ptA
+        vn = np.cross(v1, v2)
+     
+    sgn = vn.dot(cen_pt - ptA)
+    vn *= sgn  # flip so center is inward
+    un = vn / np.linalg.norm(vn)
+    return un, pts.mean(axis=0)

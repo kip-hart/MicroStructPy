@@ -517,7 +517,10 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         tri_created = True
         # Create triangular mesh
         if verbose:
-            print('Creating triangular mesh.')
+            if raster:
+                print('Creating triangular mesh.')
+            else:
+                print('Creating raster mesh.')
 
         if raster:
             tmesh = RasterMesh.from_polymesh(pmesh, mesh_size, phases)
@@ -547,12 +550,19 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     plot_files = []
     for ext in plot_types:
-        fname = os.path.join(directory, 'trimesh.' + str(ext))
+        if raster:
+            bname = 'rastermesh'
+        else:
+            bname = 'trimesh'
+        fname = os.path.join(directory, bname + '.' + str(ext))
         if tri_created or not os.path.exists(fname):
             plot_files.append(fname)
 
     if plot_files and verbose:
-        print('Plotting triangular mesh.')
+        if raster:
+            print('Plotting raster mesh.')
+        else:
+            print('Plotting triangular mesh.')
 
     if plot_files:
         plot_tri(tmesh, phases, seeds, pmesh, plot_files, plot_axes, color_by,
