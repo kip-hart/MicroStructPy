@@ -518,9 +518,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         # Create triangular mesh
         if verbose:
             if raster:
-                print('Creating triangular mesh.')
-            else:
                 print('Creating raster mesh.')
+            else:
+                print('Creating triangular mesh.')
 
         if raster:
             tmesh = RasterMesh.from_polymesh(pmesh, mesh_size, phases)
