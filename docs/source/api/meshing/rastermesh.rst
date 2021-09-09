@@ -3,7 +3,7 @@
 .. currentmodule:: microstructpy.meshing
 
 microstructpy.meshing.RasterMesh
-=============================
+================================
 
 .. autoclass:: RasterMesh
     :members:
