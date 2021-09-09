@@ -578,31 +578,7 @@ class TriMesh(object):
             xlim = [float('inf'), -float('inf')]
             ylim = [float('inf'), -float('inf')]
         if n_dim == 2:
-            simps = np.array(self.elements)
-            pts = np.array(self.points)
-            xy = pts[simps, :]
-
-            plt_kwargs = {}
-            for key, value in kwargs.items():
-                if type(value) in (list, np.array):
-                    plt_value = []
-                    for e_num, e_att in enumerate(self.element_attributes):
-                        if index_by == 'element':
-                            ind = e_num
-                        elif index_by == 'attribute':
-                            ind = int(e_att)
-                        else:
-                            e_str = 'Cannot index by {}.'.format(index_by)
-                            raise ValueError(e_str)
-                        v = value[ind]
-                        plt_value.append(v)
-                else:
-                    plt_value = value
-                plt_kwargs[key] = plt_value
-
-            pc = collections.PolyCollection(xy, **plt_kwargs)
-            ax.add_collection(pc)
-            ax.autoscale_view()
+            _plot_2d(ax, self, **kwargs)
         else:
             if n_obj > 0:
                 zlim = ax.get_zlim()
@@ -804,7 +780,7 @@ class RasterMesh(TriMesh):
         elem_atts = np.full(cens.shape[0], -1)
         for r_num, region in enumerate(polymesh.regions):
             # A. Create a bounding box
-            r_kps = np.unique([polymesh.facets[f] for f in region])
+            r_kps = np.unique([k for f in region for k in polymesh.facets[f]])
             r_pts = p_pts[r_kps]
             r_mins = r_pts.min(axis=0)
             r_maxs = r_pts.max(axis=0)
@@ -1290,7 +1266,119 @@ class RasterMesh(TriMesh):
     # ----------------------------------------------------------------------- #
     # Plot Function                                                           #
     # ----------------------------------------------------------------------- #
-    # Inherited from TriMesh
+    def plot(self, index_by='element', material=[], loc=0, **kwargs):
+        """Plot the mesh.
+
+        This method plots the mesh using matplotlib.
+        In 2D, this uses `matplotlib.pyplot.imshow`
+        and adds it to the current axes.
+        In 3D, it creates a
+        :class:`mpl_toolkits.mplot3d.axes3d.Axes3D.voxels` and
+        adds it to the current axes.
+        The keyword arguments are passed though to matplotlib.
+
+        Args:
+            index_by (str): *(optional)* {'element' | 'attribute'}
+                Flag for indexing into the other arrays passed into the
+                function. For example,
+                ``plot(index_by='attribute', color=['blue', 'red'])`` will plot
+                the elements with ``element_attribute`` equal to 0 in blue, and
+                elements with ``element_attribute`` equal to 1 in red.
+                Defaults to 'element'.
+            material (list): *(optional)* Names of material phases. One entry
+                per material phase (the ``index_by`` argument is ignored).
+                If this argument is set, a legend is added to the plot with
+                one entry per material. Note that the ``element_attributes``
+                must be the material numbers for the legend to be
+                formatted properly.
+            loc (int or str): *(optional)* The location of the legend,
+                if 'material' is specified. This argument is passed directly
+                through to :func:`matplotlib.pyplot.legend`. Defaults to 0,
+                which is 'best' in matplotlib.
+            **kwargs: Keyword arguments that are passed through to matplotlib.
+
+        """
+        n_dim = len(self.points[0])
+        if n_dim == 2:
+            ax = plt.gca()
+        else:
+            ax = plt.gcf().gca(projection=Axes3D.name)
+        n_obj = _misc.ax_objects(ax)
+        if n_obj > 0:
+            xlim = ax.get_xlim()
+            ylim = ax.get_ylim()
+        else:
+            xlim = [float('inf'), -float('inf')]
+            ylim = [float('inf'), -float('inf')]
+        if n_dim == 2:
+            _plot_2d(ax, self, **kwargs)
+        else:
+            if n_obj > 0:
+                zlim = ax.get_zlim()
+            else:
+                zlim = [float('inf'), -float('inf')]
+
+            inds = self.as_array(element_attributes=index_by=='attribute')
+            plt_kwargs = {}
+            for key, value in kwargs.items():
+                if type(value) in (list, np.array):
+                    plt_value = np.empty(inds.shape, dtype=object)
+                    for i, val_i in enumerate(value):
+                        plt_value[inds == i] = val_i
+                else:
+                    plt_value = value
+                plt_kwargs[key] = plt_value
+
+            # Scale axes
+            pts = np.array(self.points)
+            mins = pts.min(axis=0)
+            sz = self.mesh_size
+            pt_tups = np.round((pts - mins) / sz).astype(int)
+            maxs = pt_tups.max(axis=0)
+            grids = np.indices(maxs + 1, dtype=float)
+            for pt, pt_tup in zip(pts, pt_tups):
+                for i, x in enumerate(pt):
+                    grids[i][tuple(pt_tup)] = x
+            ax.voxels(*grids, inds >= 0, **plt_kwargs)
+
+        # Add legend
+        if material and index_by == 'attribute':
+            p_kwargs = [{'label': m} for m in material]
+            for key, value in kwargs.items():
+                if type(value) not in (list, np.array):
+                    for kws in p_kwargs:
+                        kws[key] = value
+
+                for i, m in enumerate(material):
+                    if type(value) in (list, np.array):
+                        p_kwargs[i][key] = value[i]
+                    else:
+                        p_kwargs[i][key] = value
+
+            # Replace plural keywords
+            for p_kw in p_kwargs:
+                for kw in _misc.mpl_plural_kwargs:
+                    if kw in p_kw:
+                        p_kw[kw[:-1]] = p_kw[kw]
+                        del p_kw[kw]
+            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
+            ax.legend(handles=handles, loc=loc)
+
+        # Adjust Axes
+        mins = np.array(self.points).min(axis=0)
+        maxs = np.array(self.points).max(axis=0)
+        xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
+        ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
+        if n_dim == 2:
+            plt.axis('square')
+            plt.xlim(xlim)
+            plt.ylim(ylim)
+        elif n_dim == 3:
+            zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+            ax.set_zlim(zlim)
+            _misc.axisEqual3D(ax)
 
 
 def facet_check(neighs, polymesh, phases):
@@ -1794,3 +1882,31 @@ def _facet_in_normal(pts, cen_pt):
     vn *= sgn  # flip so center is inward
     un = vn / np.linalg.norm(vn)
     return un, pts.mean(axis=0)
+
+
+def _plot_2d(ax, mesh, **kwargs):
+    simps = np.array(mesh.elements)
+    pts = np.array(mesh.points)
+    xy = pts[simps, :]
+
+    plt_kwargs = {}
+    for key, value in kwargs.items():
+        if type(value) in (list, np.array):
+            plt_value = []
+            for e_num, e_att in enumerate(mesh.element_attributes):
+                if index_by == 'element':
+                    ind = e_num
+                elif index_by == 'attribute':
+                    ind = int(e_att)
+                else:
+                    e_str = 'Cannot index by {}.'.format(index_by)
+                    raise ValueError(e_str)
+                v = value[ind]
+                plt_value.append(v)
+        else:
+            plt_value = value
+        plt_kwargs[key] = plt_value
+
+    pc = collections.PolyCollection(xy, **plt_kwargs)
+    ax.add_collection(pc)
+    ax.autoscale_view()
