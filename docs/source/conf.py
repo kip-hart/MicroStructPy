@@ -120,6 +120,8 @@ sphinx_gallery_conf = {
 numfig = True
 numfig_secnum_depth = 1
 
+# Ignore ref warnings, multiple classes in same file
+nitpick_ignore = [('py:class', 'type')]
 
 
 # -- Options for HTML output -------------------------------------------------
