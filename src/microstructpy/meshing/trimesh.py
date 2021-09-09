@@ -1077,7 +1077,7 @@ class RasterMesh(TriMesh):
         """Side length of elements."""
         e0 = self.elements[0]
         s0 = np.array(self.points[e0[1]]) - np.array(self.points[e0[0]])
-        return np.norm(s0)
+        return np.linalg.norm(s0)
 
     def as_array(self, element_attributes=True):
         """numpy.ndarray containing element attributes.
@@ -1089,12 +1089,28 @@ class RasterMesh(TriMesh):
             attributes in the array. Set to True return attributes and set to
             False to return element indices. Defaults to True.
         """
-        # TODO convert pseudo-code to code
-        # 1. Create array full of -1 values
-        # 2. Convert 1st node of each element into array indices
-        # 3. For each element: populate array with element attributes
+        # 1. Convert 1st node of each element into array indices
+        pts = np.array(self.points)
+        mins = pts.min(axis=0)
+        sz = self.mesh_size
 
-        raise NotImplementedError
+        corner_pts = pts[np.array(self.elements)[:, 0]]
+        rel_pos = corner_pts - mins
+        elem_tups = (rel_pos / sz).astype(int)
+
+        # 2. Create array full of -1 values
+        inds_maxs = elem_tups.max(axis=0)
+        arr = np.full(inds_maxs + 1, -1)
+
+        # 3. For each element: populate array with element attributes
+        if element_attributes:
+            vals = self.element_attributes
+        else:
+            vals = np.arange(elem_tups.shape[0])
+        for t, v in zip(elem_tups, vals):
+            arr[tuple(t)] = v
+
+        return arr
 
 
     # ----------------------------------------------------------------------- #
