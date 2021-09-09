@@ -1270,7 +1270,7 @@ class RasterMesh(TriMesh):
 
         corner_pts = pts[np.array(self.elements)[:, 0]]
         rel_pos = corner_pts - mins
-        elem_tups = (rel_pos / sz).astype(int)
+        elem_tups = np.round(rel_pos / sz).astype(int)
 
         # 2. Create array full of -1 values
         inds_maxs = elem_tups.max(axis=0)
