@@ -124,9 +124,11 @@ class TriMesh(object):
                     elif stage == 'element attributes':
                         elem_atts.append(_misc.from_str(line))
                     elif stage == 'facets':
-                        facets.append([int(kp) for kp in line.split(',')])
+                        if n_facets > 0:
+                            facets.append([int(kp) for kp in line.split(',')])
                     elif stage == 'facet attributes':
-                        facet_atts.append(_misc.from_str(line))
+                        if n_fas > 0:
+                            facet_atts.append(_misc.from_str(line))
                     else:
                         pass
 
@@ -672,6 +674,625 @@ class TriMesh(object):
             _misc.axisEqual3D(ax)
 
 
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# RasterMesh Class                                                               #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+class RasterMesh(TriMesh):
+    """Raster mesh.
+
+    The RasterMesh class contains the points and elements in a raster mesh,
+    also called an regular grid.
+
+    The points attribute is an Nx2 or Nx3 list of points in the mesh.
+    The elements attribute contains the Nx4 or Nx8 list of the points at
+    the corners of each pixel/voxel. A list of facets can also be
+    included, though it is optional and does not need to include every facet
+    in the mesh. Attributes can also be assigned to the elements and facets,
+    though they are also optional.
+
+    Args:
+        points (list, numpy.ndarray): List of coordinates in the mesh.
+        elements (list, numpy.ndarray): List of indices of the points at
+            the corners of each element. The shape should be Nx3 in 2D or
+            Nx4 in 3D.
+        element_attributes (list, numpy.ndarray): *(optional)* A number
+            associated with each element.
+            Defaults to None.
+        facets (list, numpy.ndarray): *(optional)* A list of facets in the
+            mesh. The shape should be Nx2 in 2D or Nx3 in 3D.
+            Defaults to None.
+        facet_attributes (list, numpy.ndarray): *(optional)* A number
+            associated with each facet.
+            Defaults to None.
+
+    """
+    # ----------------------------------------------------------------------- #
+    # Constructors                                                            #
+    # ----------------------------------------------------------------------- #
+    # Inherited from TriMesh
+
+    @classmethod
+    def from_polymesh(cls, polymesh, mesh_size, phases=None):
+        """Create RasterMesh from PolyMesh.
+
+        This constuctor creates a raster mesh from a polygon
+        mesh (:class:`.PolyMesh`). Polygons of the same seed number are
+        merged and the element attribute is set to the seed number it is
+        within. The facets between seeds are saved to the mesh and the index
+        of the facet is stored in the facet attributes.
+
+        Since the PolyMesh can include phase numbers for each region,
+        additional information about the phases can be included as an input.
+        The "phases" input should be a list of material phase dictionaries,
+        formatted according to the :ref:`phase_dict_guide` guide.
+
+        The mesh_size option determines the side length of each pixel/voxel.
+        Element attributes are sampled at the center of each pixel/voxel.
+        If an edge of a domain is not an integer multiple of the mesh_size, it
+        will be clipped. For example, if mesh_size is 3 and an edge has
+        bounds [0, 11], the sides of the pixels will be at 0, 3, 6, and 9 while
+        the centers of the pixels will be at 1.5, 4.5, 7.5.
+
+        The phase type option can take one of several values, described below.
+
+        * **crystalline**: granular, solid
+        * **amorphous**: glass, matrix
+        * **void**: crack, hole
+
+        The **crystalline** option creates a mesh where cells of the same seed
+        number are merged, but cells are not merged across seeds. _This is
+        the default material type._
+
+        The **amorphous** option creates a mesh where cells of the same
+        phase number are merged to create an amorphous region in the mesh.
+
+        Finally, the **void** option will merge neighboring void cells and
+        treat them as holes in the mesh.
+
+        Args:
+            polymesh (PolyMesh): A polygon/polyhedron mesh.
+            mesh_size (float): The side length of each pixel/voxel.
+            phases (list): *(optional)* A list of dictionaries containing
+                options for each phase.
+                Default is
+                ``{'material_type': 'solid', 'max_volume': float('inf')}``.
+            
+
+        """
+        # 1. Create node and element grids
+        p_pts = np.array(polymesh.points)
+        mins = p_pts.min(axis=0)
+        maxs = p_pts.max(axis=0)
+        lens = (maxs - mins)*(1 + 1e-9)
+        sides = [lb + np.arange(0, dlen, mesh_size) for lb, dlen in
+                 zip(mins, lens)]
+        mgrid = np.meshgrid(*sides)
+        nodes = np.array([g.flatten() for g in mgrid]).T
+        node_nums = np.arange(mgrid[0].size).reshape(mgrid[0].shape)
+        
+        n_dim = len(mins)
+        if n_dim == 2:
+            m, n = node_nums.shape
+            kp1 = node_nums[:(m-1), :(n-1)].flatten()
+            kp2 = node_nums[1:m, :(n-1)].flatten()
+            kp3 = node_nums[1:m, 1:n].flatten()
+            kp4 = node_nums[:(m-1), 1:n].flatten()
+            elems = np.array([kp1, kp2, kp3, kp4]).T
+        elif n_dim == 3:
+            m, n, p = node_nums.shape
+            kp1 = node_nums[:(m-1), :(n-1), :(p-1)].flatten()
+            kp2 = node_nums[1:m, :(n-1), :(p-1)].flatten()
+            kp3 = node_nums[1:m, 1:n, :(p-1)].flatten()
+            kp4 = node_nums[:(m-1), 1:n, :(p-1)].flatten()
+            kp5 = node_nums[:(m-1), :(n-1), 1:p].flatten()
+            kp6 = node_nums[1:m, :(n-1), 1:p].flatten()
+            kp7 = node_nums[1:m, 1:n, 1:p].flatten()
+            kp8 = node_nums[:(m-1), 1:n, 1:p].flatten()
+            elems = np.array([kp1, kp2, kp3, kp4, kp5, kp6, kp7, kp8]).T
+
+        else:
+            raise NotImplementedError
+
+        # 2. Compute element centers
+        cens = nodes[elems[:, 0]] + 0.5 * mesh_size
+
+        # 3. For each region:
+        i_remain = np.arange(cens.shape[0])
+        elem_regs = np.full(cens.shape[0], -1)
+        elem_atts = np.full(cens.shape[0], -1)
+        for r_num, region in enumerate(polymesh.regions):
+            # A. Create a bounding box
+            r_kps = np.unique([polymesh.facets[f] for f in region])
+            r_pts = p_pts[r_kps]
+            r_mins = r_pts.min(axis=0)
+            r_maxs = r_pts.max(axis=0)
+
+            # B. Isolate element centers with box
+            r_i_remain = np.copy(i_remain)
+            for i, lb in enumerate(r_mins):
+                ub = r_maxs[i]
+                x = cens[r_i_remain, i]
+                in_range = (x >= lb) & (x <= ub)
+                r_i_remain = r_i_remain[in_range]
+
+            # C. For each facet, remove centers on the wrong side
+            # note: regions are convex, so mean pt is on correct side of facets
+            r_cen = r_pts.mean(axis=0)
+            for f in region:
+                f_kps = polymesh.facets[f]
+                f_pts = p_pts[f_kps]
+                u_in, f_cen = _facet_in_normal(f_pts, r_cen)
+
+                rel_pos = cens[r_i_remain] - f_cen
+                dp = rel_pos.dot(u_in)
+                inside = dp >= 0
+                r_i_remain = r_i_remain[inside]
+            
+            # D. Assign remaining centers to region
+            elem_regs[r_i_remain] = r_num
+            elem_atts[r_i_remain] = polymesh.seed_numbers[r_num]
+            i_remain = np.setdiff1d(i_remain, r_i_remain)
+
+        # 4. Combine regions of the same seed number
+        if phases is not None:
+            conv_dict = _amorphous_seed_numbers(polymesh, phases)
+            elem_atts = np.array([conv_dict.get(s, s) for s in elem_atts])
+        
+        # 5. Define remaining facets, inherit their attributes
+        facets = []
+        facet_atts = []
+        for f_num, f_neighs in enumerate(polymesh.facet_neighbors):
+            n1, n2 = f_neighs
+            if n1 >= 0:
+                e1 = elems[elem_regs == n1]
+                e2 = elems[elem_regs == n2]
+
+                # Shift +x
+                e1_s = e1[:, 1]
+                e2_s = e2[:, 0]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[1, 2]]
+                    else:
+                        facet = elem[[1, 2, 6, 5]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift -x
+                e1_s = e1[:, 0]
+                e2_s = e2[:, 1]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[3, 0]]
+                    else:
+                        facet = elem[[0, 4, 7, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift +y
+                e1_s = e1[:, 3]
+                e2_s = e2[:, 0]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[2, 3]]
+                    else:
+                        facet = elem[[2, 3, 7, 6]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift -y
+                e1_s = e1[:, 0]
+                e2_s = e2[:, 3]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    if n_dim == 2:
+                        facet = elem[[0, 1]]
+                    else:
+                        facet = elem[[0, 1, 5, 4]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                if n_dim < 3:
+                    continue
+
+                # Shift +z
+                e1_s = e1[:, 4]
+                e2_s = e1[:, 0]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    facet = elem[[4, 5, 6, 7]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+                # Shift -z
+                e1_s = e1[:, 0]
+                e2_s = e1[:, 4]
+                mask = np.isin(e1_s, e2_s)
+                for elem in e1[mask]:
+                    facet = elem[[0, 1, 2, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -1:
+                # -x face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 0], 0]
+                mask = np.isclose(x2, mins[0])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[3, 0]]
+                    else:
+                        facet = elem[[0, 4, 7, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -2:
+                # +x face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 1], 0]
+                mask = np.isclose(x2, maxs[0])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[1, 2]]
+                    else:
+                        facet = elem[[1, 2, 6, 5]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -3:
+                # -y face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 0], 1]
+                mask = np.isclose(x2, mins[1])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[0, 1]]
+                    else:
+                        facet = elem[[0, 1, 5, 4]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -4:
+                # +y face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 2], 1]
+                mask = np.isclose(x2, maxs[1])
+                for elem in e2[mask]:
+                    if n_dim == 2:
+                        facet = elem[[2, 3]]
+                    else:
+                        facet = elem[[2, 3, 7, 6]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -5:
+                # -z face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 0], 2]
+                mask = np.isclose(x2, mins[2])
+                for elem in e2[mask]:
+                    facet = elem[[0, 1, 2, 3]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+            elif n1 == -6:
+                # +z face
+                e2 = elems[elem_regs == n2]
+                x2 = nodes[e2[:, 4], 2]
+                mask = x2 == maxs[2]
+                for elem in e2[mask]:
+                    facet = elem[[4, 5, 6, 7]]
+                    facets.append(facet)
+                    facet_atts.append(f_num)
+
+        # 6. Remove voids and excess cells
+        if phases is not None:
+            att_rm = [-1]
+            for i, phase in enumerate(phases):
+                if phase.get('material_type', 'solid') in _misc.kw_void:
+                    r_mask = np.array(polymesh.phase_numbers) == i
+                    seeds = np.unique(np.array(polymesh.seed_numbers)[r_mask])
+                    att_rm.extend(list(seeds))
+
+            # Remove elements
+            rm_mask = np.isin(elem_atts, att_rm)
+            elems = elems[~rm_mask]
+            elem_atts = elem_atts[~rm_mask]
+
+            # Re-number nodes
+            nodes_mask = np.isin(np.arange(nodes.shape[0]), elems)
+            n_remain = np.sum(nodes_mask)
+            node_n_conv = np.arange(nodes.shape[0])
+            node_n_conv[nodes_mask] = np.arange(n_remain)
+
+            nodes = nodes[nodes_mask]
+            elems = node_n_conv[elems]
+            if len(facets) > 0:
+                f_keep = np.all(nodes_mask[facets], axis=1)
+                facets = node_n_conv[np.array(facets)[f_keep, :]]
+                facet_atts = np.array(facet_atts)[f_keep]
+
+        return cls(nodes, elems, elem_atts, facets, facet_atts)
+
+    # ----------------------------------------------------------------------- #
+    # String and Representation Functions                                     #
+    # ----------------------------------------------------------------------- #
+    # __str__ inherited from TriMesh
+
+    def __repr__(self):
+        repr_str = 'RasterMesh('
+        repr_str += ', '.join([repr(v) for v in (self.points, self.elements,
+                               self.element_attributes, self.facets,
+                               self.facet_attributes)])
+        repr_str += ')'
+        return repr_str
+
+    # ----------------------------------------------------------------------- #
+    # Write Function                                                          #
+    # ----------------------------------------------------------------------- #
+    def write(self, filename, format='txt', seeds=None, polymesh=None):
+        """Write mesh to file.
+
+        This function writes the contents of the mesh to a file.
+        The format options are 'abaqus', 'txt', and 'vtk'.
+        See the :ref:`s_tri_file_io` section of the :ref:`c_file_formats`
+        guide for more details on these formats.
+
+        Args:
+            filename (str): The name of the file to write.
+            format (str): {'abaqus' | 'txt' | 'vtk'}
+                *(optional)* The format of the output file.
+                Default is 'txt'.
+            seeds (SeedList): *(optional)* List of seeds. If given, VTK files
+                will also include the phase number of of each element in the
+                mesh. This assumes the ``element_attributes``
+                field contains the seed number of each element.
+            polymesh (PolyMesh): *(optional)* Polygonal mesh used for
+                generating the raster mesh. If given, will add surface
+                unions to Abaqus files - for easier specification of
+                boundary conditions.
+
+        """  # NOQA: E501
+        fmt = format.lower()
+        if fmt == 'abaqus':
+            # write top matter
+            abaqus = '*Heading\n'
+            abaqus += '** Job name: microstructure '
+            abaqus += 'Model name: microstructure_model\n'
+            abaqus += '** Generated by: MicroStructPy\n'
+
+            # write parts
+            abaqus += '**\n** PARTS\n**\n'
+            abaqus += '*Part, name=Part-1\n'
+
+            abaqus += '*Node\n'
+            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(x) for x in
+                               pt]) + '\n' for i, pt in
+                               enumerate(self.points)])
+
+            n_dim = len(self.points[0])
+            elem_type = {2: 'CPS4', 3: 'C3D8'}[n_dim]
+
+            abaqus += '*Element, type=' + elem_type + '\n'
+            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(kp + 1) for kp
+                                                     in elem]) + '\n' for
+                               i, elem in enumerate(self.elements)])
+
+            # Element sets - seed number
+            elset_n_per = 16
+            elem_atts = np.array(self.element_attributes)
+            for att in np.unique(elem_atts):
+                elset_name = 'Set-E-Seed-' + str(att)
+                elset_str = '*Elset, elset=' + elset_name + '\n'
+                elem_groups = [[]]
+                for elem_ind, elem_att in enumerate(elem_atts):
+                    if ~np.isclose(elem_att, att):
+                        continue
+                    if len(elem_groups[-1]) >= elset_n_per:
+                        elem_groups.append([])
+                    elem_groups[-1].append(elem_ind + 1)
+                for group in elem_groups:
+                    elset_str += ','.join([str(i) for i in group])
+                    elset_str += '\n'
+
+                abaqus += elset_str
+
+            # Element Sets - phase number
+            if seeds is not None:
+                phase_nums = np.array([seed.phase for seed in seeds])
+                for phase_num in np.unique(phase_nums):
+                    mask = phase_nums == phase_num
+                    seed_nums = np.nonzero(mask)[0]
+
+                    elset_name = 'Set-E-Material-' + str(phase_num)
+                    elset_str = '*Elset, elset=' + elset_name + '\n'
+                    groups = [[]]
+                    for seed_num in seed_nums:
+                        if seed_num not in elem_atts:
+                            continue
+                        if len(groups[-1]) >= elset_n_per:
+                            groups.append([])
+                        seed_elset_name = 'Set-E-Seed-' + str(seed_num)
+                        groups[-1].append(seed_elset_name)
+                    for group in groups:
+                        elset_str += ','.join(group)
+                        elset_str += '\n'
+                    abaqus += elset_str
+
+            # Surfaces - Exterior and Interior
+            facets = np.array(self.facets)
+            facet_atts = np.array(self.facet_attributes)
+
+            face_ids = {2: [2, 3, 1], 3: [3, 4, 2, 1]}[n_dim]
+
+            for att in np.unique(facet_atts):
+                facet_name = 'Surface-' + str(att)
+                surf_str = '*Surface, name=' + facet_name + ', type=element\n'
+
+                att_facets = facets[facet_atts == att]
+                for facet in att_facets:
+                    mask = np.isin(self.elements, facet)
+                    n_match = mask.astype('int').sum(axis=1)
+                    i_elem = np.argmax(n_match)
+                    elem_id = i_elem + 1
+
+                    i_missing = np.argmin(mask[i_elem])
+                    face_id = face_ids[i_missing]
+
+                    surf_str += str(elem_id) + ', S' + str(face_id) + '\n'
+
+                abaqus += surf_str
+
+            # Surfaces - Exterior
+            poly_neighbors = np.array(polymesh.facet_neighbors)
+            poly_mask = np.any(poly_neighbors < 0, axis=1)
+            neigh_nums = np.min(poly_neighbors, axis=1)
+            u_neighs = np.unique(neigh_nums[poly_mask])
+            for neigh_num in u_neighs:
+                mask = neigh_nums == neigh_num
+                facet_name = 'Ext-Surface-' + str(-neigh_num)
+                surf_str = '*Surface, name=' + facet_name + ', combine=union\n'
+                for i, flag in enumerate(mask):
+                    if flag:
+                        surf_str += 'Surface-' + str(i) + '\n'
+                abaqus += surf_str
+
+            # End Part
+            abaqus += '*End Part\n\n'
+
+            # Assembly
+            abaqus += '**\n'
+            abaqus += '** ASSEMBLY\n'
+            abaqus += '**\n'
+
+            abaqus += '*Assembly, name=assembly\n'
+            abaqus += '**\n'
+
+            # Instances
+            abaqus += '*Instance, name=I-Part-1, part=Part-1\n'
+            abaqus += '*End Instance\n'
+
+            # End Assembly
+            abaqus += '**\n'
+            abaqus += '*End Assembly\n'
+
+            with open(filename, 'w') as file:
+                file.write(abaqus)
+        elif fmt in ('str', 'txt'):
+            with open(filename, 'w') as file:
+                file.write(str(self) + '\n')
+        elif fmt == 'vtk':
+            n_kp = len(self.elements[0])
+            mesh_type = {4: 'Pixel', 8: 'Voxel'}[n_kp]
+            pt_fmt = '{: f} {: f} {: f}\n'
+            # write heading
+            vtk = '# vtk DataFile Version 2.0\n'
+            vtk += '{} mesh\n'.format(mesh_type)
+            vtk += 'ASCII\n'
+            vtk += 'DATASET UNSTRUCTURED_GRID\n'
+
+            # Write points
+            vtk += 'POINTS ' + str(len(self.points)) + ' float\n'
+            if len(self.points[0]) == 2:
+                vtk += ''.join([pt_fmt.format(x, y, 0) for x, y in
+                                self.points])
+            else:
+                vtk += ''.join([pt_fmt.format(x, y, z) for x, y, z in
+                                self.points])
+
+            # write elements
+            n_elem = len(self.elements)
+            cell_fmt = str(n_kp) + n_kp * ' {}' + '\n'
+            cell_sz = (1 + n_kp) * n_elem
+            vtk += '\nCELLS ' + str(n_elem) + ' ' + str(cell_sz) + '\n'
+            vtk += ''.join([cell_fmt.format(*el) for el in self.elements])
+
+            # write cell type
+            vtk += '\nCELL_TYPES ' + str(n_elem) + '\n'
+            cell_type = {4: '9', 8: '12'}[n_kp]
+            vtk += ''.join(n_elem * [cell_type + '\n'])
+
+            # write element attributes
+            try:
+                int(self.element_attributes[0])
+                att_type = 'int'
+            except TypeError:
+                att_type = 'float'
+
+            vtk += '\nCELL_DATA ' + str(n_elem) + '\n'
+            vtk += 'SCALARS element_attributes ' + att_type + ' 1 \n'
+            vtk += 'LOOKUP_TABLE element_attributes\n'
+            vtk += ''.join([str(a) + '\n' for a in self.element_attributes])
+
+            # Write phase numbers
+            if seeds is not None:
+                vtk += '\nSCALARS phase_numbers int 1 \n'
+                vtk += 'LOOKUP_TABLE phase_numbers\n'
+                vtk += ''.join([str(seeds[a].phase) + '\n' for a in
+                                self.element_attributes])
+
+            with open(filename, 'w') as file:
+                file.write(vtk)
+
+        else:
+            e_str = 'Cannot write file type ' + str(format) + ' yet.'
+            raise NotImplementedError(e_str)
+
+    # ----------------------------------------------------------------------- #
+    # As Array Functions                                                      #
+    # ----------------------------------------------------------------------- #
+    @property
+    def mesh_size(self):
+        """Side length of elements."""
+        e0 = self.elements[0]
+        s0 = np.array(self.points[e0[1]]) - np.array(self.points[e0[0]])
+        return np.linalg.norm(s0)
+
+    def as_array(self, element_attributes=True):
+        """numpy.ndarray containing element attributes.
+
+        Array contains -1 where there are no elements (e.g. circular domains).
+
+        Args:
+            element_attributes (bool): *(optional)* Flag to return element
+            attributes in the array. Set to True return attributes and set to
+            False to return element indices. Defaults to True.
+        """
+        # 1. Convert 1st node of each element into array indices
+        pts = np.array(self.points)
+        mins = pts.min(axis=0)
+        sz = self.mesh_size
+
+        corner_pts = pts[np.array(self.elements)[:, 0]]
+        rel_pos = corner_pts - mins
+        elem_tups = (rel_pos / sz).astype(int)
+
+        # 2. Create array full of -1 values
+        inds_maxs = elem_tups.max(axis=0)
+        arr = np.full(inds_maxs + 1, -1)
+
+        # 3. For each element: populate array with element attributes
+        if element_attributes:
+            vals = self.element_attributes
+        else:
+            vals = np.arange(elem_tups.shape[0])
+        for t, v in zip(elem_tups, vals):
+            arr[tuple(t)] = v
+
+        return arr
+
+
+    # ----------------------------------------------------------------------- #
+    # Plot Function                                                           #
+    # ----------------------------------------------------------------------- #
+    # Inherited from TriMesh
+
+
 def facet_check(neighs, polymesh, phases):
     if any([n < 0 for n in neighs]):
         add_facet = True
@@ -1152,3 +1773,24 @@ def _pt3d(pt):
     pt3d = np.zeros(3)
     pt3d[:len(pt)] = pt
     return pt3d
+
+
+def _facet_in_normal(pts, cen_pt):
+    n_dim = len(cen_pt)
+    if n_dim == 2:
+        ptA = pts[0]
+        ptB = pts[1]
+        vt = ptB - ptA
+        vn = np.array([-vt[1], vt[0]])
+    else:
+        ptA = pts[0]
+        ptB = pts[1]
+        ptC = pts[2]
+        v1 = ptB - ptA
+        v2 = ptC - ptA
+        vn = np.cross(v1, v2)
+     
+    sgn = vn.dot(cen_pt - ptA)
+    vn *= sgn  # flip so center is inward
+    un = vn / np.linalg.norm(vn)
+    return un, pts.mean(axis=0)

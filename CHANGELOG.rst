@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.5.0`_ - 2021-09-08
+--------------------------
+Added
+'''''
+- RasterMesh class, to create pixel/voxel meshes. (addresses `#44`_)
+
 `1.4.10`_ - 2021-06-08
 --------------------------
 Fixed
@@ -237,7 +243,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.10...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.0...HEAD
+.. _`1.5.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.10...v1.5.0
 .. _`1.4.10`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.9...v1.4.10
 .. _`1.4.9`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.8...v1.4.9
 .. _`1.4.8`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.7...v1.4.8
@@ -270,3 +277,4 @@ Added
 
 .. _`#14`: https://github.com/kip-hart/MicroStructPy/issues/14
 .. _`#16`: https://github.com/kip-hart/MicroStructPy/issues/16
+.. _`#44`: https://github.com/kip-hart/MicroStructPy/issues/44
