@@ -578,7 +578,7 @@ class TriMesh(object):
             xlim = [float('inf'), -float('inf')]
             ylim = [float('inf'), -float('inf')]
         if n_dim == 2:
-            _plot_2d(ax, self, **kwargs)
+            _plot_2d(ax, self, index_by, **kwargs)
         else:
             if n_obj > 0:
                 zlim = ax.get_zlim()
@@ -1270,7 +1270,7 @@ class RasterMesh(TriMesh):
         """Plot the mesh.
 
         This method plots the mesh using matplotlib.
-        In 2D, this uses `matplotlib.pyplot.imshow`
+        In 2D, this creates a :class:`matplotlib.collections.PolyCollection`
         and adds it to the current axes.
         In 3D, it creates a
         :class:`mpl_toolkits.mplot3d.axes3d.Axes3D.voxels` and
@@ -1311,7 +1311,7 @@ class RasterMesh(TriMesh):
             xlim = [float('inf'), -float('inf')]
             ylim = [float('inf'), -float('inf')]
         if n_dim == 2:
-            _plot_2d(ax, self, **kwargs)
+            _plot_2d(ax, self, index_by, **kwargs)
         else:
             if n_obj > 0:
                 zlim = ax.get_zlim()
@@ -1884,7 +1884,7 @@ def _facet_in_normal(pts, cen_pt):
     return un, pts.mean(axis=0)
 
 
-def _plot_2d(ax, mesh, **kwargs):
+def _plot_2d(ax, mesh, index_by, **kwargs):
     simps = np.array(mesh.elements)
     pts = np.array(mesh.points)
     xy = pts[simps, :]
