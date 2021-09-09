@@ -1277,7 +1277,7 @@ class RasterMesh(TriMesh):
         In 2D, this creates a :class:`matplotlib.collections.PolyCollection`
         and adds it to the current axes.
         In 3D, it creates a
-        :class:`mpl_toolkits.mplot3d.axes3d.Axes3D.voxels` and
+        :func:`mpl_toolkits.mplot3d.axes3d.Axes3D.voxels` and
         adds it to the current axes.
         The keyword arguments are passed though to matplotlib.
 
