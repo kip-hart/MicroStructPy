@@ -9,4 +9,3 @@ microstructpy.meshing.RasterMesh
     :members:
     :undoc-members:
     :inherited-members:
-    :show-inheritance:
