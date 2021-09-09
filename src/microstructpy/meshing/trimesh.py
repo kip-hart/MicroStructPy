@@ -1329,6 +1329,11 @@ class RasterMesh(TriMesh):
                     plt_value = np.empty(inds.shape, dtype=object)
                     for i, val_i in enumerate(value):
                         plt_value[inds == i] = val_i
+                    if 'color' in key:
+                        unset_mask = plt_value == None
+                        plt_value[unset_mask] = 'k'
+                        inds[unset_mask] = -1
+
                 else:
                     plt_value = value
                 plt_kwargs[key] = plt_value
@@ -1905,7 +1910,10 @@ def _plot_2d(ax, mesh, index_by, **kwargs):
                 else:
                     e_str = 'Cannot index by {}.'.format(index_by)
                     raise ValueError(e_str)
-                v = value[ind]
+                try:
+                    v = value[ind]
+                except IndexError:
+                    v = 'none'
                 plt_value.append(v)
         else:
             plt_value = value
