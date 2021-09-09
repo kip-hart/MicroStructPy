@@ -1236,8 +1236,12 @@ class RasterMesh(TriMesh):
 
         Args:
             element_attributes (bool): *(optional)* Flag to return element
-            attributes in the array. Set to True return attributes and set to
-            False to return element indices. Defaults to True.
+                attributes in the array. Set to True return attributes and
+                set to False to return element indices. Defaults to True.
+
+        Returns:
+            numpy.ndarray: Array of values of element atttributes, or indices.
+
         """
         # 1. Convert 1st node of each element into array indices
         pts = np.array(self.points)
