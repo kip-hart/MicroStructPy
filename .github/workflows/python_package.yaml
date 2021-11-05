@@ -17,6 +17,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install gmsh
+        run: |
+          sudo apt-get install -y python3-gmsh
     - name: Install test dependencies
       run: |
         python -m pip install --upgrade pip
@@ -55,6 +58,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+    - name: Install gmsh
+        run: |
+          brew install gmsh
     - name: Install test dependencies
       run: |
         python -m pip install --upgrade pip
