@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install gmsh
-        run: |
+      run: |
           sudo apt-get install -y python3-gmsh
     - name: Install test dependencies
       run: |
@@ -59,7 +59,7 @@ jobs:
       with:
         python-version: '3.x'
     - name: Install gmsh
-        run: |
+      run: |
           brew install gmsh
     - name: Install test dependencies
       run: |
