@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.5.3`_ - 2022-03-30
+--------------------------
+Fixed
+'''''''
+- String types in generating Abaqus inp files.
+
 `1.5.2`_ - 2021-09-09
 --------------------------
 Fixed
@@ -256,7 +262,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.2...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.3...HEAD
+.. _`1.5.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.1...v1.5.3
 .. _`1.5.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.1...v1.5.2
 .. _`1.5.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.0...v1.5.1
 .. _`1.5.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.10...v1.5.0
