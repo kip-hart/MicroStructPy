@@ -304,9 +304,9 @@ class TriMesh(object):
             elem_type = {2: 'CPS3', 3: 'C3D4'}[n_dim]
 
             abaqus += '*Element, type=' + elem_type + '\n'
-            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(kp + 1) for kp
-                                                     in elem]) + '\n' for
-                               i, elem in enumerate(self.elements)])
+            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(int(kp) + 1)
+                                                     for kp in elm]) + '\n' for
+                               i, elm in enumerate(self.elements)])
 
             # Element sets - seed number
             elset_n_per = 16
