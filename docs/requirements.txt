@@ -1,6 +1,6 @@
 gmsh==4.6.0.post2
 matplotlib==3.2.1
-numpy==1.17.3
+numpy==1.22.0
 pybind11==2.4.3
 sphinx==4.2.0
 sphinx-gallery==0.8.1
