@@ -48,7 +48,11 @@ jobs:
         if [ "${{ matrix.doc-type }}" = epub ]; then echo "art_path=docs/build-epub/MicroStructPy.epub" >> $GITHUB_ENV; fi
         
         # Build PDF
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-fonts-recommended; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-generic-recommended; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-latex-recommended; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-lang-english; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-xetex; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then cd docs/build-latex; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then pdflatex MicroStructPy.tex; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then ls; fi
