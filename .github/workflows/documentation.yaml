@@ -31,14 +31,14 @@ jobs:
     #  run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
 
     - name: Define Docs Path
-      run |
-        if [ "${{ matrix.doc-type }}" = html ]; then echo "docs_path=docs/build-html" >> $DOCS_PATH; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then echo "docs_path=docs/build-latex" >> $DOCS_PATH; fi
-        if [ "${{ matrix.doc-type }}" = epub ]; then echo "docs_path=docs/build-epub" >> $DOCS_PATH; fi
+      run: |
+        if [ "${{ matrix.doc-type }}" = html ]; then echo "docs_path=docs/build-html" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then echo "docs_path=docs/build-latex" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.doc-type }}" = epub ]; then echo "docs_path=docs/build-epub" >> $GITHUB_ENV; fi
         
     - name: Echo Docs Path
       run: |
-        echo ${{ DOCS_PATH }}
+        echo ${{ env.docs_path }}
         
         
 
