@@ -29,20 +29,16 @@ jobs:
         pip install -e .
     - name: Build ${{ matrix.doc-type }} documentation
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
-    - name: Create documentation artifact
+
+    - name: Create html artifact
+      if: ${{ matrix.doc-type }} == "html"
       run: |
-        if [[ "${{ matrix.doc-type }}" == "html" ]]; then
-          echo "docs_path=docs/build-html" >> $GITHUB_ENV
-        elif [[ "${{ matrix.doc-type }}" == "latex" ]]; then
-          echo "docs_path=docs/build-latex" >> $GITHUB_ENV
-          echo "need to create pdf"
-        elif [[ "${{ matrix.doc-type }}" == "epub" ]]; then
-          echo "docs_path=docs/build-epub" >> $GITHUB_ENV
-        else;
-          echo "Do not know what to do with " "${{ matrix.doc-type }}"
-        fi
-    - name: Upload ${{ matrix.doc-type }} documentation
-      uses: actions/upload-artifact@v3
-      with:
-        name: docs_${{ matrix.doc-type }}
-        path: env.docs_path
+        echo "is html"
+
+    - name: Create pdf artifact
+      if: ${{ matrix.doc-type }} == "latex"
+      run: |
+        echo "is pdf"
+        
+        
+
