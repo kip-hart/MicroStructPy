@@ -49,7 +49,6 @@ jobs:
         
         # Build PDF
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-fonts-recommended; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-generic-recommended; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-latex-recommended; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-lang-english; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-xetex; fi
