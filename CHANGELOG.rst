@@ -6,6 +6,24 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.5.4`_ - 2022-04-16
+--------------------------
+Added
+'''''
+- Support for Python 3.9 and 3.10.
+
+Changed
+'''''''
+- Dependent versions of NumPy, SciPy, and matplotlib.
+
+Removed
+'''''''
+- Support for Python 3.7 and below.
+
+Security
+''''''''
+- Upgraded to NumPy v1.22.0 to address overflow vulnerability.
+
 `1.5.3`_ - 2022-03-30
 --------------------------
 Fixed
@@ -262,8 +280,9 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.3...HEAD
-.. _`1.5.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.1...v1.5.3
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.4...HEAD
+.. _`1.5.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.3...v1.5.4
+.. _`1.5.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.2...v1.5.3
 .. _`1.5.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.1...v1.5.2
 .. _`1.5.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.0...v1.5.1
 .. _`1.5.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.10...v1.5.0
