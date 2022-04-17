@@ -20,25 +20,26 @@ jobs:
     - name: Setup Linux Environment
       run: |
         sudo apt-get install libglu1
-    #- name: Install docs dependencies
-    #  run: |
-    #    python -m pip install -r docs/requirements.txt
-    #- name: Install package
-    #  run: |
-    #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    #    pip install -e .
-    #- name: Build ${{ matrix.doc-type }} documentation
-    #  run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
-
-    - name: Define Docs Path
+    - name: Install docs dependencies
       run: |
+        python -m pip install -r docs/requirements.txt
+    - name: Install package
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -e .
+    - name: Build ${{ matrix.doc-type }} documentation
+      run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
+
+    - name: Define document path
+      run: |
+        # Define Path to Documents
         if [ "${{ matrix.doc-type }}" = html ]; then echo "docs_path=docs/build-html" >> $GITHUB_ENV; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then echo "docs_path=docs/build-latex" >> $GITHUB_ENV; fi
         if [ "${{ matrix.doc-type }}" = epub ]; then echo "docs_path=docs/build-epub" >> $GITHUB_ENV; fi
         
-    - name: Echo Docs Path
+    - name: LS document path
       run: |
-        echo ${{ env.docs_path }}
+        ls ${{ env.docs_path }}
         
         
 
