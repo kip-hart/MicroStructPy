@@ -44,8 +44,14 @@ jobs:
       run: |
         # Define Path to Upload
         if [ "${{ matrix.doc-type }}" = html ]; then echo "art_path=docs/build-html" >> $GITHUB_ENV; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then echo "art_path=docs/build-latex" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then echo "art_path=docs/build-latex/MicroStructPy.pdf" >> $GITHUB_ENV; fi
         if [ "${{ matrix.doc-type }}" = epub ]; then echo "art_path=docs/build-epub/MicroStructPy.epub" >> $GITHUB_ENV; fi
+        
+        # Build PDF
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-latex-recommended; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then pdflatex docs/build-latex/MicroStructPy.tex; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then ls docs/build-latex; fi
+        
         
     - name: Upload artifact
       uses: actions/upload-artifact@v3
