@@ -29,16 +29,6 @@ jobs:
         pip install -e .
     - name: Build ${{ matrix.doc-type }} documentation
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
-
-    - name: Define document path
-      run: |
-        if [ "${{ matrix.doc-type }}" = html ]; then echo "docs_path=docs/build-html" >> $GITHUB_ENV; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then echo "docs_path=docs/build-latex" >> $GITHUB_ENV; fi
-        if [ "${{ matrix.doc-type }}" = epub ]; then echo "docs_path=docs/build-epub" >> $GITHUB_ENV; fi
-        
-    - name: LS document path
-      run: |
-        ls ${{ env.docs_path }}
         
     - name: Prepare documentation artifact
       run: |
@@ -55,7 +45,6 @@ jobs:
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install latexmk; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then cd docs/build-latex; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then make; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then ls; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then cd -; fi
         
         
