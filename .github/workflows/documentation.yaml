@@ -1,10 +1,15 @@
+
 name: Documentation check
 
 on: [pull_request]
 
-jobs:
-  initial:
-    name: build environment
+jobs:   
+  docs-checks:
+    name: ${{ matrix.doc-type }}
+    strategy:
+      matrix:
+        doc-type: [html, latex, epub]
+    
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -22,27 +27,16 @@ jobs:
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
-        
-  docs-checks-html:
-    name: Build html documentation
-    runs-on: ubuntu-latest
-    needs: initial
-    steps:
-    - name: Build html documentation
-      run: sphinx-build -Wnb html docs/source/ docs/build-html/
-        
-  docs-checks-pdf:
-    name: Build latex documentation
-    needs: initial
-    runs-on: ubuntu-latest
-    steps:
-    - name: Build pdf documentation
-      run: sphinx-build -Wnb pdf docs/source/ docs/build-pdf/
-        
-  docs-checks-epub:
-    name: Build epub documentation
-    needs: initial
-    runs-on: ubuntu-latest
-    steps:
-    - name: Build epub documentation
-      run: sphinx-build -Wnb epub docs/source/ docs/build-epub/
+    - name: Build ${{ matrix.doc-type }} documentation
+      run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
+    - name: Define varibles
+      run: |
+        if [[ "${{ matrix.doc-type }}" == "html" ]]; then
+          echo "found html"
+          docs_path = docs/build-html
+        fi
+    #- name: Upload ${{ matrix.doc-type }} documentation
+    #  uses: actions/upload-artifact@v3
+    #  with:
+    #    name: docs_${{ matrix.doc-type }}
+    #    path: docs/build-${{ matrix.doc-type }}/
