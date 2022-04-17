@@ -20,13 +20,13 @@ jobs:
     - name: Setup Linux Environment
       run: |
         sudo apt-get install libglu1
-    - name: Install docs dependencies
-      run: |
-        python -m pip install -r docs/requirements.txt
-    - name: Install package
-      run: |
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install -e .
+    #- name: Install docs dependencies
+    #  run: |
+    #    python -m pip install -r docs/requirements.txt
+    #- name: Install package
+    #  run: |
+    #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    #    pip install -e .
     #- name: Build ${{ matrix.doc-type }} documentation
     #  run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
 
