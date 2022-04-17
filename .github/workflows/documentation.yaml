@@ -32,12 +32,12 @@ jobs:
     - name: Create documentation artifact
       run: |
         if [[ "${{ matrix.doc-type }}" == "html" ]]; then
-          docs_path=docs/build-html
+          echo "docs_path=docs/build-html" >> $GITHUB_ENV
         elif [[ "${{ matrix.doc-type }}" == "latex" ]]; then
-          docs_path=docs/build-latex
+          echo "docs_path=docs/build-latex" >> $GITHUB_ENV
           echo "need to create pdf"
         elif [[ "${{ matrix.doc-type }}" == "epub" ]]; then
-          docs_path=docs/build-epub
+          echo "docs_path=docs/build-epub" >> $GITHUB_ENV
         else;
           echo "Do not know what to do with " "${{ matrix.doc-type }}"
         fi
@@ -45,4 +45,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: docs_${{ matrix.doc-type }}
-        path: ${{ docs_path }}
+        path: env.docs_path
