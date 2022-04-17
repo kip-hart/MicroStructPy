@@ -3,6 +3,7 @@ MicroStructPy - Microstructure Mesh Generation in Python
 
 |s-ci|
 |s-license|
+|s-versions|
 
 |s-doi1|
 |s-doi2|
@@ -199,6 +200,10 @@ advised by Prof. Julian Rimoli.
 .. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
+
+.. |s-versions| image:: https://img.shields.io/pypi/pyversions/microstructpy
+    :target: https://pypi.org/project/microstructpy/
+    :alt: Python Versions
 
 .. |s-doi1| image:: https://img.shields.io/badge/DOI-10.1016%2Fj.cma.2020.113242-blue
    :target: https://doi.org/10.1016/j.cma.2020.113242
