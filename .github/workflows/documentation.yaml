@@ -29,14 +29,20 @@ jobs:
         pip install -e .
     - name: Build ${{ matrix.doc-type }} documentation
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
-    - name: Define varibles
+    - name: Create documentation artifact
       run: |
         if [[ "${{ matrix.doc-type }}" == "html" ]]; then
-          echo "found html"
-          docs_path = docs/build-html
+          docs_path=docs/build-html
+        elif [[ "${{ matrix.doc-type }}" == "latex" ]]; then
+          docs_path=docs/build-latex
+          echo "need to create pdf"
+        elif [[ "${{ matrix.doc-type }}" == "epub" ]]; then
+          docs_path=docs/build-epub
+        else;
+          echo "Do not know what to do with " "${{ matrix.doc-type }}"
         fi
-    #- name: Upload ${{ matrix.doc-type }} documentation
-    #  uses: actions/upload-artifact@v3
-    #  with:
-    #    name: docs_${{ matrix.doc-type }}
-    #    path: docs/build-${{ matrix.doc-type }}/
+    - name: Upload ${{ matrix.doc-type }} documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: docs_${{ matrix.doc-type }}
+        path: ${{docs_path}}
