@@ -27,18 +27,18 @@ jobs:
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
-    - name: Build ${{ matrix.doc-type }} documentation
-      run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
+    #- name: Build ${{ matrix.doc-type }} documentation
+    #  run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
 
-    - name: Create html artifact
-      if: ${{ matrix.doc-type }} == "html"
+    - name: Define Docs Path
+      run |
+        if [ "${{ matrix.doc-type }}" = html ]; then echo "docs_path=docs/build-html" >> $DOCS_PATH; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then echo "docs_path=docs/build-latex" >> $DOCS_PATH; fi
+        if [ "${{ matrix.doc-type }}" = epub ]; then echo "docs_path=docs/build-epub" >> $DOCS_PATH; fi
+        
+    - name: Echo Docs Path
       run: |
-        echo "is html"
-
-    - name: Create pdf artifact
-      if: ${{ matrix.doc-type }} == "latex"
-      run: |
-        echo "is pdf"
+        echo ${{ DOCS_PATH }}
         
         
 
