@@ -28,3 +28,8 @@ jobs:
         pip install -e .
     - name: Build ${{ matrix.doc-type }} documentation
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
+    - name: Upload ${{ matrix.doc-type }} documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: docs_${{ matrix.doc-type }}
+        path: docs/build-${{ matrix.doc-type }}/
