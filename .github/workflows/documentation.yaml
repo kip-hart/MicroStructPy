@@ -52,7 +52,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: microstructpy_${{ matrix.doc-type }}_documentation
-        path: ${{ env.art_path }}
-        
-        
+        path: ${{ env.art_path }} 
 
