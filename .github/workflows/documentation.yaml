@@ -53,7 +53,7 @@ jobs:
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-lang-english; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-xetex; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then cd docs/build-latex; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then pdflatex MicroStructPy.tex; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then make; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then ls; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then cd -; fi
         
