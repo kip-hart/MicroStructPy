@@ -1,3 +1,4 @@
+
 name: Documentation check
 
 on: [pull_request]
@@ -28,3 +29,28 @@ jobs:
         pip install -e .
     - name: Build ${{ matrix.doc-type }} documentation
       run: sphinx-build -Wnb ${{ matrix.doc-type }} docs/source/ docs/build-${{ matrix.doc-type }}/
+        
+    - name: Prepare documentation artifact
+      run: |
+        # Define Path to Upload
+        if [ "${{ matrix.doc-type }}" = html ]; then echo "art_path=docs/build-html" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then echo "art_path=docs/build-latex/MicroStructPy.pdf" >> $GITHUB_ENV; fi
+        if [ "${{ matrix.doc-type }}" = epub ]; then echo "art_path=docs/build-epub/MicroStructPy.epub" >> $GITHUB_ENV; fi
+        
+        # Build PDF 
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-fonts-recommended; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-latex-recommended; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-lang-english; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-xetex; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install latexmk; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then cd docs/build-latex; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then make; fi
+        if [ "${{ matrix.doc-type }}" = latex ]; then cd -; fi
+        
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: microstructpy_${{ matrix.doc-type }}_documentation
+        path: ${{ env.art_path }} 
+
