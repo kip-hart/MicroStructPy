@@ -1166,51 +1166,138 @@ class RasterMesh(TriMesh):
             n_kp = len(self.elements[0])
             mesh_type = {4: 'Pixel', 8: 'Voxel'}[n_kp]
             pt_fmt = '{: f} {: f} {: f}\n'
+
+            # Dimensions
+            coords = [list(set(ax)) for ax in zip(*self.points)]
+            if len(coords) < 3:
+                coords.append([0])  # force z=0 for 2D meshes
+            dims = [len(c) for c in coords]
+            n_dim = len(dims)
+
+
             # write heading
             vtk = '# vtk DataFile Version 2.0\n'
             vtk += '{} mesh\n'.format(mesh_type)
             vtk += 'ASCII\n'
-            vtk += 'DATASET UNSTRUCTURED_GRID\n'
+            vtk += 'DATASET RECTILINEAR_GRID\n'
+            vtk += 'DIMENSIONS {} {} {}\n'.format(*dims)
 
-            # Write points
-            vtk += 'POINTS ' + str(len(self.points)) + ' float\n'
-            if len(self.points[0]) == 2:
-                vtk += ''.join([pt_fmt.format(x, y, 0) for x, y in
-                                self.points])
-            else:
-                vtk += ''.join([pt_fmt.format(x, y, z) for x, y, z in
-                                self.points])
-
-            # write elements
-            n_elem = len(self.elements)
-            cell_fmt = str(n_kp) + n_kp * ' {}' + '\n'
-            cell_sz = (1 + n_kp) * n_elem
-            vtk += '\nCELLS ' + str(n_elem) + ' ' + str(cell_sz) + '\n'
-            vtk += ''.join([cell_fmt.format(*el) for el in self.elements])
-
-            # write cell type
-            vtk += '\nCELL_TYPES ' + str(n_elem) + '\n'
-            cell_type = {4: '9', 8: '12'}[n_kp]
-            vtk += ''.join(n_elem * [cell_type + '\n'])
+            # write points
+            for ind, ax in enumerate(['X', 'Y', 'Z']):
+                vtk += '{}_COORDINATES {} float\n'.format(ax, dims[ind])
+                line = ''
+                for x in coords[ind]:
+                    x_str = '{:f}'.format(x)
+                    if len(line) == 0:
+                        line = x_str
+                    elif len(line) + len(' ') + len(x_str) < 80:
+                        line += ' ' + x_str
+                    else:
+                        vtk += line + '\n'
+                        line = x_str
+                vtk += line + '\n'
 
             # write element attributes
-            try:
-                int(self.element_attributes[0])
-                att_type = 'int'
-            except TypeError:
-                att_type = 'float'
+            vtk += 'CELL_DATA {}\n'.format(len(self.element_attributes))
+            vtk += 'SCALARS element_attributes float\n'
+            vtk += 'LOOKUP_TABLE default\n'
+            line = ''
+            phase_nums = ''
+            phase_line = ''
+            pts = np.array(self.points)
+            elems = np.sort(self.elements)
+            if len(coords[-1]) == 1: # 2D
+                for y_ind in range(len(coords[1][:-1])):
+                    y_mask_ind = pts[:, 1] == coords[1][y_ind]
+                    y_mask_ip1 = pts[:, 1] == coords[1][y_ind]
+                    y_mask = y_mask_ind | y_mask_ip1
 
-            vtk += '\nCELL_DATA ' + str(n_elem) + '\n'
-            vtk += 'SCALARS element_attributes ' + att_type + ' 1 \n'
-            vtk += 'LOOKUP_TABLE element_attributes\n'
-            vtk += ''.join([str(a) + '\n' for a in self.element_attributes])
+                    for x_ind in range(len(coords[0][:-1])):
+                        # mask self.points
+                            x_mask_ind = pts[:, 0] == coords[0][x_ind]
+                            x_mask_ip1 = pts[:, 0] == coords[0][x_ind + 1]
+                            x_mask = x_mask_ind | x_mask_ip1
 
-            # Write phase numbers
-            if seeds is not None:
-                vtk += '\nSCALARS phase_numbers int 1 \n'
-                vtk += 'LOOKUP_TABLE phase_numbers\n'
-                vtk += ''.join([str(seeds[a].phase) + '\n' for a in
-                                self.element_attributes])
+                            mask = x_mask & y_mask
+                            el = np.where(mask)
+                            e_ind = np.where(np.all(elems == el, axis=1))[0][0]
+
+                            # element attribute
+                            att = self.element_attributes[e_ind]
+                            att_str = '{:f}'.format(att)
+                            if len(line) == 0:
+                                line += att_str
+                            elif len(line) + len(' ') + len(att_str) < 80:
+                                line += ' ' + att_str
+                            else:
+                                vtk += line + '\n'
+                                line = att_str
+
+                            # phase number
+                            if seeds is not None:
+                                phase = seeds[att].phase
+                                p_str = str(int(phase))
+                                if len(phase_line) == 0:
+                                    phase_line = p_str
+                                elif len(line) + len(' ') + len(p_str) < 80:
+                                    phase_line += ' ' + p_str
+                                else:
+                                    phase_nums += phase_line + '\n'
+                                    phase_line = p_str
+                vtk += line + '\n'
+                if seeds is not None:
+                    vtk += 'SCALARS phase_numbers int\n'
+                    vtk += 'LOOKUP_TABLE default\n'
+                    vtk += phase_nums + phase_line + '\n'
+
+            else:
+                for z_ind in range(len(coords[2][:-1])):
+                    z_mask_ind = pts[:, 2] == coords[2][z_ind]
+                    z_mask_ip1 = pts[:, 2] == coords[2][z_ind + 1]
+                    z_mask = z_mask_ind | z_mask_ip1
+
+                    for y_ind in range(len(coords[1][:-1])):
+                        y_mask_ind = pts[:, 1] == coords[1][y_ind]
+                        y_mask_ip1 = pts[:, 1] == coords[1][y_ind + 1]
+                        y_mask = y_mask_ind | y_mask_ip1
+
+                        for x_ind in range(len(coords[0][:-1])):
+                            # mask self.points
+                            x_mask_ind = pts[:, 0] == coords[0][x_ind]
+                            x_mask_ip1 = pts[:, 0] == coords[0][x_ind + 1]
+                            x_mask = x_mask_ind | x_mask_ip1
+
+                            mask = x_mask & y_mask & z_mask
+                            el = np.where(mask)
+                            e_ind = np.where(np.all(elems == el, axis=1))[0][0]
+
+                            # element attribute
+                            att = self.element_attributes[e_ind]
+                            att_str = '{:f}'.format(att)
+                            if len(line) == 0:
+                                line += att_str
+                            elif len(line) + len(' ') + len(att_str) < 80:
+                                line += ' ' + att_str
+                            else:
+                                vtk += line + '\n'
+                                line = att_str
+
+                            # phase number
+                            if seeds is not None:
+                                phase = seeds[att].phase
+                                p_str = str(int(phase))
+                                if len(phase_line) == 0:
+                                    phase_line = p_str
+                                elif len(line) + len(' ') + len(p_str) < 80:
+                                    phase_line += ' ' + p_str
+                                else:
+                                    phase_nums += phase_line + '\n'
+                                    phase_line = p_str
+                vtk += line + '\n'
+                if seeds is not None:
+                    vtk += 'SCALARS phase_numbers int\n'
+                    vtk += 'LOOKUP_TABLE default\n'
+                    vtk += phase_nums + phase_line + '\n'
 
             with open(filename, 'w') as file:
                 file.write(vtk)
