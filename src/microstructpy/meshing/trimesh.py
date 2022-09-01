@@ -1019,6 +1019,8 @@ class RasterMesh(TriMesh):
         See the :ref:`s_tri_file_io` section of the :ref:`c_file_formats`
         guide for more details on these formats.
 
+        VTK files use the `RECTILINEAR_GRID` data type.
+
         Args:
             filename (str): The name of the file to write.
             format (str): {'abaqus' | 'txt' | 'vtk'}
