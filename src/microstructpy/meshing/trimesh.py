@@ -1170,7 +1170,8 @@ class RasterMesh(TriMesh):
             pt_fmt = '{: f} {: f} {: f}\n'
 
             # Dimensions
-            coords = [list(set(ax)) for ax in zip(*self.points)]
+            pts = np.array(self.points)
+            coords = [np.unique(ax) for ax in pts.T]
             if len(coords) < 3:
                 coords.append([0])  # force z=0 for 2D meshes
             dims = [len(c) for c in coords]

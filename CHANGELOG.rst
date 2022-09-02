@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.5.6`_ - 2022-09-01
+--------------------------
+Fixed
+'''''''
+- Bug in RasterMesh VTK writer.
+
 `1.5.5`_ - 2022-08-31
 --------------------------
 Changed
@@ -286,7 +292,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.5...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.6...HEAD
+.. _`1.5.6`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.5...v1.5.6
 .. _`1.5.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.4...v1.5.5
 .. _`1.5.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.3...v1.5.4
 .. _`1.5.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.2...v1.5.3
