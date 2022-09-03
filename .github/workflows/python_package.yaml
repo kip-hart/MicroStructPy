@@ -46,7 +46,7 @@ jobs:
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
-        coveralls
+        COVERALLS_FLAG_NAME=py${{ matrix.python-version }} on ${{ matrix.os }} coveralls
         
   package-checks:
     name: package checks
