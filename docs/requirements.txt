@@ -1,4 +1,4 @@
-gmsh==4.6.0.post2
+gmsh==4.10.5
 matplotlib==3.5.1
 numpy==1.22.0
 pybind11==2.4.3
