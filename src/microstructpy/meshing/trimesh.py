@@ -561,7 +561,8 @@ class TriMesh(object):
     # ----------------------------------------------------------------------- #
     # Write Function                                                          #
     # ----------------------------------------------------------------------- #
-    def write(self, filename, format='txt', seeds=None, polymesh=None):
+    def write(self, filename, format='txt', seeds=None, polymesh=None,
+              plane_stress=True):
         """Write mesh to file.
 
         This function writes the contents of the mesh to a file.
@@ -583,6 +584,11 @@ class TriMesh(object):
                 generating the triangular mesh. If given, will add surface
                 unions to Abaqus files - for easier specification of
                 boundary conditions.
+            plain_stress (bool): *(optional)* Flag to use plane stress or
+                plain strain elements for 2D meshes written with the ``abaqus``
+                format. Setting the flag to ``True`` indicates plain stress,
+                while ``False`` indicates plain strain. This flag is ignored
+                in 3D meshes. Defaults to ``True``.
 
         """  # NOQA: E501
         fmt = format.lower()
@@ -594,7 +600,11 @@ class TriMesh(object):
             nc_el = len(self.elements)
             n_dim = len(self.points[0])
             n_kps = len(self.elements[0])
-            cont_type = _misc.abaqus_el_types[n_dim]
+            if plane_stress:
+                cont_2d = 'CPS3'
+            else:
+                cont_2d = 'CPE3'
+            cont_type = {2: cont_2d, 3: 'C3D4'}[n_dim]
             hdr_str = '** Mesh Produced by MicroStructPy\n'
             hdr_str += '** Number of Nodes: {}\n'.format(n_pts)
             hdr_str += '** Number of Continuum Elements: {}\n'.format(nc_el)
@@ -606,7 +616,7 @@ class TriMesh(object):
                 has_coh = False
             else:
                 has_coh = True
-                coh_type = _misc.abaqus_coh_types[n_dim]
+                coh_type = {2: 'COH2D4', 3: 'COH3D6'}[n_dim]
                 hdr_str += '** Number of Cohesive Elements: {}\n'.format(n_coh)
                 hdr_str += '** Cohesive Element Type: {}\n'.format(coh_type)
             abaqus += hdr_str

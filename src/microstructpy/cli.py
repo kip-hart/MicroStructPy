@@ -228,8 +228,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         edge_opt_n_iter=100, mesher='Triangle/TetGen',
         mesh_max_volume=float('inf'), mesh_min_angle=0,
         mesh_max_edge_length=float('inf'), mesh_size=float('inf'),
-        add_cohesive=False, verify=False, color_by='material',
-        colormap='viridis', seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
+        plane_stress=True, add_cohesive=False, verify=False,
+        color_by='material', colormap='viridis',
+        seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
     r"""Run MicroStructPy
 
     This is the primary run function for the package. It performs these steps:
@@ -320,6 +321,11 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         mesh_size (float): The target size of the mesh elements. This
             option is used with gmsh. Default is infinity, whihch turns off
             this control.
+        plane_stress (bool): *(optional)* Option to specify plain stress or
+            plain strain elements for 2D mesh outputs. Currently this is only
+            supported by the ``abaqus`` filetype. Setting the flag to ``True``
+            indicates plane stress, while ``False`` indicates plane strain.
+            Defaults to ``True``.
         add_cohesive (bool): *(optional)* Option to add cohesive elements at
             grain boundaries in the triangular mesh. This will create separate
             mesh files from the triangular mesh, with the cohesive elements.
@@ -541,7 +547,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     for tri_type in tri_types:
         fname = tri_filename.replace('.txt', exts[tri_type])
         if tri_created or not os.path.exists(fname):
-            tmesh.write(fname, tri_type, seeds, pmesh)
+            tmesh.write(fname, tri_type, seeds, pmesh, plane_stress)
 
     # ----------------------------------------------------------------------- #
     # Plot Triangular Mesh                                                    #
@@ -604,7 +610,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     for cohesive_type in cohesive_types:
         fname = coh_filename.replace('.txt', exts[cohesive_type])
         if cmesh_created or not os.path.exists(fname):
-            cmesh.write(fname, cohesive_type, seeds, pmesh)
+            cmesh.write(fname, cohesive_type, seeds, pmesh, plane_stress)
 
     # ----------------------------------------------------------------------- #
     # Perform Verification                                                    #
