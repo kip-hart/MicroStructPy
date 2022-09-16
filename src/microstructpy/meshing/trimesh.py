@@ -61,18 +61,36 @@ class TriMesh(object):
         facet_attributes (list, numpy.ndarray): *(optional)* A number
             associated with each facet.
             Defaults to None.
+        cohesive_elements (list, numpy.ndarray): *(optional)* Cohesive elements
+            between continuum elements.
+        cohesive_attributes (list, numpy.ndarray): *(optional)* Attributes of
+            cohesive elements.
+        cohesive_norm_pos_elements (list, numpy.ndarray): *(optional)* Element
+            number with the postive normal vector for the cohesive element.
+        cohesive_norms (list, numpy.ndarray): *(optional)* Unit normal vector
+            for the cohesive element.
 
     """
     # ----------------------------------------------------------------------- #
     # Constructors                                                            #
     # ----------------------------------------------------------------------- #
     def __init__(self, points, elements, element_attributes=None, facets=None,
-                 facet_attributes=None):
+                 facet_attributes=None, cohesive_elements=None,
+                 cohesive_attributes=None, cohesive_norm_pos_elements=None,
+                 cohesive_norms=None):
         self.points = points
         self.elements = elements
         self.element_attributes = element_attributes
         self.facets = facets
         self.facet_attributes = facet_attributes
+        if cohesive_elements is not None:
+            self.cohesive_elements = cohesive_elements
+        if cohesive_attributes is not None:
+            self.cohesive_attributes = cohesive_attributes
+        if cohesive_norm_pos_elements is not None:
+            self.cohesive_norm_pos_elements = cohesive_norm_pos_elements
+        if cohesive_norms is not None:
+            self.cohesive_norms = cohesive_norms
 
     @classmethod
     def from_file(cls, filename):
@@ -96,10 +114,18 @@ class TriMesh(object):
             elem_atts = []
             facets = []
             facet_atts = []
+            coh_elems = []
+            coh_atts = []
+            coh_npe = []
+            coh_norms = []
 
             n_eas = 0
             n_facets = 0
             n_fas = 0
+            n_coh = 0
+            n_coha = 0
+            n_npe = 0
+            n_norm = 0
             for line in file.readlines():
                 if 'Mesh Points'.lower() in line.lower():
                     n_pts = int(line.split(':')[1])
@@ -116,6 +142,18 @@ class TriMesh(object):
                 elif 'Facet Attributes'.lower() in line.lower():
                     n_fas = int(line.split(':')[1])
                     stage = 'facet attributes'
+                elif 'Cohesive Elements'.lower() in line.lower():
+                    n_coh = int(line.split(':')[1])
+                    stage = 'cohesive elements'
+                elif 'Cohesive Attributes'.lower() in line.lower():
+                    n_coha = int(line.split(':')[1])
+                    stage = 'cohesive attributes'
+                elif 'Cohesive Norm Positive Elements'.lower() in line.lower():
+                    n_npe = int(line.split(':')[1])
+                    stage = 'cohesive norm positive elements'
+                elif 'Cohesive Normals'.lower() in line.lower():
+                    n_norm = int(line.split(':')[1])
+                    stage = 'cohesive normals'
                 else:
                     if stage == 'points':
                         pts.append([float(x) for x in line.split(',')])
@@ -129,6 +167,15 @@ class TriMesh(object):
                     elif stage == 'facet attributes':
                         if n_fas > 0:
                             facet_atts.append(_misc.from_str(line))
+                    elif stage == 'cohesive elements' and n_coh > 0:
+                        coh_elems.append([int(kp) for kp in line.split(',')])
+                    elif stage == 'cohesive attributes' and n_coha > 0:
+                        coh_atts.append(_misc.from_str(line))
+                    elif stage == 'cohesive norm positive elements':
+                        if n_npe > 0:
+                            coh_npe.append(_misc.from_str(line))
+                    elif stage == 'cohesive normals' and n_norm > 0:
+                        coh_norms.append([float(x) for x in line.split(',')])
                     else:
                         pass
 
@@ -138,8 +185,18 @@ class TriMesh(object):
         assert len(elem_atts) == n_eas
         assert len(facets) == n_facets
         assert len(facet_atts) == n_fas
+        
+        assert len(coh_elems) == n_coh
+        assert len(coh_atts) == n_coha
+        assert len(coh_npe) == n_npe
+        assert len(coh_norms) == n_norm
 
-        return cls(pts, elems, elem_atts, facets, facet_atts)
+        if n_coh == 0:
+            tmesh = cls(pts, elems, elem_atts, facets, facet_atts)
+        else:
+            tmesh = cls(pts, elems, elem_atts, facets, facet_atts,
+                        coh_elems, coh_atts, coh_npe, coh_norms)
+        return tmesh
 
     @classmethod
     def from_polymesh(cls, polymesh, phases=None, mesher='Triangle/Tetgen',
@@ -246,6 +303,38 @@ class TriMesh(object):
         except TypeError:
             pass
 
+        try:
+            str_str += '\nCohesive Elements: '
+            str_str += str(len(self.cohesive_elements)) + '\n'
+            str_str += '\n'.join(['\t' + str(tuple(e))[1:-1] for e in
+                                  self.cohesive_elements])
+        except AttributeError:
+            pass
+
+        try:
+            str_str += '\nCohesive Attributes: '
+            str_str += str(len(self.cohesive_attributes)) + '\n'
+            str_str += '\n'.join(['\t' + str(a) for a in 
+                                  self.cohesive_attributes])
+        except AttributeError:
+            pass
+
+        try:
+            str_str += '\nCohesive Norm Positive Elements: '
+            str_str += str(len(self.cohesive_norm_pos_elements)) + '\n'
+            str_str += '\n'.join(['\t' + str(a) for a in 
+                                  self.cohesive_norm_pos_elements])
+        except AttributeError:
+            pass
+
+        try:
+            str_str += '\nCohesive Normals: '
+            str_str += str(len(self.cohesive_norms)) + '\n'
+            str_str += ''.join([pt_fmt.format(pt=p) + '\n' for p in
+                                self.cohesive_norms])
+        except AttributeError:
+            pass
+
         return str_str
 
     def __repr__(self):
@@ -253,8 +342,221 @@ class TriMesh(object):
         repr_str += ', '.join([repr(v) for v in (self.points, self.elements,
                                self.element_attributes, self.facets,
                                self.facet_attributes)])
+        try:
+            repr_str += ', ' + repr(self.cohesive_elements)
+        except AttributeError:
+            pass
+        try:
+            repr_str += ', ' + repr(self.cohesive_attributes)
+        except AttributeError:
+            pass
+        try:
+            repr_str += ', ' + repr(self.cohesive_norm_pos_elements)
+        except AttributeError:
+            pass
+        try:
+            repr_str += ', ' + repr(self.cohesive_norms)
+        except AttributeError:
+            pass
         repr_str += ')'
         return repr_str
+
+    # ----------------------------------------------------------------------- #
+    # Write Function                                                          #
+    # ----------------------------------------------------------------------- #
+    def add_cohesive_elements(self, polymesh, verbose=False):
+        """Add cohesive elements to the triangular mesh.
+
+        This function adds cohesive elements to the mesh. It does so by
+        duplicating nodes and facets at grain boundaries and inserting
+        zero-thickness cohesive elements at those boundaries. This method works
+        for both 2D and 3D meshes.
+
+        Running this function will change the attributes of the object. Points
+        are added to the points list, then elements and facets are redefined.
+        Currently there is no way to undo adding cohesive elements to a mesh.
+
+        The cohesive elements attributes added to the object are:
+
+        * ``cohesive_elements``: Indices of the points defining each cohesive
+        * ``cohesive_attributes``: Grain boundary index of each cohesive
+        * ``cohesive_norm_pos_elements``: Element number for the bottom of the
+            cohesive
+        * ``cohesive_norms``: Unit normal vector of the cohesive
+
+        These attributes are used by the ``write`` method when
+        ``format='abaqus'``, for finite element modeling of microstructures
+        with crack growth at grain boundaries.
+
+        Args:
+            polymesh (PolyMesh): The polygonal mesh used to create this mesh.
+            verbose (bool): Option to display progress towards creating the
+                cohesive elements. Dafault is ``false``.
+
+        """
+        if verbose:
+            print('----', 'Creating Cohesive Elements')
+        # Read PolyMesh and TriMesh
+        if verbose:
+            print('- Reading Polygonal and Triangular Meshes')
+        n_dim = len(polymesh.points[0])
+        # Sort TriMesh Element Keypoints for Positive Volume
+        if verbose:
+            print('- Sorting Element Keypoints for Positive Volume')
+        self.elements = np.array([e[_sort_element([self.points[k] for k
+                                                    in e])] for e in 
+                                   np.array(self.elements)])
+
+        # Duplicate Nodes at Grain Interfaces and Update Element Keypoints
+        if verbose:
+            print('- Duplicating Nodes at Grain Interfaces')
+
+        new_pts = [pt for pt in self.points]
+        new_elems = []
+        n_nodes_init = len(self.points)
+        node_seeds = {i: [] for i in range(n_nodes_init)}
+        node_new_nums = {i: [] for i in range(n_nodes_init)}
+        n_nodes = n_nodes_init
+        for elem, elem_att in zip(self.elements, self.element_attributes):
+            new_elem = []
+            for kp in elem:
+                n_seeds = node_seeds[kp]
+                n_nums = node_new_nums[kp]
+
+                if elem_att not in n_seeds:
+                    if len(n_nums) == 0:
+                        node_num = kp
+                    else:
+                        new_pts.append(self.points[kp])
+                        node_num = n_nodes
+                        n_nodes += 1
+
+                    n_seeds.append(elem_att)
+                    n_nums.append(node_num)
+                else:
+                    ind = n_seeds.index(elem_att)
+                    node_num = n_nums[ind]
+
+                new_elem.append(node_num)
+            new_elems.append(new_elem)
+
+        # Connect Facets to Elements and Create Cohesive Elements
+        if verbose:
+            print('- Create Cohesive Element for Each Facet')
+        facet2elems = {}
+        facet2missing = {}
+
+        coh_elems = []
+        pfacet_nums = []
+        coh_pos_elems = []
+        coh_norms = []
+
+        new_tfacets = []
+        new_tfacet_tups = []
+        new_tfacet_atts = []
+        new_tfacet_polynums = []
+        new_tfacet_neighs = []
+
+        n_facet = len(self.facet_attributes)
+        print_cutoff = 0
+        print_inc = 5
+        for f_num, facet in enumerate(self.facets):
+            if verbose:
+                f_perc = 100 * (f_num + 1) / n_facet
+                if f_perc >= print_cutoff:
+                    print('{}%'.format(int(print_cutoff)))
+                    print_cutoff += print_inc
+            # Determine Elements Connected to Facet
+            elems = np.copy(self.elements)
+            elem_inds = np.arange(len(elems))
+            for kp in facet:
+                mask = np.any(elems == kp, axis=1)
+                elems = elems[mask]
+                elem_inds = elem_inds[mask]
+            assert len(elem_inds) in (1, 2), str(elem_inds)
+            facet2elems[f_num] = elem_inds
+
+            pmesh_f = self.facet_attributes[f_num]
+            neighs = polymesh.facet_neighbors[pmesh_f]
+            neigh_num = min(min(neighs), 0)
+
+            # Create New Facet for Each Element
+            missing_inds = []
+            for elem_num in elem_inds:
+                elem = self.elements[elem_num]
+                missing_ind = np.argmin(np.isin(elem, facet))
+
+                outward_inds = _misc.outward_dict[n_dim][missing_ind]
+                outward_facet = np.array(new_elems[elem_num])[outward_inds]
+                seed_num = self.element_attributes[elem_num]
+
+                facet_tuple = (elem_num, missing_ind)
+
+                new_tfacets.append(outward_facet)
+                new_tfacet_tups.append(facet_tuple)
+                new_tfacet_atts.append(seed_num)
+                new_tfacet_polynums.append(pmesh_f)
+                new_tfacet_neighs.append(neigh_num)
+                missing_inds.append(missing_ind)
+
+            assert len(elem_inds) in (1, 2)
+
+            # Create Cohesive Element
+            if len(elem_inds) == 2:
+                # Get the first facet of the element
+                outward_facets = new_tfacets[-2:]
+                tups = new_tfacet_tups[-2:]
+                f1 = outward_facets[0]
+                t1 = tups[0]
+
+                # Order the second facet according to the indices of the first
+                out_inds = _misc.outward_dict[n_dim][t1[1]]
+                old_f1 = np.array(self.elements[t1[0]])[out_inds]
+                seed_f2 = new_tfacet_atts[-1]
+                f2 = []
+                for kp in old_f1:
+                    kp_seeds = node_seeds[kp]
+                    kp_nums = node_new_nums[kp]
+                    ind = kp_seeds.index(seed_f2)
+                    node_num = kp_nums[ind]
+                    f2.append(node_num)
+
+                # Flip if 2D
+                if n_dim == 2:
+                    f2.reverse()
+
+                # Get normal vector
+                facet_pts = np.array([self.points[kp] for kp in old_f1])
+                coh_norm = _facet_norm(facet_pts)
+
+                coh_elem = np.concatenate((f1, f2))
+                pfacet_num = self.facet_attributes[f_num]
+                coh_elems.append(coh_elem)
+                pfacet_nums.append(pfacet_num)
+                coh_pos_elems.append(t1[0])
+                coh_norms.append(coh_norm)
+
+            facet2missing[f_num] = missing_inds
+
+        # Adding New Attributes to TriMesh
+        if verbose:
+            print('- Adding New Attributes to TriMesh')
+        self.facet_polynums = new_tfacet_polynums
+        self.facet_attributes = new_tfacet_atts
+        self.facet_tuples = new_tfacet_tups
+        self.facet_exterior = new_tfacet_neighs
+
+        # Update TriMesh
+        if verbose:
+            print('- Updating TriMesh')
+        self.points = new_pts
+        self.elements = new_elems
+        self.facets = new_tfacets
+
+        self.cohesive_elements = coh_elems
+        self.cohesive_attributes = pfacet_nums
+        self.cohesive_norm_pos_elements = coh_pos_elems
+        self.cohesive_norms = coh_norms
 
     # ----------------------------------------------------------------------- #
     # Write Function                                                          #
@@ -285,126 +587,127 @@ class TriMesh(object):
         """  # NOQA: E501
         fmt = format.lower()
         if fmt == 'abaqus':
-            # write top matter
-            abaqus = '*Heading\n'
-            abaqus += '** Job name: microstructure '
-            abaqus += 'Model name: microstructure_model\n'
-            abaqus += '** Generated by: MicroStructPy\n'
+            abaqus = ''
 
-            # write parts
-            abaqus += '**\n** PARTS\n**\n'
-            abaqus += '*Part, name=Part-1\n'
-
-            abaqus += '*Node\n'
-            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(x) for x in
-                               pt]) + '\n' for i, pt in
-                               enumerate(self.points)])
-
+            # header
+            n_pts = len(self.points)
+            nc_el = len(self.elements)
             n_dim = len(self.points[0])
-            elem_type = {2: 'CPS3', 3: 'C3D4'}[n_dim]
+            n_kps = len(self.elements[0])
+            cont_type = _misc.abaqus_el_types[n_dim]
+            hdr_str = '** Mesh Produced by MicroStructPy\n'
+            hdr_str += '** Number of Nodes: {}\n'.format(n_pts)
+            hdr_str += '** Number of Continuum Elements: {}\n'.format(nc_el)
+            hdr_str += '** Continuum Elemnt Type: {}\n'.format(cont_type)
 
-            abaqus += '*Element, type=' + elem_type + '\n'
-            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(int(kp) + 1)
-                                                     for kp in elm]) + '\n' for
-                               i, elm in enumerate(self.elements)])
+            try:
+                n_coh = len(self.cohesive_elements)
+            except AttributeError:
+                has_coh = False
+            else:
+                has_coh = True
+                coh_type = _misc.abaqus_coh_types[n_dim]
+                hdr_str += '** Number of Cohesive Elements: {}\n'.format(n_coh)
+                hdr_str += '** Cohesive Element Type: {}\n'.format(coh_type)
+            abaqus += hdr_str
 
-            # Element sets - seed number
-            elset_n_per = 16
-            elem_atts = np.array(self.element_attributes)
-            for att in np.unique(elem_atts):
-                elset_name = 'Set-E-Seed-' + str(att)
-                elset_str = '*Elset, elset=' + elset_name + '\n'
-                elem_groups = [[]]
-                for elem_ind, elem_att in enumerate(elem_atts):
-                    if ~np.isclose(elem_att, att):
-                        continue
-                    if len(elem_groups[-1]) >= elset_n_per:
-                        elem_groups.append([])
-                    elem_groups[-1].append(elem_ind + 1)
-                for group in elem_groups:
-                    elset_str += ','.join([str(i) for i in group])
-                    elset_str += '\n'
+            # points
+            pts_str = '*Node, nset=N-ALL\n'
+            for i, pt in enumerate(self.points):
+                pts_str += '{}, {}\n'.format(i + 1, _format_pt(pt))
+            abaqus += pts_str
 
-                abaqus += elset_str
+            # continuum elements
+            elem_str = '*Element, type={}'.format(cont_type)
+            elem_str += ', elset=E-CONTINUUM-ALL\n'
+            for i, elem in enumerate(self.elements):
+                if -1 not in elem:
+                    elem_str += str(i + 1)
+                    elem_str += _misc.list2str(elem, n=float('inf'))
+            abaqus += elem_str
 
-            # Element Sets - phase number
-            if seeds is not None:
-                phase_nums = np.array([seed.phase for seed in seeds])
-                for phase_num in np.unique(phase_nums):
-                    mask = phase_nums == phase_num
-                    seed_nums = np.nonzero(mask)[0]
+            # cohesive elements
+            if has_coh:
+                coh_str = '*Element, type={}'.format(coh_type)
+                coh_str += ', elset=E-COHESIVE-ALL\n'
+                n_cont = len(self.elements)
+                for i, elem in enumerate(self.cohesive_elements):
+                    if -1 not in elem:
+                        coh_str += str(i + n_cont + 1)
+                        coh_str += _misc.list2str(elem, n=float('inf'))
+                abaqus += coh_str
 
-                    elset_name = 'Set-E-Material-' + str(phase_num)
-                    elset_str = '*Elset, elset=' + elset_name + '\n'
-                    groups = [[]]
-                    for seed_num in seed_nums:
-                        if seed_num not in elem_atts:
-                            continue
-                        if len(groups[-1]) >= elset_n_per:
-                            groups.append([])
-                        seed_elset_name = 'Set-E-Seed-' + str(seed_num)
-                        groups[-1].append(seed_elset_name)
-                    for group in groups:
-                        elset_str += ','.join(group)
-                        elset_str += '\n'
-                    abaqus += elset_str
+            # continuum element sets
+            elsets_str = '** Seed Element Sets\n'
+            seed_sets = {}
+            for i, seed_num in enumerate(self.element_attributes):
+                seed_sets.setdefault(seed_num, []).append(i)
+            for seed_num, seed_elems in seed_sets.items():
+                name = 'E-SEED-{}'.format(seed_num)
+                elset = '*Elset, elset={n}\n'
+                elset += _misc.list2str(seed_elems, n=16)
+                elset += '*Nset, nset=N-{n}, elset={n}\n'
+                elsets_str += elset.format(n=name)
+            abaqus += elsets_str
 
-            # Surfaces - Exterior and Interior
-            facets = np.array(self.facets)
-            facet_atts = np.array(self.facet_attributes)
+            # cohesive element sets
+            if has_coh:
+                cohsets_str = '** Cohesive Element Sets\n'
+                coh_sets = {}
+                for i, coh_num in enumerate(self.cohesive_attributes):
+                    coh_sets.setdefault(coh_num, []).append(i)
+                for fnum, f_elems in coh_sets.items():
+                    name = 'E-FACET-{}'.format(fnum)
+                    coh_str = '*Elset, elset={n}\n'
+                    coh_str += _misc.list2str(f_elems, n=16, shift=n_cont + 1)
+                    coh_str += '*Nset, nset=N-{n}, elset={n}\n'
+                    cohsets_str += coh_str.format(n=name)
+                abaqus += cohsets_str
 
-            face_ids = {2: [2, 3, 1], 3: [3, 4, 2, 1]}[n_dim]
+            # facet surfaces
+            surface_dict_2d = {0: 'S2', 1: 'S3', 2: 'S1'}
+            surface_dict_3d = {0: 'S3', 1: 'S4', 2: 'S2', 3: 'S1'}
+            surface_dict = {2: surface_dict_2d, 3: surface_dict_3d}[n_dim]
 
-            for att in np.unique(facet_atts):
-                facet_name = 'Surface-' + str(att)
-                surf_str = '*Surface, name=' + facet_name + ', type=element\n'
+            facet_str = '** Facet Surfaces\n'
+            f_pairs = {}
+            for seed_num, poly_num, tup in zip(self.facet_attributes,
+                                               self.facet_polynums,
+                                               self.facet_tuples):
+                if poly_num >= 0:
+                    key = (seed_num, poly_num)
+                    f_pairs.setdefault(key, []).append(tup)
+            for key, tups in f_pairs.items():
+                surf_name = 'S-SEED-{}-FACET-{}'.format(*key)
+                facet_str += '*Surface, name={}'.format(surf_name)
+                facet_str += ', type=element\n'
+                for elem, ind in tups:
+                    facet_str += '{}, {}\n'.format(elem + 1, surface_dict[ind])
+            abaqus += facet_str
 
-                att_facets = facets[facet_atts == att]
-                for facet in att_facets:
-                    mask = np.isin(self.elements, facet)
-                    n_match = mask.astype('int').sum(axis=1)
-                    i_elem = np.argmax(n_match)
-                    elem_id = i_elem + 1
+            # boundary surfaces
+            pyvoro_inds = {
+                -1: 'X-MIN',
+                -2: 'X-MAX',
+                -3: 'Y-MIN',
+                -4: 'Y-MAX',
+                -5: 'Z-MIN',
+                -6: 'Z-MAX',
+            }
 
-                    i_missing = np.argmin(mask[i_elem])
-                    face_id = face_ids[i_missing]
-
-                    surf_str += str(elem_id) + ', S' + str(face_id) + '\n'
-
-                abaqus += surf_str
-
-            # Surfaces - Exterior
-            poly_neighbors = np.array(polymesh.facet_neighbors)
-            poly_mask = np.any(poly_neighbors < 0, axis=1)
-            neigh_nums = np.min(poly_neighbors, axis=1)
-            u_neighs = np.unique(neigh_nums[poly_mask])
-            for neigh_num in u_neighs:
-                mask = neigh_nums == neigh_num
-                facet_name = 'Ext-Surface-' + str(-neigh_num)
-                surf_str = '*Surface, name=' + facet_name + ', combine=union\n'
-                for i, flag in enumerate(mask):
-                    if flag:
-                        surf_str += 'Surface-' + str(i) + '\n'
-                abaqus += surf_str
-
-            # End Part
-            abaqus += '*End Part\n\n'
-
-            # Assembly
-            abaqus += '**\n'
-            abaqus += '** ASSEMBLY\n'
-            abaqus += '**\n'
-
-            abaqus += '*Assembly, name=assembly\n'
-            abaqus += '**\n'
-
-            # Instances
-            abaqus += '*Instance, name=I-Part-1, part=Part-1\n'
-            abaqus += '*End Instance\n'
-
-            # End Assembly
-            abaqus += '**\n'
-            abaqus += '*End Assembly\n'
+            ext_surfs = '** Exterior Surfaces and Node Sets\n'
+            ext_sets = {}
+            for i, f_ext in enumerate(self.facet_exterior):
+                if f_ext in pyvoro_inds:
+                    ext_sets.setdefault(f_ext, []).append(i)
+            for ind, ext_set in ext_sets.items():
+                name = pyvoro_inds[ind]
+                tups = [self.facet_tuples[i] for i in ext_set]
+                ext_surfs += '*Surface, name=S-{}, type=element\n'.format(name)
+                for i in ext_set:
+                    el, s_i = self.facet_tuples[i]
+                    ext_surfs += '{}, {}\n'.format(el + 1, surface_dict[s_i])
+            abaqus += ext_surfs
 
             with open(filename, 'w') as file:
                 file.write(abaqus)
@@ -1981,6 +2284,30 @@ def _facet_in_normal(pts, cen_pt):
     vn *= sgn  # flip so center is inward
     un = vn / np.linalg.norm(vn)
     return un, pts.mean(axis=0)
+
+
+def _facet_norm(facet_pts):
+    n_pts = len(facet_pts)
+    if n_pts == 2:
+        pt1 = facet_pts[0]
+        pt2 = facet_pts[1]
+        rel_pos = np.array(pt2) - np.array(pt1)
+        norm_vec = np.array([rel_pos[1], -rel_pos[0]])
+        return norm_vec / np.linalg.norm(norm_vec)
+    if n_pts == 3:
+        pt1 = np.array(facet_pts[0])
+        pt2 = np.array(facet_pts[1])
+        pt3 = np.array(facet_pts[2])
+
+        v1 = pt2 - pt1
+        v2 = pt3 - pt1
+        norm_vec = np.cross(v1, v2)
+        return norm_vec / np.linalg.norm(norm_vec)
+    raise ValueError('Expected 2 or 3 points, got ' + str(n_pts))
+
+
+def _format_pt(pt, fmt='{: .8e}'):
+    return ','.join([fmt.format(x) for x in pt])
 
 
 def _plot_2d(ax, mesh, index_by, **kwargs):

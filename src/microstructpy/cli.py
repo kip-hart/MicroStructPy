@@ -13,6 +13,7 @@ from __future__ import print_function
 import argparse
 import ast
 import collections
+import copy
 import glob
 import os
 import shutil
@@ -227,8 +228,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         edge_opt_n_iter=100, mesher='Triangle/TetGen',
         mesh_max_volume=float('inf'), mesh_min_angle=0,
         mesh_max_edge_length=float('inf'), mesh_size=float('inf'),
-        verify=False, color_by='material', colormap='viridis',
-        seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
+        add_cohesive=False, verify=False, color_by='material',
+        colormap='viridis', seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
     r"""Run MicroStructPy
 
     This is the primary run function for the package. It performs these steps:
@@ -319,6 +320,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         mesh_size (float): The target size of the mesh elements. This
             option is used with gmsh. Default is infinity, whihch turns off
             this control.
+        add_cohesive (bool): *(optional)* Option to add cohesive elements at
+            grain boundaries in the triangular mesh. This will create separate
+            mesh files from the triangular mesh, with the cohesive elements.
         plot_axes (bool): *(optional)* Option to show the axes in output plots.
             When False, the plots are saved without axes and very tight
             borders. Defaults to True.
@@ -567,6 +571,40 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     if plot_files:
         plot_tri(tmesh, phases, seeds, pmesh, plot_files, plot_axes, color_by,
                  colormap, **tri_kwargs)
+
+    # ----------------------------------------------------------------------- #
+    # Create Cohesive Mesh                                                    #
+    # ----------------------------------------------------------------------- #
+    coh_basename = 'trimesh_cohesive.txt'
+    coh_filename = os.path.join(directory, coh_basename)
+    if restart and os.path.exists(coh_filename) and not tri_created:
+        # Read cohesive mesh from file
+        if verbose:
+            print('Reading cohesive mesh from file.')
+            print('Cohesive mesh filename: ' + coh_filename)
+
+        cmesh = TriMesh.from_file(coh_filename)
+        cmesh_created = False
+    elif add_cohesive:
+        cmesh_created = True
+
+        # Create cohesive mesh from triangular mesh
+        if verbose:
+            print('Creating cohesive mesh.')
+        cmesh = copy.deepcopy(tmesh)
+        cmesh.add_cohesive_elements(pmesh, verbose)
+    else:
+        cmesh_created = False
+
+    # Write cohesive mesh
+    cohesive_types = filetypes.get('cohesive', [])
+    if type(cohesive_types) != list:
+        cohesive_types = [cohesive_types]
+
+    for cohesive_type in cohesive_types:
+        fname = coh_filename.replace('.txt', exts[cohesive_type])
+        if cmesh_created or not os.path.exists(fname):
+            cmesh.write(fname, cohesive_type, seeds, pmesh)
 
     # ----------------------------------------------------------------------- #
     # Perform Verification                                                    #

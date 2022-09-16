@@ -21,6 +21,7 @@ Features of MicroStructPy include:
 * Grain size, shape, orientation, and position control
 * Polycrystals, amorphous phases, and voids
 * Unstructured and raster meshes
+* Cohesive elements at grain boundaries
 * Mesh verification
 * Visualizations
 * Output to common file formats

@@ -50,6 +50,7 @@ quality, among other things. The default settings are:
             <mesh_min_angle> 0 </mesh_min_angle> <!-- used with Triangle and TetGen -->
             <mesh_max_edge_length> inf </mesh_max_edge_length> <!-- used with Triangle -->
 
+            <add_cohesive> False </add_cohesive>
             <verify> False </verify>
 
             <!-- Plot Controls -->
