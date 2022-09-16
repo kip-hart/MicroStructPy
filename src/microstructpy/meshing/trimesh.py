@@ -2198,8 +2198,9 @@ def _call_gmsh(pmesh, phases, res, edge_res):
     return tri_args
 
 
-def _sort_element(elem_pts):
-    n_pts = len(elem_pts)
+def _sort_element(pts):
+    n_pts = len(pts)
+    elem_pts = np.array(pts)
     n_dim = n_pts - 1
     if n_dim == 2:
         v1 = elem_pts[1] - elem_pts[0]

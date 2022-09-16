@@ -175,3 +175,17 @@ def ax_objects(ax):
     for att in ['collections', 'images', 'lines', 'patches', 'texts']:
         n += len(getattr(ax, att))
     return n
+
+
+def list2str(values, n=1, shift=1):
+    init_list = [val for val in values]
+    lists = [[]]
+    while init_list:
+        if len(lists[-1]) < n:
+            lists[-1].append(init_list.pop(0))
+        else:
+            lists.append([])
+    strs = '\n'.join([','.join([str(int(v + shift)) for v in l]) for l in
+                      lists])
+    return strs + '\n'
+
