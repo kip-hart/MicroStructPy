@@ -4,3 +4,4 @@ numpy==1.22.0
 pybind11==2.4.3
 sphinx==4.2.0
 sphinx-gallery==0.8.1
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
