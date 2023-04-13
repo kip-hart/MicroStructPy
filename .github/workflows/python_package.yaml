@@ -29,6 +29,7 @@ jobs:
     - name: Install test dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install cython
         pip install setuptools wheel
         pip install flake8 pytest pytest-cov coveralls
     - name: Install package requirements
