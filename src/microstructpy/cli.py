@@ -703,7 +703,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
     plt.clf()
     plt.close('all')
     fig = plt.figure()
-    ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='seeds')
+    ax = fig.add_subplot(projection={2: None, 3: Axes3D.name}[n_dim], label='seeds')
 
     if not plot_axes:
         if n_dim == 2:
@@ -714,7 +714,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
             ax._axis3don = False
 
     # Plot seeds
-    edge_kwargs.setdefault('edgecolors', {2: 'k', 3: 'none'}[n_dim])
+    edge_kwargs.setdefault('edgecolors', {2: 'k', 3: None}[n_dim])
     if given_names and color_by == 'material':
         seeds.plot(material=phase_names, facecolors=seed_colors, loc=4,
                    **edge_kwargs)
@@ -823,7 +823,7 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
     plt.clf()
     plt.close('all')
     fig = plt.figure()
-    ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='poly')
+    ax = fig.add_subplot(projection={2: None, 3: Axes3D.name}[n_dim], label='poly')
 
     if not plot_axes:
         if n_dim == 2:
@@ -957,7 +957,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     plt.clf()
     plt.close('all')
     fig = plt.figure()
-    ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='tri')
+    ax = fig.add_subplot(projection={2: None, 3: Axes3D.name}[n_dim], label='tri')
 
     if not plot_axes:
         if n_dim == 2:
