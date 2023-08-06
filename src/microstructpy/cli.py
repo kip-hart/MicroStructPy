@@ -741,8 +741,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
             plt.subplots_adjust(left=0, bottom=.05, right=1, top=1, wspace=0, hspace=0)
             plt.savefig(fname)
         else:
-            plt.tight_layout()
-            plt.savefig(fname, pad_inches=0)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
     plt.close('all')
 
@@ -869,7 +868,7 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
             plt.savefig(fname)
         else:
             plt.tight_layout()
-            plt.savefig(fname, pad_inches=0)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
     plt.close('all')
 
 
@@ -1047,7 +1046,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
             plt.savefig(fname)
         else:
             plt.tight_layout()
-            plt.savefig(fname, pad_inches=0)
+            plt.savefig(fname, bbox_inches='tight', pad_inches=0)
 
     plt.close('all')
 
