@@ -718,7 +718,7 @@ class Ellipsoid(object):
     def plot(self, **kwargs):
         """Plot the ellipsoid.
 
-        This function uses the :meth:`mpl_toolkits.mplot3d.Axes3D.plot_surface`
+        This function uses the :meth:`mpl_toolkits.mplot3d.axes3d.Axes3D.plot_surface`
         method to add an ellipsoid to the current axes. The keyword arguments
         are passes through to the plot_surface function.
 

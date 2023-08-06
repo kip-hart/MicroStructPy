@@ -152,7 +152,7 @@ class Sphere(NSphere):
     def plot(self, **kwargs):
         """Plot the sphere.
 
-        This function uses the :meth:`mpl_toolkits.mplot3d.Axes3D.plot_surface`
+        This function uses the :meth:`mpl_toolkits.mplot3d.axes3d.Axes3D.plot_surface`
         method to add the sphere to the current axes. The keyword arguments
         are passed through to plot_surface.
 
