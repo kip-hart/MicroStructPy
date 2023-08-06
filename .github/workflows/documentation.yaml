@@ -45,7 +45,7 @@ jobs:
         sudo apt-get update
         
         # Install LaTeX packages
-        sudo apt install latexmk
+        sudo apt install python3-sphinx
 
         # Make
         cd docs/build-latex
