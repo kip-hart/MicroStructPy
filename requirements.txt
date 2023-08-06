@@ -1,7 +1,7 @@
 aabbtree==2.5.0
 matplotlib==3.7.2
 pybind11==2.4.3
-pygmsh==7.0.2
+pygmsh==7.1.17
 MeshPy==2018.2.1
 numpy==1.24.4
 pyquaternion==0.9.5
