@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-    - uses: actions/checkout@v3
+      uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -40,7 +40,7 @@ jobs:
         
     - name: Use LaTeX Action (latex only)
       if: matrix.doc-type == 'latex'
-    - uses: xu-cheng/latex-action@v2
+      uses: xu-cheng/latex-action@v2
 
     - name: Build PDF (latex only)
       if: matrix.doc-type == 'latex'
