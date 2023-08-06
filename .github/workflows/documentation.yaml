@@ -37,6 +37,9 @@ jobs:
         if [ "${{ matrix.doc-type }}" = latex ]; then echo "art_path=docs/build-latex/MicroStructPy.pdf" >> $GITHUB_ENV; fi
         if [ "${{ matrix.doc-type }}" = epub ]; then echo "art_path=docs/build-epub/MicroStructPy.epub" >> $GITHUB_ENV; fi
         
+    - name: Build PDF
+      if: matrix.doc-type == 'latex'
+      run: |
         # Build PDF 
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-fonts-recommended; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-latex-recommended; fi
