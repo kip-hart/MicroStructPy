@@ -99,7 +99,7 @@ for i in range(m):
         else:
             fnum_bottom = facet_bottom[i, j]
 
-        # region
+        # update region
         region = (fnum_top, fnum_left, fnum_bottom, fnum_right)
         regions[k_regions] = region
         region_phases[k_regions] = bin_nums[i, j]
@@ -137,6 +137,7 @@ filename = os.path.join(file_dir, plot_basename)
 dirs = os.path.dirname(filename)
 if not os.path.exists(dirs):
     os.makedirs(dirs)
-plt.savefig(filename, bbox_inches='tight', pad_inches=0)
+plt.gcf().tight_layout()
+plt.savefig(filename, pad_inches=0)
 
 shutil.copy(image_filename, dirs)

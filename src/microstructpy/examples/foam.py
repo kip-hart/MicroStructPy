@@ -76,13 +76,14 @@ def main():
     plt.gca().set_axis_off()
     plt.gca().get_xaxis().set_visible(False)
     plt.gca().get_yaxis().set_visible(False)
+    plt.gcf().tight_layout()
 
     xlim, ylim = domain.limits
     plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])
 
     for ext in ['png', 'pdf']:
         fname = os.path.join(dirname, 'trimesh.' + ext)
-        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        plt.savefig(fname, pad_inches=0)
 
 
 def pick_edge(void_tess):
