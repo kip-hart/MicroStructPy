@@ -16,16 +16,14 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/'))
 sys.path.insert(0, os.path.abspath('../../src/MicroStructPy/'))
-
 import sphinx_gallery
-
 import microstructpy
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'MicroStructPy'
-copyright = '2019-2022, Georgia Tech Research Corporation'
+copyright = '2019-2023, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
@@ -138,7 +136,7 @@ html_theme_options = {
     'logo_name': True,
     'sidebar_width': '230px',
     'description': 'Microstructure modeling, mesh generation, analysis, and visualization.',
-    'analytics_id': 'UA-147258715-1',
+    'analytics_id': 'G-TK7PBETHC0',
     'code_font_size': '12.5px',
 }
 
