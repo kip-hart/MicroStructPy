@@ -45,7 +45,13 @@ jobs:
         sudo apt-get update
         
         # Install LaTeX packages
-        sudo apt install python3-sphinx
+        # Recommended by Sphinx on their docs page:
+        # https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
+        sudo apt install texlive-latex-recommended
+        sudo apt install texlive-fonts-recommended
+        sudo apt install tex-gyre # (if latex_engine left to default)
+        sudo apt install texlive-latex-extra
+        sudo apt install latexmk
 
         # Make
         cd docs/build-latex
