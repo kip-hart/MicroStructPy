@@ -12,7 +12,7 @@ build:
   tools:
     python: "3.8"
   apt_packages:
-    freeglut3-dev
+    - freeglut3-dev
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
