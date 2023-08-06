@@ -41,6 +41,9 @@ jobs:
     - name: Build PDF (latex only)
       if: matrix.doc-type == 'latex'
       run: |
+        # Install LaTeX packages
+        sudo apt install latexmk
+        
         cd docs/build-latex
         make
         cd -
