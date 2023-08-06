@@ -735,7 +735,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
         _misc.axisEqual3D(plt.gca())
 
     # Save plot
-    fig.tight_layout()
+    plt.tight_layout()
     for fname in plot_files:
         if n_dim == 3:
             fig.subplots_adjust(**_misc.plt_3d_adj)
@@ -861,7 +861,7 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
             pmesh.plot(facecolors=fcs, index_by='seed', **edge_kwargs)
 
     # save plot
-    fig.tight_layout()
+    plt.tight_layout()
     for fname in plot_files:
         if n_dim == 3:
             fig.subplots_adjust(**_misc.plt_3d_adj)
@@ -1038,7 +1038,7 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         tmesh.plot(facecolors=fcs, index_by='attribute', **edge_kwargs)
 
     # save plot
-    fig.tight_layout()
+    plt.tight_layout()
     for fname in plot_files:
         if n_dim == 3:
             fig.subplots_adjust(**_misc.plt_3d_adj)

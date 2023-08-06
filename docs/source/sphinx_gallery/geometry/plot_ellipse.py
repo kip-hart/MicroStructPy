@@ -34,7 +34,7 @@ def breakdown():
     plt.gca().set_xticklabels([str(round(float(label), 1)) for label in xticks])
     plt.axis('scaled')
     plt.grid(True, linestyle=':')
-    fig.tight_layout()
+    plt.tight_layout()
 
 
 if __name__ == '__main__':

@@ -137,7 +137,7 @@ filename = os.path.join(file_dir, plot_basename)
 dirs = os.path.dirname(filename)
 if not os.path.exists(dirs):
     os.makedirs(dirs)
-plt.gcf().tight_layout()
+plt.tight_layout()
 plt.savefig(filename, pad_inches=0)
 
 shutil.copy(image_filename, dirs)

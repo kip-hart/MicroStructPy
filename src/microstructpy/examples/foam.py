@@ -76,7 +76,7 @@ def main():
     plt.gca().set_axis_off()
     plt.gca().get_xaxis().set_visible(False)
     plt.gca().get_yaxis().set_visible(False)
-    plt.gcf().tight_layout()
+    plt.tight_layout()
 
     xlim, ylim = domain.limits
     plt.axis([xlim[0], xlim[1], ylim[0], ylim[1]])

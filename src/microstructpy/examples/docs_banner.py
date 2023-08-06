@@ -123,7 +123,7 @@ def main():
     plt.axis(list(xlim) + list(ylim))
 
     fname = os.path.join(dirname, 'banner.png')
-    fig.tight_layout()
+    plt.tight_layout()
     plt.savefig(fname, pad_inches=0)
     plt.savefig(fname.replace('.png', '.pdf'), pad_inches=0)
 

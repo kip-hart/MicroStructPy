@@ -169,7 +169,7 @@ def main(n_seeds, size_rng, pos_rng, k_lw):
                    horizontalalignment='center',
                    verticalalignment='center')
     plt.draw()
-    fig_social.tight_layout()
+    plt.tight_layout()
     plt.savefig(social_filename)
     plt.close('all')
 
