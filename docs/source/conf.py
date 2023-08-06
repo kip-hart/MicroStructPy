@@ -15,9 +15,9 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/'))
-sys.path.insert(0, os.path.abspath('../../src/MicroStructPy/'))
+sys.path.insert(0, os.path.abspath('../../src/microstructpy/'))
 import sphinx_gallery
-import microstructpy
+from microstructpy import __version__ as msp_version
 
 
 # -- Project information -----------------------------------------------------
@@ -27,9 +27,9 @@ copyright = '2019-2023, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
-version = ''.join(microstructpy.__version__.split('.')[:2])
+version = ''.join(msp_version.split('.')[:2])
 # The full version, including alpha/beta/rc tags
-release = microstructpy.__version__
+release = msp_version
 
 
 # -- General configuration ---------------------------------------------------
