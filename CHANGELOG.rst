@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_ - 2023-08-06
+--------------------------
+Fixed
+'''''''
+- Errors associated with using keyword arguments in ``plt.gca()`` deprecated in matplotlib 3.4.
+- 3D plots now use matplotlib standard for setting equal aspect ratios.
+
+
 `1.5.6`_ - 2022-09-01
 --------------------------
 Fixed
