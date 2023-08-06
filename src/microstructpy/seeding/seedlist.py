@@ -469,8 +469,6 @@ class SeedList(object):
                 zlim = [float('inf'), -float('inf')]
 
             for seed, args in zip(self, seed_args):
-                print('seed')
-                print(seed)
                 seed.plot(**args)
 
         elif n == 2:
