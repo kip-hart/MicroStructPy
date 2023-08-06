@@ -20,7 +20,7 @@ def breakdown():
     b = 1
     x1 = 0.7
 
-    plt.figure(figsize=(14, 6))
+    fig = plt.figure(figsize=(14, 6))
     ellipse = msp.geometry.Ellipse(a=a, b=b)
     approx = ellipse.approximate(x1)
     ellipse.plot(edgecolor='k', facecolor='none', lw=3)
@@ -34,8 +34,9 @@ def breakdown():
     plt.gca().set_xticklabels([str(round(float(label), 1)) for label in xticks])
     plt.axis('scaled')
     plt.grid(True, linestyle=':')
+    fig.tight_layout()
 
 
 if __name__ == '__main__':
-    plt.rc('savefig', dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.rc('savefig', dpi=300, pad_inches=0)
     main()

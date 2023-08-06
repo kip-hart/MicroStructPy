@@ -20,7 +20,7 @@ def breakdown(length, width, x1, figsize):
     approx = r.approximate(x1=x1)
 
     # Plot rectangle
-    plt.figure(figsize=figsize)
+    fig = plt.figure(figsize=figsize)
     r.plot(edgecolor='k', facecolor='none', lw=3)
 
     # Plot breakdown
@@ -38,8 +38,9 @@ def breakdown(length, width, x1, figsize):
 
     plt.axis('scaled')
     plt.grid(True, linestyle=':')
+    fig.tight_layout()
 
 
 if __name__ == '__main__':
-    plt.rc('savefig', dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.rc('savefig', dpi=300, pad_inches=0)
     main()
