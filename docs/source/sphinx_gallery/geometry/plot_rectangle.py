@@ -41,5 +41,5 @@ def breakdown(length, width, x1, figsize):
 
 
 if __name__ == '__main__':
-    plt.rc('savefig', dpi=300, bbox='tight', pad_inches=0)
+    plt.rc('savefig', dpi=300, bbox_inches='tight', pad_inches=0)
     main()

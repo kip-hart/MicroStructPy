@@ -12,6 +12,7 @@ Fixed
 '''''''
 - Errors associated with using keyword arguments in ``plt.gca()`` deprecated in matplotlib 3.4.
 - 3D plots now use matplotlib standard for setting equal aspect ratios.
+- Replaced use of ``bbox`` with ``bbox_inches``.
 
 
 `1.5.6`_ - 2022-09-01

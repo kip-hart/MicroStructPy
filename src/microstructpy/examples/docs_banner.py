@@ -123,8 +123,8 @@ def main():
     plt.axis(list(xlim) + list(ylim))
 
     fname = os.path.join(dirname, 'banner.png')
-    plt.savefig(fname, bbox='tight', pad_inches=0)
-    plt.savefig(fname.replace('.png', '.pdf'), bbox='tight', pad_inches=0)
+    plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+    plt.savefig(fname.replace('.png', '.pdf'), bbox_inches='tight', pad_inches=0)
 
 
 def ordered_kps(pairs):
