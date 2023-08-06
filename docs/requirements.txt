@@ -1,5 +1,5 @@
 gmsh==4.10.5
-matplotlib==3.5.1
+matplotlib==3.7.2
 numpy==1.22.0
 pybind11==2.4.3
 sphinx==4.2.0
