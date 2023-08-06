@@ -17,8 +17,22 @@ import sys
 sys.path.insert(0, os.path.abspath('../../src/'))
 sys.path.insert(0, os.path.abspath('../../src/microstructpy/'))
 import sphinx_gallery
-from microstructpy import __version__ as msp_version
+from os.path import dirname
+from os.path import join
 
+def read(*fname):
+    return open(join(dirname(__file__), *fname)).read()
+
+
+def find_version(*fname):
+    ver_str = ''
+    for line in read(*fname).split('\n'):
+        if line.startswith('__version__') and '=' in line:
+            ver_str = line.split('=')[-1].strip().strip('\"').strip('\'')
+            break
+    return ver_str
+
+msp_version = find_version('..', '..', 'src', 'microstructpy', '__init__.py')
 
 # -- Project information -----------------------------------------------------
 
