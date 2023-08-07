@@ -1,9 +1,5 @@
 aabbtree==2.5.0
-<<<<<<< HEAD
-matplotlib==3.7.1
-=======
 matplotlib==3.7.2
->>>>>>> master
 pybind11==2.4.3
 pygmsh==7.1.17
 MeshPy==2018.2.1
