@@ -70,7 +70,8 @@ def create_welcome():
 
     sub_fname = 'welcome_examples.png'
     sub_filename = os.path.join(example_dir, sub_fname)
-    plt.savefig(sub_filename, pad_inches=0, bbox_inches='tight', dpi=200)
+    plt.tight_layout()
+    plt.savefig(sub_filename, pad_inches=0, dpi=200)
     plt.close('all')
 
 
@@ -92,7 +93,8 @@ def seed_poly_tri(filepath):
     
     sub_fname = 'joined.png'
     sub_filename = os.path.join(ex_path, sub_fname)
-    plt.savefig(sub_filename, pad_inches=0, bbox_inches='tight', dpi=300)
+    plt.tight_layout()
+    plt.savefig(sub_filename, pad_inches=0, dpi=300)
     plt.close('all')
 
 
