@@ -17,22 +17,8 @@ import sys
 sys.path.insert(0, os.path.abspath('../../src/'))
 sys.path.insert(0, os.path.abspath('../../src/microstructpy/'))
 import sphinx_gallery
-from os.path import dirname
-from os.path import join
+import microstructpy
 
-def read(*fname):
-    return open(join(dirname(__file__), *fname)).read()
-
-
-def find_version(*fname):
-    ver_str = ''
-    for line in read(*fname).split('\n'):
-        if line.startswith('__version__') and '=' in line:
-            ver_str = line.split('=')[-1].strip().strip('\"').strip('\'')
-            break
-    return ver_str
-
-msp_version = find_version('..', '..', 'src', 'microstructpy', '__init__.py')
 
 # -- Project information -----------------------------------------------------
 
@@ -41,9 +27,9 @@ copyright = '2019-2023, Georgia Tech Research Corporation'
 author = 'Kenneth Hart'
 
 # The short X.Y version
-version = ''.join(msp_version.split('.')[:2])
+version = ''.join(microstructpy.__version__.split('.')[:2])
 # The full version, including alpha/beta/rc tags
-release = msp_version
+release = microstructpy.__version__
 
 
 # -- General configuration ---------------------------------------------------
