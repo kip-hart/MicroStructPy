@@ -7,7 +7,7 @@ include .bumpversion.cfg
 include .coveragerc
 include .editorconfig
 include .pyup.yml
-include .readthedocs.yml
+include .readthedocs.yaml
 
 include CHANGELOG.rst
 include LICENSE.rst

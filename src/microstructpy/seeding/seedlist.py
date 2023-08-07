@@ -450,7 +450,7 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
-        if n == 2 or plt.gcf().get_axes():
+        if n == 2 or plt.gcf().axes:
             ax = plt.gca()
         else:
             ax = plt.gcf().add_subplot(projection=Axes3D.name)

@@ -566,10 +566,10 @@ class TriMesh(object):
 
         """
         n_dim = len(self.points[0])
-        if n_dim == 2:
+        if n_dim == 2 or plt.gcf().axes:
             ax = plt.gca()
         else:
-            ax = plt.gcf().gca(projection=Axes3D.name)
+            ax = plt.gcf().add_subplot(projection=Axes3D.name)
         n_obj = _misc.ax_objects(ax)
         if n_obj > 0:
             xlim = ax.get_xlim()

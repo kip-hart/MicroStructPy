@@ -12,9 +12,10 @@ jobs:
     
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.10'
     - name: Setup Linux Environment
@@ -36,17 +37,26 @@ jobs:
         if [ "${{ matrix.doc-type }}" = html ]; then echo "art_path=docs/build-html" >> $GITHUB_ENV; fi
         if [ "${{ matrix.doc-type }}" = latex ]; then echo "art_path=docs/build-latex/MicroStructPy.pdf" >> $GITHUB_ENV; fi
         if [ "${{ matrix.doc-type }}" = epub ]; then echo "art_path=docs/build-epub/MicroStructPy.epub" >> $GITHUB_ENV; fi
+
+    - name: Build PDF (latex only)
+      if: matrix.doc-type == 'latex'
+      run: |
+        # Update apt
+        sudo apt-get update
         
-        # Build PDF 
-        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-fonts-recommended; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-latex-recommended; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-lang-english; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install texlive-xetex; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then sudo apt install latexmk; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then cd docs/build-latex; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then make; fi
-        if [ "${{ matrix.doc-type }}" = latex ]; then cd -; fi
-        
+        # Install LaTeX packages
+        # Recommended by Sphinx on their docs page:
+        # https://www.sphinx-doc.org/en/master/usage/builders/index.html#sphinx.builders.latex.LaTeXBuilder
+        sudo apt install texlive-latex-recommended
+        sudo apt install texlive-fonts-recommended
+        sudo apt install tex-gyre # (if latex_engine left to default)
+        sudo apt install texlive-latex-extra
+        sudo apt install latexmk
+
+        # Make
+        cd docs/build-latex
+        make
+        cd -
         
     - name: Upload artifact
       uses: actions/upload-artifact@v3

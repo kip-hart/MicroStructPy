@@ -156,14 +156,7 @@ def tangent_sphere(points, radii=None, simplices=None):
 
 
 def axisEqual3D(ax):
-    '''From stackoverflow: https://stackoverflow.com/a/19248731'''
-    extents = np.array([getattr(ax, 'get_{}lim'.format(d))() for d in 'xyz'])
-    sz = extents[:, 1] - extents[:, 0]
-    centers = np.mean(extents, axis=1)
-    maxsize = max(abs(sz))
-    r = maxsize/2
-    for ctr, dim in zip(centers, 'xyz'):
-        getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
+    ax.set_aspect('equal')
 
 
 def ax_objects(ax):

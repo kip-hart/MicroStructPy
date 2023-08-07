@@ -99,7 +99,7 @@ for i in range(m):
         else:
             fnum_bottom = facet_bottom[i, j]
 
-        # region
+        # update region
         region = (fnum_top, fnum_left, fnum_bottom, fnum_right)
         regions[k_regions] = region
         region_phases[k_regions] = bin_nums[i, j]
