@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
-`Unreleased`_ - 2023-08-06
+`1.5.7`_ - 2023-08-06
 --------------------------
 Fixed
 '''''''
@@ -300,7 +300,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.6...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.7...HEAD
+.. _`1.5.7`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.6...v1.5.7
 .. _`1.5.6`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.5...v1.5.6
 .. _`1.5.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.4...v1.5.5
 .. _`1.5.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.3...v1.5.4
