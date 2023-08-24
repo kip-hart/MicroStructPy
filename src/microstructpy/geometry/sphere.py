@@ -152,7 +152,7 @@ class Sphere(NSphere):
     def plot(self, **kwargs):
         """Plot the sphere.
 
-        This function uses the :meth:`mpl_toolkits.mplot3d.Axes3D.plot_surface`
+        This function uses the :meth:`mpl_toolkits.mplot3d.axes3d.Axes3D.plot_surface`
         method to add the sphere to the current axes. The keyword arguments
         are passed through to plot_surface.
 
@@ -160,10 +160,10 @@ class Sphere(NSphere):
             **kwargs (dict): Keyword arguments for plot_surface.
 
         """  # NOQA: E501
-        if len(plt.gcf().axes) == 0:
-            ax = plt.axes(projection=Axes3D.name)
-        else:
+        if plt.gcf().axes:
             ax = plt.gca()
+        else:
+            ax = plt.add_subplot(projection=Axes3D.name)
 
         u = np.linspace(0, 2 * np.pi, 11)
         cv = np.linspace(-1, 1, 12)

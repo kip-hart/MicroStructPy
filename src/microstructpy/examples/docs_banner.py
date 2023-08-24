@@ -60,7 +60,7 @@ def main():
     k = 0.12
     len_x = 3 * domain.length + 4 * off
     len_y = domain.width + 2 * off
-    plt.figure(figsize=(k * len_x, k * len_y))
+    fig = plt.figure(figsize=(k * len_x, k * len_y))
 
     # Plot Seeds
     seed_colors = [phases[s.phase]['color'] for s in seeds]
@@ -123,8 +123,8 @@ def main():
     plt.axis(list(xlim) + list(ylim))
 
     fname = os.path.join(dirname, 'banner.png')
-    plt.savefig(fname, bbox='tight', pad_inches=0)
-    plt.savefig(fname.replace('.png', '.pdf'), bbox='tight', pad_inches=0)
+    plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+    plt.savefig(fname.replace('.png', '.pdf'), bbox_inches='tight', pad_inches=0)
 
 
 def ordered_kps(pairs):
