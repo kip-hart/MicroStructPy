@@ -181,13 +181,13 @@ advised by Prof. Julian Rimoli.
 
 .. external-images
 
-.. |l-github| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/github.svg
+.. |l-github| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/github.svg?inline=true
     :alt: GitHub
 
-.. |l-rtd| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/rtd.svg
+.. |l-rtd| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/rtd.svg?inline=true
     :alt: ReadTheDocs
 
-.. |l-pypi| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/pypi.svg
+.. |l-pypi| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/pypi.svg?inline=true
     :alt: PyPI
 
 
