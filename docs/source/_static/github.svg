@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="octicon mark-github.svg"
+   inkscape:export-filename="github.svg"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
+  <rect
+     style="fill:#ffffff;fill-opacity:1;stroke-width:1.82692"
+     id="rect3"
+     width="4.7851562"
+     height="12.489996"
+     x="5.59375"
+     y="3.1076612"
+     ry="0" />
+  <rect
+     style="fill:#ffffff;fill-opacity:1;stroke-width:1.61719"
+     id="rect3-4"
+     width="4.7851562"
+     height="9.786871"
+     x="2.078125"
+     y="3.015625"
+     ry="0" />
+  <rect
+     style="fill:#ffffff;fill-opacity:1;stroke-width:1.61719"
+     id="rect3-4-1"
+     width="4.7851562"
+     height="9.786871"
+     x="3.171875"
+     y="4.359375"
+     ry="0" />
+  <rect
+     style="fill:#ffffff;fill-opacity:1;stroke-width:1.61719"
+     id="rect3-4-4"
+     width="4.7851562"
+     height="9.786871"
+     x="8.65625"
+     y="2.921875"
+     ry="0" />
+  <path
+     fill="black0"
+     d="m 8,0 c 4.42,0 8,3.58 8,8 a 8.013,8.013 0 0 1 -5.45,7.59 C 10.15,15.67 10,15.42 10,15.21 c 0,-0.27 0.01,-1.13 0.01,-2.2 0,-0.75 -0.25,-1.23 -0.54,-1.48 1.78,-0.2 3.65,-0.88 3.65,-3.95 0,-0.88 -0.31,-1.59 -0.82,-2.15 0.08,-0.2 0.36,-1.02 -0.08,-2.12 0,0 -0.67,-0.22 -2.2,0.82 C 9.38,3.95 8.7,3.86 8.02,3.86 7.34,3.86 6.66,3.95 6.02,4.13 4.49,3.1 3.82,3.31 3.82,3.31 3.38,4.41 3.66,5.23 3.74,5.43 3.23,5.99 2.92,6.71 2.92,7.58 c 0,3.06 1.86,3.75 3.64,3.95 C 6.33,11.73 6.12,12.08 6.05,12.6 5.59,12.81 4.44,13.15 3.72,11.94 3.57,11.7 3.12,11.11 2.49,11.12 1.82,11.13 2.22,11.5 2.5,11.65 c 0.34,0.19 0.73,0.9 0.82,1.13 0.16,0.45 0.68,1.31 2.69,0.94 0,0.67 0.01,1.3 0.01,1.49 0,0.21 -0.15,0.45 -0.55,0.38 A 7.995,7.995 0 0 1 0,8 C 0,3.58 3.58,0 8,0 Z"
+     id="path1" />
+</svg>
