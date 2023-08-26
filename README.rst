@@ -183,12 +183,15 @@ advised by Prof. Julian Rimoli.
 
 .. |l-github| image:: https://github.com/kip-hart/MicroStructPy/blob/master/docs/source/_static/github.svg
     :alt: GitHub
+    :target: https://github.com/kip-hart/MicroStructPy
 
 .. |l-rtd| image:: https://github.com/kip-hart/MicroStructPy/blob/master/docs/source/_static/rtd.svg
     :alt: ReadTheDocs
+    :target: https://docs.microstructpy.org
 
 .. |l-pypi| image:: https://github.com/kip-hart/MicroStructPy/blob/master/docs/source/_static/pypi.svg
     :alt: PyPI
+    :target: https://pypi.org/project/microstructpy/
 
 
 .. SHIELDS
