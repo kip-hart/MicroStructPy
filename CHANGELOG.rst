@@ -1,10 +1,21 @@
 Changelog
-==========
+=========
 
 All notable changes to this project will be documented in this file.
 
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
+
+`1.5.8`_ - 2023-08-25
+--------------------------
+Added
+'''''
+- Support for Python 3.11
+
+Fixed
+'''''''
+- Errors associated with using keyword arguments in ``plt.gca()`` deprecated in matplotlib 3.4.
+
 
 `1.5.7`_ - 2023-08-06
 --------------------------
@@ -300,7 +311,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.7...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.8...HEAD
+.. _`1.5.8`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.7...v1.5.8
 .. _`1.5.7`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.6...v1.5.7
 .. _`1.5.6`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.5...v1.5.6
 .. _`1.5.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.4...v1.5.5
