@@ -670,10 +670,10 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
-        if n == 2:
+        if n == 2 or plt.gca().get_axes():
             ax = plt.gca()
         else:
-            ax = plt.gcf().gca(projection=Axes3D.name)
+            ax = plt.gcf().add_subplot(projection=Axes3D.name)
         n_obj = _misc.ax_objects(ax)
         if n_obj > 0:
             xlim = ax.get_xlim()
@@ -1072,10 +1072,10 @@ def _plt_args(seeds, index_by, kwargs):
 
 
 def _get_axes(n):
-    if n == 2:
+    if n == 2 or plt.gcf().get_axes():
         ax = plt.gca()
     else:
-        ax = plt.gcf().gca(projection=Axes3D.name)
+        ax = plt.gcf().add_subplot(projection=Axes3D.name)
     n_obj = _misc.ax_objects(ax)
     if n_obj > 0:
         xlim = ax.get_xlim()

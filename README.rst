@@ -152,7 +152,7 @@ generator in Python, *SoftwareX*, 12 (2020), 100595.
 (`BibTeX <https://github.com/kip-hart/MicroStructPy/raw/master/docs/publications/swx2020.bib>`__)
 (`DOI <https://doi.org/10.1016/j.softx.2020.100595>`__)
 
-The news article `AE Doctoral Student Kenneth A. Hart Presents MicroStructPy to the World <https://www.ae.gatech.edu/news/2020/07/ae-doctoral-student-kenneth-hart-presents-microstructpy-world>`__,
+The news article `AE Doctoral Student Kenneth A. Hart Presents MicroStructPy to the World <https://www.ae.gatech.edu/news/2020/07/kip-hart>`__,
 written by the School of Aerospace Engineering at Georgia Tech,
 describes MicroStructPy for a general audience.
 
@@ -177,17 +177,17 @@ advised by Prof. Julian Rimoli.
 
 .. LINKS
 
-.. _`Contributing Guidelines`: https://github.com/kip-hart/MicroStructPy/blob/dev/.github/CONTRIBUTING.md
+.. _`Contributing Guidelines`: https://github.com/kip-hart/MicroStructPy/blob/master/.github/CONTRIBUTING.md
 
 .. external-images
 
-.. |l-github| image:: https://api.iconify.design/octicon:mark-github.svg?color=black0&inline=true&height=16
+.. |l-github| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/github.svg
     :alt: GitHub
 
-.. |l-rtd| image:: https://api.iconify.design/simple-icons:readthedocs.svg?color=black&inline=true&height=16
+.. |l-rtd| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/rtd.svg
     :alt: ReadTheDocs
 
-.. |l-pypi| image:: https://api.iconify.design/mdi:cube-outline.svg?color=black&inline=true&height=16
+.. |l-pypi| image:: https://github.com/kip-hart/MicroStructPy/raw/master/docs/source/_static/pypi.svg
     :alt: PyPI
 
 

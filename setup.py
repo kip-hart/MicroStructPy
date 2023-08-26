@@ -60,6 +60,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Physics'
@@ -84,7 +85,7 @@ setup(
         'numpy>=1.13.0',
         'pygmsh>=7.0.2',
         'pyquaternion',
-        'pyvoro-mmalahe',  # install issue with pyvoro
+        'pyvoro-mmalahe>=1.3.4',  # install issue with pyvoro
         'scipy',
         'xmltodict'
     ],
