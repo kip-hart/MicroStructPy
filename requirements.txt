@@ -7,6 +7,7 @@ numpy==1.24.4
 pyquaternion==0.9.5
 pyvoro-mmalahe==1.3.4
 scipy==1.10.1
+setuptools>=68.1.2
 xmltodict==0.12.0
 tox==3.14.0
 lsq-ellipse==2.0.1
