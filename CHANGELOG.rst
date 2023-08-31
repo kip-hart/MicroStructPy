@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Changed
+'''''''
+- Updated version numbers of dependencies per security report.
+
+
 `1.5.8`_ - 2023-08-25
 --------------------------
 Added

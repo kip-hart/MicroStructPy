@@ -82,7 +82,7 @@ setup(
         'lsq-ellipse',
         'matplotlib>=3.4.0',
         'meshpy>=2018.2.1',
-        'numpy>=1.13.0',
+        'numpy>=1.22.2',
         'pygmsh>=7.0.2',
         'pyquaternion',
         'pyvoro-mmalahe>=1.3.4',  # install issue with pyvoro
