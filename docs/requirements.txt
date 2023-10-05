@@ -1,5 +1,5 @@
 gmsh==4.11.1
-matplotlib==3.8.0
+matplotlib>=3.7.3
 numpy==1.25.0
 pybind11==2.4.3
 setuptools>=65.5.1 

@@ -1,5 +1,5 @@
 aabbtree==2.5.0
-matplotlib==3.8.0
+matplotlib>=3.7.3
 pybind11==2.4.3
 pygmsh==7.1.17
 MeshPy==2022.1.3
