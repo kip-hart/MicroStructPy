@@ -575,7 +575,7 @@ class SeedList(object):
             rects = [Rectangle(xy=xyi, width=wi, height=hi, angle=ai) for
                      xyi, wi, hi, ai in zip(rect_data['xy'], rect_data['w'],
                      rect_data['h'], rect_data['angle'])]
-            rc = collections.PatchCollection(rects, False, **rect_kwargs)
+            rc = collections.PatchCollection(rects, match_original=False, **rect_kwargs)
             ax.add_collection(rc)
 
             # Plot Polygons
@@ -1161,7 +1161,7 @@ def _plot_2d(ax, seeds, seed_args):
 
     # Plot Rectangles
     rects = [Rectangle(**rect_inps) for rect_inps in rect_data]
-    rc = collections.PatchCollection(rects, False, **rect_kwargs)
+    rc = collections.PatchCollection(rects, match_original=False, **rect_kwargs)
     ax.add_collection(rc)
 
     ax.autoscale_view()

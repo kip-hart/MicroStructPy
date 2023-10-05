@@ -61,7 +61,7 @@ cmap = mpl.colors.LinearSegmentedColormap.from_list('area_cmap', colors)
 norm = mpl.colors.Normalize(vmin=min_area, vmax=max_area)
 sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
-cb = plt.colorbar(sm, ticks=[min_area, std_area, max_area],
+cb = plt.colorbar(sm, ticks=[min_area, std_area, max_area], ax=plt.gca(),
                   orientation='horizontal', fraction=0.046, pad=0.08)
 cb.set_label('Cell Area')
 
