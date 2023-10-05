@@ -569,7 +569,7 @@ class Ellipse(object):
 
         """  # NOQA: E501
         p = patches.Ellipse(self.center, 2 * self.a, 2 * self.b,
-                            self.angle_deg, **kwargs)
+                            angle=self.angle_deg, **kwargs)
         plt.gca().add_patch(p)
 
     # ----------------------------------------------------------------------- #
