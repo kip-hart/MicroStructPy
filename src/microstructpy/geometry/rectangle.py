@@ -396,7 +396,7 @@ class Rectangle(NBox):
         w = self.length
         h = self.width
         ang = self.angle
-        c = patches.Rectangle(pt, w, h, ang, **kwargs)
+        c = patches.Rectangle(pt, w, h, angle=ang, **kwargs)
         plt.gca().add_patch(c)
 
 
