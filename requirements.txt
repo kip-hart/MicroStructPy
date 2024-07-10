@@ -11,3 +11,4 @@ setuptools>=65.5.1
 xmltodict==0.12.0
 tox==3.14.0
 lsq-ellipse==2.0.1
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
