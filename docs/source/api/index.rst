@@ -4,6 +4,7 @@ API
 ===
 
 .. toctree::
+    :maxdepth: 2
 
     cli
     geometry/index
