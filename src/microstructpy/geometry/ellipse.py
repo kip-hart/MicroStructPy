@@ -182,7 +182,7 @@ class Ellipse(object):
             points (list or numpy.ndarray): An Nx2 list of points to fit.
 
         Returns:
-            .Ellipse: An instance of the class that best fits the points.
+            Ellipse: An instance of the class that best fits the points.
 
         .. _`least-squares-ellipse-fitting`: https://github.com/bdhammel/least-squares-ellipse-fitting
 
