@@ -44,7 +44,7 @@ y_perim = (b - r) * np.sin(t_perim)
 dx = np.insert(np.diff(x_perim), 0, 0)
 dy = np.insert(np.diff(y_perim), 0, 0)
 ds = np.sqrt(dx * dx + dy * dy)
-arc_len = scipy.integrate.cumtrapz(ds, x=t_perim, initial=0)
+arc_len = scipy.integrate.cumulative_trapezoid(ds, x=t_perim, initial=0)
 eq_spaced = arc_len[-1] * np.arange(n) / n
 x_pts = np.interp(eq_spaced, arc_len, x_perim)
 y_pts = np.interp(eq_spaced, arc_len, y_perim)
