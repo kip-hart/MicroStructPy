@@ -31,6 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel
         pip install flake8 pytest pytest-cov coveralls
+        pip install --upgrade pluggy
     - name: Install package requirements
       run: pip install -r requirements.txt
     - name: Install package
