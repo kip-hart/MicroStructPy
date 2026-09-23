@@ -1442,6 +1442,80 @@ def _clip_loop(pts, adj, axis, value, keep_below, wall, tol):
     return new_pts, new_adj
 
 
+def _unify_cell_vertices(voro, lims, per_axes, merge_tol, snap_tol):
+    """Give the cells identical coordinates for their shared vertices.
+
+    Voro++ computes each cell on its own, so two cells that share a vertex
+    hold copies of it that differ by its precision, and in periodic mode
+    the copies may lie in different images of the domain. The copies that
+    coincide, modulo the length of the domain along the periodic axes, are
+    replaced by their mean, snapped onto the periodic faces when within
+    the snapping tolerance, so that the cells are cut consistently at the
+    faces and their pieces match exactly.
+
+    Args:
+        voro (list): The cells from pyvoro.
+        lims (list): (lower, upper) bounds of the domain, per axis.
+        per_axes (list): Periodicity flag of each axis.
+        merge_tol (float): Distance below which copies are one vertex.
+        snap_tol (float): Distance below which a vertex is on a face.
+
+    Returns:
+        list: The cells, with the unified vertices.
+
+    """
+    lb = np.array([lim[0] for lim in lims], dtype='float')
+    lengths = np.array([ub - lo for lo, ub in lims], dtype='float')
+    counts = [len(cell['vertices']) for cell in voro]
+    all_pts = np.vstack([np.array(cell['vertices'], dtype='float')
+                         for cell in voro])
+
+    # the images of the vertices in the domain, along the periodic axes
+    shifts = np.zeros_like(all_pts)
+    for axis, flag in enumerate(per_axes):
+        if flag:
+            n_img = np.floor((all_pts[:, axis] - lb[axis]) / lengths[axis])
+            shifts[:, axis] = n_img * lengths[axis]
+    wrapped = all_pts - shifts
+
+    # coincident copies are one vertex
+    parent = np.arange(len(wrapped))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i, j in cKDTree(wrapped).query_pairs(merge_tol):
+        r_i, r_j = find(i), find(j)
+        if r_i != r_j:
+            parent[max(r_i, r_j)] = min(r_i, r_j)
+    roots = np.array([find(i) for i in range(len(wrapped))])
+    unified = wrapped.copy()
+    for root in np.unique(roots):
+        members = roots == root
+        unified[members] = wrapped[members].mean(axis=0)
+
+    # vertices next to a periodic face are on it
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        for value in (lb[axis], lb[axis] + lengths[axis]):
+            on_face = np.abs(unified[:, axis] - value) <= snap_tol
+            unified[on_face, axis] = value
+    unified += shifts
+
+    new_voro = []
+    start = 0
+    for cell, count in zip(voro, counts):
+        new_cell = dict(cell)
+        new_cell['vertices'] = unified[start:start + count].tolist()
+        new_voro.append(new_cell)
+        start += count
+    return new_voro
+
+
 def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
     """Split the cells of a periodic 2D tessellation at the periodic faces.
 
@@ -1469,7 +1543,9 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
     """
     lengths = [ub - lb for lb, ub in lims]
     tol = 1e-10 * max(lengths)
+    merge_tol = _MERGE_TOL * max(lengths)
     snap_tol = _SNAP_TOL * max(lengths)
+    voro = _unify_cell_vertices(voro, lims, per_axes, merge_tol, snap_tol)
 
     # Cut the cells at the periodic faces
     pieces = []  # (cell number, vertices, edge adjacencies)
@@ -1534,7 +1610,7 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
                 candidates = [p for p in cell_pieces.get(adj_cell, [])
                               if p != piece_num]
                 adj_cell = _matching_piece(pts[k], pts[k1], candidates,
-                                           pieces, tol)
+                                           pieces, merge_tol)
                 if adj_cell is None:
                     adj_cell = _wall_of_edge(pts[k], pts[k1], lims, tol)
             faces.append({'adjacent_cell': int(adj_cell),
@@ -1740,7 +1816,9 @@ def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
     """
     lengths = [ub - lb for lb, ub in lims]
     tol = 1e-10 * max(lengths)
+    merge_tol = _MERGE_TOL * max(lengths)
     snap_tol = _SNAP_TOL * max(lengths)
+    voro = _unify_cell_vertices(voro, lims, per_axes, merge_tol, snap_tol)
 
     pieces = []  # (cell number, vertices, faces)
     for cell_num, cell in enumerate(voro):
@@ -1805,7 +1883,7 @@ def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
                 candidates = [p for p in cell_pieces.get(adj_cell, [])
                               if p != piece_num]
                 adj_cell = _matching_piece_3d(verts[loop], candidates,
-                                              pieces, tol)
+                                              pieces, merge_tol)
                 if adj_cell is None:
                     adj_cell = _wall_of_face(verts[loop], lims, tol)
             out_faces.append({'adjacent_cell': int(adj_cell),
