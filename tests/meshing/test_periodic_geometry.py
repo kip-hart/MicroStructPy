@@ -5,6 +5,11 @@ domain: each cell is a closed convex polytope inside the domain, the cell
 volumes add up to the domain volume and every point of the domain lies in
 exactly one cell (no gaps, no overlaps). The elements of the triangular/
 tetrahedral mesh must partition the cells in the same way.
+
+The points of a periodic polymesh are snapped onto the periodic faces
+within ``_SNAP_TOL`` (relative to the size of the domain), which makes some
+facets non-planar by up to that distance: the geometric tests use it as
+their tolerance.
 """
 from collections import Counter
 
@@ -15,6 +20,7 @@ import scipy.stats
 import microstructpy as msp
 from microstructpy.meshing import PolyMesh
 from microstructpy.meshing import TriMesh
+from microstructpy.meshing.polymesh import _SNAP_TOL
 from microstructpy.meshing.trimesh import _amorphous_seed_numbers
 from microstructpy.seeding import SeedList
 
@@ -41,6 +47,8 @@ CASES = [
     ('cube-xyz-4', msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0)), 4,
      True),
     ('cube-xz', msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0)), 3,
+     'xz'),
+    ('cube-xz-10', msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0)), 10,
      'xz'),
     ('box-y', msp.geometry.Box(limits=[(0, 2), (0, 1), (0, 1.3)]), 7, 'y'),
     ('box-none', msp.geometry.Box(limits=[(0, 2), (0, 1), (0, 1.3)]), 9,
@@ -126,6 +134,7 @@ def test_cells_partition_the_domain(case):
     lims = np.array(domain.limits)
     n_dim = len(lims)
     scale = np.max(lims[:, 1] - lims[:, 0])
+    geom_tol = 2 * _SNAP_TOL * scale
     assert np.all(pts >= lims[:, 0] - 1e-9)
     assert np.all(pts <= lims[:, 1] + 1e-9)
     # no duplicate points
@@ -138,7 +147,7 @@ def test_cells_partition_the_domain(case):
         n = _facet_normal(loop)
         assert np.linalg.norm(n) > 1e-12
         n /= np.linalg.norm(n)
-        assert np.abs((loop - loop[0]) @ n).max() < 1e-8 * scale
+        assert np.abs((loop - loop[0]) @ n).max() < geom_tol
 
     # facet neighbors and regions agree; wall facets are on their wall
     for f, neighs in enumerate(pmesh.facet_neighbors):
@@ -162,18 +171,23 @@ def test_cells_partition_the_domain(case):
         all_planes.append(planes)
         vols[r] = sum([np.dot(n, p0) * m for n, _, m, p0 in planes]) / n_dim
         assert vols[r] > 0
-        assert np.all(_inside(planes, pts[verts], tol=1e-8 * scale))
-    assert np.isclose(vols.sum(), domain.n_vol, rtol=1e-9)
-    assert np.allclose(pmesh.volumes, vols, rtol=1e-9, atol=1e-12)
+        assert np.all(_inside(planes, pts[verts], tol=geom_tol))
+    assert np.isclose(vols.sum(), domain.n_vol, rtol=1e-6)
+    assert np.allclose(pmesh.volumes, vols, rtol=1e-6, atol=1e-9)
 
     # random points of the domain lie in exactly one cell
     rng = np.random.default_rng(0)
     lengths = lims[:, 1] - lims[:, 0]
     sample = lims[:, 0] + rng.random((20000, n_dim)) * lengths
-    counts = np.zeros(len(sample), dtype=int)
+    # (no gaps: every point is in a cell widened by the tolerance; no
+    # overlaps: at most one cell contains it when the cells are shrunk)
+    n_loose = np.zeros(len(sample), dtype=int)
+    n_strict = np.zeros(len(sample), dtype=int)
     for planes in all_planes:
-        counts += _inside(planes, sample, tol=1e-12)
-    assert np.all(counts == 1)
+        n_loose += _inside(planes, sample, tol=geom_tol)
+        n_strict += _inside(planes, sample, tol=-geom_tol)
+    assert np.all(n_loose >= 1)
+    assert np.all(n_strict <= 1)
 
 
 # --------------------------------------------------------------------------- #
@@ -186,6 +200,7 @@ def test_elements_partition_the_cells(case):
     elems = np.array(mesh.elements)
     lims = np.array(domain.limits)
     n_dim = len(lims)
+    geom_tol = 2 * _SNAP_TOL * np.max(lims[:, 1] - lims[:, 0])
 
     # positively oriented elements that add up to the domain volume
     rel = pts[elems[:, 1:]] - pts[elems[:, :1]]
@@ -232,7 +247,7 @@ def test_elements_partition_the_cells(case):
         loop = ppts[pmesh.facets[f_num]]
         n = _facet_normal(loop)
         n /= np.linalg.norm(n)
-        assert np.abs((fp - loop[0]) @ n).max() < 1e-8
+        assert np.abs((fp - loop[0]) @ n).max() < geom_tol
     for f_num, (r_a, r_b) in enumerate(pmesh.facet_neighbors):
         measure = np.linalg.norm(_facet_normal(ppts[pmesh.facets[f_num]]))
         if min(r_a, r_b) < 0 or att_of_reg[r_a] != att_of_reg[r_b]:
@@ -244,11 +259,11 @@ def test_elements_partition_the_cells(case):
     for att in np.unique(att_of_reg):
         regs = np.nonzero(att_of_reg == att)[0]
         mask = attrs == att
-        assert np.isclose(svol[mask].sum(), cell_vols[regs].sum(), rtol=1e-9)
+        assert np.isclose(svol[mask].sum(), cell_vols[regs].sum(), rtol=1e-6)
         inside = np.zeros(np.sum(mask), dtype=bool)
         for r in regs:
             planes, _ = _cell_planes(ppts, pmesh, r)
-            inside |= _inside(planes, cents[mask])
+            inside |= _inside(planes, cents[mask], tol=geom_tol)
         assert np.all(inside)
 
     # the labels: crystalline cells keep their seed number, amorphous cells
