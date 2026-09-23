@@ -21,8 +21,11 @@ Added
   triangulated identically). The pairs of periodic points/nodes and facets
   are stored in the meshes and their text files; the Abaqus output has a
   node set per periodic face in matching order; the verification unwraps
-  grains that are split by the faces. gmsh is not supported for periodic
-  meshes.
+  grains that are split by the faces. Cells of the same amorphous phase
+  that touch across a periodic face are merged into one region, like cells
+  that share a facet, and the merged region is labelled with the smallest
+  seed number among its cells by every mesher and writer. gmsh is not
+  supported for periodic meshes.
 
 Fixed
 '''''

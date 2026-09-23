@@ -1460,6 +1460,11 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     regions = []
     holes = []
 
+    # Merged cells are labelled with the smallest seed number among them
+    # (the same convention as the other writers and meshers), which is not
+    # the seed number of the first cell of the group in a periodic mesh.
+    labels = _merged_seed_numbers(polymesh, phases)
+
     ungrouped = np.full(len(polymesh.regions), True, dtype='?')
     while np.any(ungrouped):
         cell_ind = np.argmax(ungrouped)
@@ -1470,7 +1475,7 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
         cell_cen = pts_arr[list(cell_kps)].mean(axis=0)
 
         # seed number and phase type
-        seed_num = int(polymesh.seed_numbers[cell_ind])
+        seed_num = int(labels[cell_ind])
         phase_num = polymesh.phase_numbers[cell_ind]
         phase = phases[phase_num]
         phase_type = phase.get('material_type', 'crystalline')
@@ -1866,30 +1871,73 @@ def _sort_facets(pairs):
     return s_pairs
 
 
-def _amorphous_seed_numbers(pmesh, phases):
+def _merged_seed_numbers(pmesh, phases):
+    """Label (seed number) of each region after merging amorphous cells.
+
+    Cells of the same amorphous phase that share a facet are merged into a
+    single region of the mesh, labelled with the smallest seed number among
+    them. In a periodic mesh, the pieces of one seed and the cells that touch
+    across a periodic face belong to the same region.
+
+    Returns:
+        numpy.ndarray: The label of each region of the polymesh.
+    """
+    seed_nums = np.array(pmesh.seed_numbers)
     phase_nums = np.array(pmesh.phase_numbers)
     is_amorph = np.array([p.get('material_type', 'solid') in _misc.kw_amorph
                           for p in phases])
     amorph_mask = is_amorph[phase_nums]
 
-    neighs = np.array(pmesh.facet_neighbors)
-    neighs = neighs[np.min(neighs, axis=1) >= 0]
-    neighs_mask = phase_nums[neighs[:, 0]] == phase_nums[neighs[:, 1]]
-    neighs_mask &= amorph_mask[neighs[:, 0]]
-    amorph_neighs = neighs[neighs_mask]
+    parent = np.arange(len(seed_nums))
 
-    new_seed_numbers = np.array(pmesh.seed_numbers)
-    changes_made = True
-    while changes_made:
-        changes_made = False
-        for pair in amorph_neighs:
-            seeds = new_seed_numbers[pair]
-            if seeds[0] != seeds[1]:
-                changes_made = True
-                new_seed_numbers[pair] = np.min(seeds)
-    conv_dict = {s1: s2 for s1, s2 in zip(pmesh.seed_numbers, new_seed_numbers)
-                 if s1 != s2}
-    return conv_dict
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def union(i, j):
+        r_i, r_j = find(i), find(j)
+        if r_i != r_j:
+            parent[max(r_i, r_j)] = min(r_i, r_j)
+
+    pairs = [tuple(neighs) for neighs in pmesh.facet_neighbors]
+    per_facets = getattr(pmesh, 'periodic_facets', None) or {}
+    for axis_pairs in per_facets.values():
+        for f_lo, f_hi in axis_pairs:
+            pairs.append((max(pmesh.facet_neighbors[f_lo]),
+                          max(pmesh.facet_neighbors[f_hi])))
+    for r_a, r_b in pairs:
+        if r_a < 0 or r_b < 0:
+            continue
+        if amorph_mask[r_a] and phase_nums[r_a] == phase_nums[r_b]:
+            union(r_a, r_b)
+
+    first_region = {}
+    for r, s in enumerate(seed_nums):
+        if s in first_region:
+            union(first_region[s], r)
+        else:
+            first_region[s] = r
+
+    roots = np.array([find(r) for r in range(len(seed_nums))])
+    labels = seed_nums.copy()
+    for root in np.unique(roots):
+        members = roots == root
+        labels[members] = seed_nums[members].min()
+    return labels
+
+
+def _amorphous_seed_numbers(pmesh, phases):
+    """Seed numbers that change when amorphous cells are merged.
+
+    Returns:
+        dict: Maps the seed number of each merged cell to the label of its
+        merged region (see :func:`_merged_seed_numbers`).
+    """
+    labels = _merged_seed_numbers(pmesh, phases)
+    return {int(s): int(lbl) for s, lbl in zip(pmesh.seed_numbers, labels)
+            if s != lbl}
 
 
 def _default_phases(polymesh):
