@@ -178,3 +178,86 @@ def ax_objects(ax):
     for att in ['collections', 'images', 'lines', 'patches', 'texts']:
         n += len(getattr(ax, att))
     return n
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Periodicity                                                                 #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def periodic_axes(periodic, n_dim):
+    """Per-axis periodicity flags.
+
+    The periodicity of a microstructure can be given as a boolean (all axes
+    or none), a list of booleans (one per axis), or a string with the names
+    of the periodic axes, such as ``'x'``, ``'xy'`` or ``'xz'``.
+
+    Args:
+        periodic (bool, list, or str): The periodicity specification.
+        n_dim (int): Number of dimensions of the domain.
+
+    Returns:
+        list: ``n_dim`` booleans, True for the periodic axes.
+
+    Raises:
+        ValueError: If the specification cannot be interpreted.
+
+    """
+    if periodic is None:
+        return [False for _ in range(n_dim)]
+
+    if isinstance(periodic, (bool, np.bool_)):
+        return [bool(periodic) for _ in range(n_dim)]
+
+    axis_names = 'xyz'[:n_dim]
+    if isinstance(periodic, str):
+        text = periodic.strip().lower()
+        if text in ('true', 'all', 'yes'):
+            return [True for _ in range(n_dim)]
+        if text in ('false', 'none', 'no', ''):
+            return [False for _ in range(n_dim)]
+        flags = [False for _ in range(n_dim)]
+        for word in text.replace(',', ' ').split():
+            for char in word:
+                if char not in axis_names:
+                    e_str = 'Cannot interpret periodic axes ' + repr(periodic)
+                    e_str += '. Use a boolean, a list of ' + str(n_dim)
+                    e_str += ' booleans, or axis names such as '
+                    e_str += repr(axis_names) + '.'
+                    raise ValueError(e_str)
+                flags[axis_names.index(char)] = True
+        return flags
+
+    flags = [bool(f) for f in periodic]
+    if len(flags) != n_dim:
+        e_str = 'Expected ' + str(n_dim) + ' periodicity flags, got '
+        e_str += str(len(flags)) + ': ' + repr(periodic) + '.'
+        raise ValueError(e_str)
+    return flags
+
+
+def periodic_domain_limits(domain):
+    """(lower, upper) bounds of a rectangular, axis-aligned domain.
+
+    Periodic microstructures are only supported in such domains.
+
+    Args:
+        domain (from :mod:`microstructpy.geometry`): The domain.
+
+    Returns:
+        list: One (lower, upper) tuple per axis.
+
+    Raises:
+        ValueError: If the domain is not a rectangle, square, box, or cube,
+            or if it is rotated.
+
+    """
+    name = type(domain).__name__.lower()
+    if name not in ('rectangle', 'square', 'box', 'cube'):
+        e_str = 'Periodic microstructures require a rectangular domain '
+        e_str += '(Rectangle, Square, Box, or Cube), not ' + name + '.'
+        raise ValueError(e_str)
+    if not np.allclose(np.array(domain.matrix), np.eye(domain.n_dim)):
+        e_str = 'Periodic microstructures require an axis-aligned domain.'
+        raise ValueError(e_str)
+    return [(float(lb), float(ub)) for lb, ub in domain.limits]

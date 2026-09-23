@@ -11,6 +11,7 @@ This module contains the class definition for the SeedList class.
 from __future__ import division
 from __future__ import print_function
 
+import itertools
 import warnings
 
 import aabbtree
@@ -777,7 +778,8 @@ class SeedList(object):
     # Position Function                                                       #
     # ----------------------------------------------------------------------- #
     def position(self, domain, pos_dists={}, rng_seed=0, hold=[],
-                 max_attempts=10000, rtol='fit', verbose=False):
+                 max_attempts=10000, rtol='fit', verbose=False,
+                 periodic=False):
         """Position seeds in a domain
 
         This method positions the seeds within a domain. The "domain" should be
@@ -837,10 +839,25 @@ class SeedList(object):
             verbose (bool): *(optional)* This option will print a running
                 counter of how many seeds have been positioned.
                 Defaults to False.
+            periodic (bool, list, or str): *(optional)* Periodicity of the
+                microstructure: True for all axes, a list of booleans (one
+                per axis), or the names of the periodic axes such as
+                ``'x'`` or ``'xy'``. A seed that crosses a periodic face of
+                the domain is checked for overlap on both sides, through its
+                periodic images. Requires a rectangular domain.
+                Defaults to False.
 
         """  # NOQA: E501
         if len(hold) == 0:
             hold = [False for seed in self]
+
+        # Periodicity: seeds that cross a periodic face take part in the
+        # overlap test through their images across the domain
+        per_axes = _misc.periodic_axes(periodic, domain.n_dim)
+        if any(per_axes):
+            dom_lims = _misc.periodic_domain_limits(domain)
+        else:
+            dom_lims = None
 
         # set the spatial distributions
         u_dist = [scipy.stats.uniform(lb, ub - lb) for lb, ub in
@@ -861,9 +878,7 @@ class SeedList(object):
         tree = aabbtree.AABBTree()
         for i in range(n_seeds):
             if hold[i]:
-                # add to tree
-                aabb = aabbtree.AABB(self[i].geometry.limits)
-                tree.add(aabb, i)
+                _add_to_tree(tree, self[i], i, dom_lims, per_axes)
 
         positioned = np.array(hold)
         vols = np.array([s.volume for s in self])
@@ -905,26 +920,28 @@ class SeedList(object):
                 bkdwn = np.array(seed.breakdown)
                 cens = bkdwn[:, :-1]
                 rads = bkdwn[:, -1].reshape(-1, 1)
+                limits = seed.geometry.limits
 
-                aabb = aabbtree.AABB(seed.geometry.limits)
-                olap_inds = tree.overlap_values(aabb, method='BFS')
-                olap_seeds = self[olap_inds]
+                # The seed and its periodic images are tested against the
+                # placed seeds and their images (the tree holds both)
                 clears = True
-                for olap_seed in olap_seeds:
-                    o_bkdwn = np.array(olap_seed.breakdown)
-                    o_cens = o_bkdwn[:, :-1]
-                    o_rads = o_bkdwn[:, -1].reshape(1, -1)
+                images = _periodic_images(limits, dom_lims, per_axes,
+                                          include_zero=True)
+                for t_seed in images:
+                    aabb = _translated_aabb(limits, t_seed)
+                    s_cens = cens + np.array(t_seed)
+                    for j, t_other in tree.overlap_values(aabb, method='BFS'):
+                        o_bkdwn = np.array(self[j].breakdown)
+                        o_cens = o_bkdwn[:, :-1] + np.array(t_other)
+                        o_rads = o_bkdwn[:, -1].reshape(1, -1)
 
-                    if len(rads) > 1:
-                        dists = distance.cdist(cens, o_cens)
-                    else:
-                        rel_pos = o_cens - cens
-                        rp2 = rel_pos * rel_pos
-                        dists = np.sqrt(np.sum(rp2, axis=1))
-                    tol = rtol * np.minimum(rads, o_rads)
-                    total_dists = dists + tol - rads - o_rads
-                    if np.any(total_dists < 0):
-                        clears = False
+                        dists = distance.cdist(s_cens, o_cens)
+                        tol = rtol * np.minimum(rads, o_rads)
+                        total_dists = dists + tol - rads - o_rads
+                        if np.any(total_dists < 0):
+                            clears = False
+                            break
+                    if not clears:
                         break
 
                 searching = not clears
@@ -935,9 +952,8 @@ class SeedList(object):
                 positioned[i] = True
                 self[i] = seed
 
-                # add to tree
-                aabb = aabbtree.AABB(seed.geometry.limits)
-                tree.add(aabb, i)
+                # add to tree, with periodic images
+                _add_to_tree(tree, seed, i, dom_lims, per_axes)
 
         keep_mask = np.array(n_seeds * [True])
         keep_mask[i_reject] = False
@@ -953,6 +969,65 @@ class SeedList(object):
             warnings.warn(w_str, RuntimeWarning)
 
         self.seeds = self[keep_mask].seeds
+
+
+def _periodic_images(limits, dom_lims, per_axes, include_zero=False):
+    """Translations of the periodic images of a shape.
+
+    A shape whose bounding box ``limits`` crosses a periodic face of the
+    domain has an image translated by the domain length across that axis;
+    crossing several faces (edges, corners) gives every combination.
+
+    Args:
+        limits (list): (lower, upper) bounds of the shape, per axis.
+        dom_lims (list or None): (lower, upper) bounds of the domain, or
+            None for a non-periodic domain.
+        per_axes (list): Periodicity flag of each axis.
+        include_zero (bool): Whether to include the zero translation (the
+            shape itself) as the first entry.
+
+    Returns:
+        list: Translation tuples.
+
+    """
+    n_dim = len(limits)
+    zero = tuple([0.0 for _ in range(n_dim)])
+    images = [zero] if include_zero else []
+    if dom_lims is None:
+        return images
+
+    options = []
+    for i in range(n_dim):
+        opts = [0.0]
+        if per_axes[i]:
+            lb, ub = dom_lims[i]
+            length = ub - lb
+            if limits[i][0] < lb:
+                opts.append(length)
+            if limits[i][1] > ub:
+                opts.append(-length)
+        options.append(opts)
+    for t in itertools.product(*options):
+        if any([x != 0 for x in t]):
+            images.append(tuple([float(x) for x in t]))
+    return images
+
+
+def _translated_aabb(limits, translation):
+    """Axis-aligned bounding box of a shape translated by a vector."""
+    return aabbtree.AABB([(lb + t, ub + t) for (lb, ub), t in
+                          zip(limits, translation)])
+
+
+def _add_to_tree(tree, seed, index, dom_lims, per_axes):
+    """Add a seed and its periodic images to an AABB tree.
+
+    The values stored in the tree are (seed index, translation) pairs.
+    """
+    limits = seed.geometry.limits
+    images = _periodic_images(limits, dom_lims, per_axes, include_zero=True)
+    for t in images:
+        tree.add(_translated_aabb(limits, t), (index, t))
 
 
 def _plt_args(seeds, index_by, kwargs):
