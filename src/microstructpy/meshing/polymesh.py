@@ -1552,10 +1552,10 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
             if adj_cell >= 0:
                 candidates = [p for p in cell_pieces.get(adj_cell, [])
                               if p != piece_num]
-                adj_cell = _matching_piece(pts[k], pts[k1], candidates,
-                                           pieces, merge_tol)
+                adj_cell = _matching_piece(pts[[k, k1]], candidates, pieces,
+                                           merge_tol)
                 if adj_cell is None:
-                    adj_cell = _wall_of_edge(pts[k], pts[k1], lims, tol)
+                    adj_cell = _wall_of_points(pts[[k, k1]], lims, tol)
             faces.append({'adjacent_cell': int(adj_cell),
                           'vertices': [k, k1]})
         new_voro.append({'vertices': pts.tolist(),
@@ -1579,17 +1579,6 @@ def _check_cell_width(pts, axis, length, tol):
         e_str += '. More seeds are needed for a periodic '
         e_str += 'microstructure.'
         raise ValueError(e_str)
-
-
-def _matching_piece(pt_a, pt_b, candidates, pieces, tol):
-    """Piece among the candidates that has vertices at both points."""
-    for piece_num in candidates:
-        pts = pieces[piece_num][1]
-        d_a = np.min(np.linalg.norm(pts - pt_a, axis=1))
-        d_b = np.min(np.linalg.norm(pts - pt_b, axis=1))
-        if d_a <= tol and d_b <= tol:
-            return piece_num
-    return None
 
 
 # --------------------------------------------------------------------------- #
@@ -1831,10 +1820,10 @@ def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
             if adj_cell >= 0:
                 candidates = [p for p in cell_pieces.get(adj_cell, [])
                               if p != piece_num]
-                adj_cell = _matching_piece_3d(verts[loop], candidates,
-                                              pieces, merge_tol)
+                adj_cell = _matching_piece(verts[loop], candidates, pieces,
+                                           merge_tol)
                 if adj_cell is None:
-                    adj_cell = _wall_of_face(verts[loop], lims, tol)
+                    adj_cell = _wall_of_points(verts[loop], lims, tol)
             out_faces.append({'adjacent_cell': int(adj_cell),
                               'vertices': list(loop)})
         adjacency = [[] for _ in range(len(verts))]
@@ -1856,8 +1845,9 @@ def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
     return new_voro, new_bkdwn2seed
 
 
-def _matching_piece_3d(face_pts, candidates, pieces, tol):
-    """Piece among the candidates that has vertices at all the points."""
+def _matching_piece(face_pts, candidates, pieces, tol):
+    """Piece among the candidates that has vertices at all the points (the
+    two ends of an edge in 2D, the vertices of a face in 3D)."""
     for piece_num in candidates:
         pts = pieces[piece_num][1]
         dists = np.linalg.norm(face_pts[:, None, :] - pts[None, :, :],
@@ -1867,29 +1857,17 @@ def _matching_piece_3d(face_pts, candidates, pieces, tol):
     return None
 
 
-def _wall_of_face(face_pts, lims, tol):
-    """Wall id of a face lying on a face of the domain."""
+def _wall_of_points(face_pts, lims, tol):
+    """Wall id of the face of the domain on which all the points lie (the
+    ends of an edge in 2D, the vertices of a face in 3D)."""
     for axis, (lb, ub) in enumerate(lims):
         if np.all(np.abs(face_pts[:, axis] - lb) <= tol):
             return -(2 * axis + 1)
         if np.all(np.abs(face_pts[:, axis] - ub) <= tol):
             return -(2 * axis + 2)
-    e_str = 'Cannot resolve the neighbor of a face of the periodic '
+    e_str = 'Cannot resolve the neighbor of a facet of the periodic '
     e_str += 'tessellation at ' + str(np.round(face_pts.mean(axis=0), 6))
     e_str += '.'
-    raise ValueError(e_str)
-
-
-def _wall_of_edge(pt_a, pt_b, lims, tol):
-    """Wall id of an edge lying on a face of the domain."""
-    for axis, (lb, ub) in enumerate(lims):
-        if abs(pt_a[axis] - lb) <= tol and abs(pt_b[axis] - lb) <= tol:
-            return -(2 * axis + 1)
-        if abs(pt_a[axis] - ub) <= tol and abs(pt_b[axis] - ub) <= tol:
-            return -(2 * axis + 2)
-    e_str = 'Cannot resolve the neighbor of the edge between '
-    e_str += str(pt_a.tolist()) + ' and ' + str(pt_b.tolist())
-    e_str += ' in the periodic tessellation.'
     raise ValueError(e_str)
 
 
