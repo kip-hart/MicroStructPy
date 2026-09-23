@@ -280,13 +280,8 @@ class TriMesh(object):
             ValueError: If a node or facet on a periodic face has no image.
 
         """
-        pts, per_nodes = _misc.pair_periodic_points(self.points, per_axes,
-                                                    dom_lims)
-        if self.facets is None:
-            per_facets = {axis: [] for axis in per_nodes}
-        else:
-            per_facets = _misc.pair_periodic_facets(self.facets, per_nodes)
-
+        pts, per_nodes, per_facets = _misc.pair_periodic_mesh(
+            self.points, self.facets, per_axes, dom_lims)
         self.points = pts
         self.periodic_axes = [bool(f) for f in per_axes]
         self.periodic_nodes = per_nodes

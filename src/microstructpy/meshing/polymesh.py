@@ -913,10 +913,8 @@ class PolyMesh(object):
                 image on the opposite face.
 
         """
-        pts, per_points = _misc.pair_periodic_points(self.points, per_axes,
-                                                     dom_lims)
-        per_facets = _misc.pair_periodic_facets(self.facets, per_points)
-
+        pts, per_points, per_facets = _misc.pair_periodic_mesh(
+            self.points, self.facets, per_axes, dom_lims)
         self.points = pts.tolist()
         self.periodic_axes = [bool(f) for f in per_axes]
         self.periodic_points = per_points

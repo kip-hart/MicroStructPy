@@ -397,6 +397,31 @@ def pair_periodic_points(points, per_axes, dom_lims, rel_tol=1e-8):
     return pts, pairs
 
 
+def pair_periodic_mesh(points, facets, per_axes, dom_lims):
+    """Pair the points and the facets of a mesh on opposite periodic faces.
+
+    See :func:`pair_periodic_points` and :func:`pair_periodic_facets`.
+
+    Args:
+        points (list or numpy.ndarray): The points.
+        facets (list or None): The facets, or None if the mesh has none.
+        per_axes (list): Periodicity flag of each axis.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+
+    Returns:
+        tuple: The snapped points (numpy.ndarray), the point pairs and the
+        facet pairs (dictionaries: axis -> list of (lower, upper) numbers;
+        the facet pairs are empty lists if the mesh has no facets).
+
+    """
+    pts, point_pairs = pair_periodic_points(points, per_axes, dom_lims)
+    if facets is None:
+        facet_pairs = {axis: [] for axis in point_pairs}
+    else:
+        facet_pairs = pair_periodic_facets(facets, point_pairs)
+    return pts, point_pairs, facet_pairs
+
+
 def pair_periodic_facets(facets, point_pairs):
     """Pair the facets lying on opposite periodic faces.
 
