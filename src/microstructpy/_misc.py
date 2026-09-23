@@ -236,6 +236,23 @@ def periodic_axes(periodic, n_dim):
     return flags
 
 
+def wall_axis_side(wall):
+    """Axis and side of a wall id of a rectangular domain.
+
+    The walls are numbered -1, -2 for the lower and upper faces along x,
+    -3, -4 along y and -5, -6 along z (the convention of Voro++).
+
+    Args:
+        wall (int): The wall id (negative).
+
+    Returns:
+        tuple: The axis (0, 1 or 2) and the side (0 for the lower face, 1
+        for the upper face).
+
+    """
+    return divmod(-wall - 1, 2)
+
+
 def periodic_domain_limits(domain):
     """(lower, upper) bounds of a rectangular, axis-aligned domain.
 

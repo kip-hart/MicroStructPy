@@ -2627,7 +2627,7 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh,
         if f_num <= 0:
             continue  # a facet of a copied cell, outside the domain
         wall = min(polymesh.facet_neighbors[f_num - 1])
-        if wall < 0 and per_axes[(-wall - 1) // 2]:
+        if wall < 0 and per_axes[_misc.wall_axis_side(wall)[0]]:
             periodic_segs.add(i)
     n_new = sum([len(seg_t[i]) for i in periodic_segs])
 
@@ -2834,7 +2834,7 @@ def _ghost_layer(polymesh, phases, labels, kps, pts, facets, facet_nums,
     for f_num, neighs in enumerate(polymesh.facet_neighbors):
         wall = min(neighs)
         if wall < 0:
-            axis, side = divmod(-wall - 1, 2)
+            axis, side = _misc.wall_axis_side(wall)
             if per_axes[axis]:
                 sign = 1 if side == 0 else -1
                 touched.setdefault(max(neighs), {})[axis] = sign
@@ -2901,7 +2901,7 @@ def _ghost_layer(polymesh, phases, labels, kps, pts, facets, facet_nums,
                         not facet_check(neighs, polymesh, phases)):
                     continue
                 if other < 0:
-                    axis = (-other - 1) // 2
+                    axis = _misc.wall_axis_side(other)[0]
                     if (per_axes[axis] and trans[axis] != 0 and
                             not any([t for a, t in enumerate(trans)
                                      if a != axis])):

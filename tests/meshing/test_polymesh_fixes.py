@@ -22,7 +22,6 @@ from microstructpy.meshing.polymesh import PolyMesh
 from microstructpy.meshing.polymesh import _edge_lengths
 from microstructpy.meshing.polymesh import _loop_area
 from microstructpy.meshing.polymesh import _segment_cross
-from microstructpy.meshing.polymesh import _shortest_edge
 from microstructpy.meshing.polymesh import kp_loop
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
@@ -91,8 +90,7 @@ def _check_partition(pmesh, domain, n_seeds):
 
 
 def _min_edge_length(pmesh):
-    edge_lens = _edge_lengths(pmesh)
-    return edge_lens[_shortest_edge(edge_lens)]['length']
+    return min([e['length'] for e in _edge_lengths(pmesh).values()])
 
 
 # --------------------------------------------------------------------------- #

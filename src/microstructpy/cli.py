@@ -537,6 +537,10 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
         seeds = _unpositioned_seeds(phases, domain, rng_seeds)
 
+    # the margin between the seeds (and their cells) and the periodic faces
+    margin = _periodic_margin(periodic_margin, domain.n_dim, mesh_max_volume,
+                              mesh_max_edge_length, seeds)
+    if seeds_created:
         if verbose:
             print('There are ' + str(len(seeds)) + ' seeds.')
             print('Positioning seeds in domain.')
@@ -544,13 +548,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         kw = 'position'
         rng_seed = rng_seeds.get(kw, 0)
         pos_dists = {i: p[kw] for i, p in enumerate(phases) if kw in p}
-        margin = _periodic_margin(periodic_margin, domain.n_dim,
-                                  mesh_max_volume, mesh_max_edge_length,
-                                  seeds)
         seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose,
                        periodic=periodic, periodic_margin=margin)
-    margin = _periodic_margin(periodic_margin, domain.n_dim, mesh_max_volume,
-                              mesh_max_edge_length, seeds)
 
     # Write seeds
     seeds_types = filetypes.get('seeds', [])

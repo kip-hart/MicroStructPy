@@ -1525,13 +1525,7 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
                 # the two cells sharing an edge are cut consistently and
                 # no sliver pieces are created
                 pts = _snap_to_planes(pts, axis, (lb, ub), snap_tol)
-                extent = pts[:, axis].max() - pts[:, axis].min()
-                if extent > length + tol:
-                    e_str = 'A cell of the periodic tessellation is wider '
-                    e_str += 'than the domain along axis ' + str(axis)
-                    e_str += '. More seeds are needed for a periodic '
-                    e_str += 'microstructure.'
-                    raise ValueError(e_str)
+                _check_cell_width(pts, axis, length, tol)
                 # part below the lower face, translated to the upper side
                 below = _clip_loop(pts, adj, axis, lb, True, wall_hi, tol)
                 rest = _clip_loop(pts, adj, axis, lb, False, wall_lo, tol)
@@ -1585,6 +1579,18 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
     new_bkdwn2seed = np.array([bkdwn2seed[cell_num]
                                for cell_num, _, _ in pieces], dtype='int')
     return new_voro, new_bkdwn2seed
+
+
+def _check_cell_width(pts, axis, length, tol):
+    """Raise if a cell is wider than the domain along an axis: it cannot
+    be cut into pieces that tile the domain (too few seeds)."""
+    extent = pts[:, axis].max() - pts[:, axis].min()
+    if extent > length + tol:
+        e_str = 'A cell of the periodic tessellation is wider '
+        e_str += 'than the domain along axis ' + str(axis)
+        e_str += '. More seeds are needed for a periodic '
+        e_str += 'microstructure.'
+        raise ValueError(e_str)
 
 
 def _matching_piece(pt_a, pt_b, candidates, pieces, tol):
@@ -1799,13 +1805,7 @@ def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
                 # vertices next to a cut plane are snapped onto it (see
                 # _periodic_pieces_2d)
                 p_verts = _snap_to_planes(p_verts, axis, (lb, ub), snap_tol)
-                extent = p_verts[:, axis].max() - p_verts[:, axis].min()
-                if extent > length + tol:
-                    e_str = 'A cell of the periodic tessellation is wider '
-                    e_str += 'than the domain along axis ' + str(axis)
-                    e_str += '. More seeds are needed for a periodic '
-                    e_str += 'microstructure.'
-                    raise ValueError(e_str)
+                _check_cell_width(p_verts, axis, length, tol)
                 below = _clip_polyhedron(p_verts, p_faces, axis, lb, True,
                                          wall_hi, tol)
                 rest = _clip_polyhedron(p_verts, p_faces, axis, lb, False,
@@ -2250,17 +2250,6 @@ def _edge_lengths(pmesh):
     return edge_lens
 
 
-def _shortest_edge(edge_lens):
-    min_len = float('inf')
-    min_pair = (-1, -1)
-    for pair in edge_lens:
-        length = edge_lens[pair]['length']
-        if length < min_len:
-            min_len = length
-            min_pair = pair
-    return min_pair
-
-
 def _point_line_vec(pt, line_pts):
     ptA, ptB = line_pts
     n_vec = (ptB - ptA) / np.linalg.norm(ptB - ptA)
@@ -2383,6 +2372,11 @@ def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
     return pmesh
 
 
+def _region_points(pmesh, region):
+    """Sorted point numbers of a region (a list of facet numbers)."""
+    return sorted({kp for f in region for kp in pmesh.facets[f]})
+
+
 def _mesh_features(pmesh, per_axes, dom_lims, scale, min_angle=0.0):
     """Edges of the mesh, pieces of the cells at the periodic faces and
     corners of the cells at the faces narrower than ``min_angle``.
@@ -2421,10 +2415,10 @@ def _mesh_features(pmesh, per_axes, dom_lims, scale, min_angle=0.0):
                     neighs.add(seed_nums[n])
         if not walls:
             continue
-        kps = sorted({kp for f in region for kp in pmesh.facets[f]})
+        kps = _region_points(pmesh, region)
         cen = pts[kps].mean(axis=0)
         for wall in sorted(walls):
-            axis, side = divmod(-wall - 1, 2)
+            axis, side = _misc.wall_axis_side(wall)
             if not per_axes[axis]:
                 continue
             # the region touches the wall: its extent normal to the wall
@@ -2465,14 +2459,14 @@ def _wedge_features(pmesh, pts, seed_nums, per_axes, scale, min_angle):
         for f in region:
             neighs = pmesh.facet_neighbors[f]
             if min(neighs) < 0:
-                axis, side = divmod(-min(neighs) - 1, 2)
+                axis, side = _misc.wall_axis_side(min(neighs))
                 if per_axes[axis]:
                     walls.append((f, axis, side))
             else:
                 inner.append(f)
         if not walls:
             continue
-        kps = sorted({kp for f in region for kp in pmesh.facets[f]})
+        kps = _region_points(pmesh, region)
         cen = pts[kps].mean(axis=0)
         for f_wall, axis, side in walls:
             wall_set = set(pmesh.facets[f_wall])
