@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <name> Phase 1 </name>
+        <fraction> 1 </fraction>
+        <shape> sphere </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0.8 </loc>
+            <scale> 0.6 </scale>
+        </size>
+    </material>
+
+    <material>
+        <name> Phase 2 </name>
+        <fraction> 1 </fraction>
+        <shape> sphere </shape>
+        <size> 1.2 </size>
+    </material>
+
+    <domain>
+        <shape> cube </shape>
+        <side_length> 4 </side_length>
+        <corner> (0, 0, 0) </corner>
+        <!-- periodic in all three directions; xz would leave y free -->
+        <periodic> xyz </periodic>
+    </domain>
+
+    <settings>
+        <directory> periodic_3D </directory>
+        <verbose> True </verbose>
+        <rng_seeds>
+            <size> 2 </size>
+            <position> 2 </position>
+        </rng_seeds>
+
+        <mesh_min_angle> 15 </mesh_min_angle>
+        <mesh_max_volume> 0.02 </mesh_max_volume>
+
+        <color_by> seed number </color_by>
+        <colormap> tab20 </colormap>
+        <seeds_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </seeds_kwargs>
+        <poly_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </poly_kwargs>
+        <tri_kwargs>
+            <linewidths> 0.1 </linewidths>
+        </tri_kwargs>
+    </settings>
+</input>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <name> Grains </name>
+        <fraction> 2 </fraction>
+        <shape> circle </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0.2 </loc>
+            <scale> 0.2 </scale>
+        </size>
+    </material>
+
+    <material>
+        <name> Inclusions </name>
+        <fraction> 1 </fraction>
+        <shape> ellipse </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0.25 </loc>
+            <scale> 0.15 </scale>
+        </size>
+        <aspect_ratio> 2 </aspect_ratio>
+        <angle_deg>
+            <dist_type> uniform </dist_type>
+            <loc> 0 </loc>
+            <scale> 180 </scale>
+        </angle_deg>
+    </material>
+
+    <domain>
+        <shape> square </shape>
+        <side_length> 2 </side_length>
+        <corner> (0, 0) </corner>
+        <!-- periodic in both directions: x, y, xy and True are accepted -->
+        <periodic> True </periodic>
+    </domain>
+
+    <settings>
+        <directory> periodic_2D </directory>
+        <verbose> True </verbose>
+        <rng_seeds>
+            <size> 1 </size>
+            <position> 1 </position>
+        </rng_seeds>
+
+        <!-- the edge optimization removes the shortest edges of the
+             polygonal mesh, which would force very small triangles -->
+        <edge_opt> True </edge_opt>
+        <edge_opt_n_iter> 25 </edge_opt_n_iter>
+
+        <mesh_min_angle> 25 </mesh_min_angle>
+        <mesh_max_volume> 0.004 </mesh_max_volume>
+
+        <color_by> seed number </color_by>
+        <colormap> tab20 </colormap>
+        <tri_kwargs>
+            <linewidth> 0.2 </linewidth>
+        </tri_kwargs>
+    </settings>
+</input>

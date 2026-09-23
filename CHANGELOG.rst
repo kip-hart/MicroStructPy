@@ -27,7 +27,9 @@ Added
   points/nodes and facets
   are stored in the meshes and their text files; the Abaqus output has a
   node set per periodic face in matching order; the verification unwraps
-  grains that are split by the faces. Cells of the same amorphous phase
+  grains that are split by the faces. The examples ``periodic_2D.xml``,
+  ``periodic_3D.xml`` and ``periodic_tiling.py`` demonstrate periodic
+  microstructures. Cells of the same amorphous phase
   that touch across a periodic face are merged into one region, like cells
   that share a facet, and the merged region is labelled with the smallest
   seed number among its cells by every mesher and writer. The element
