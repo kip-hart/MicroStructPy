@@ -13,10 +13,13 @@ This module contains the class definition for the TriMesh class.
 from __future__ import division
 from __future__ import print_function
 
+import itertools
+
 import meshpy.tet
 import meshpy.triangle
 import numpy as np
 import pygmsh as pg
+from scipy.spatial import cKDTree
 from matplotlib import collections
 from matplotlib import patches
 from matplotlib import pyplot as plt
@@ -226,7 +229,9 @@ class TriMesh(object):
                 TetGen. Defaults to infinity, which turns off this control.
             max_edge_length (float): The maximum edge length of elements
                 along grain boundaries. This option is used  with Triangle
-                and gmsh. Defaults to infinity, which turns off this control.
+                and gmsh, and in 3D for the triangles on the boundary of a
+                periodic domain. Defaults to infinity, which turns off this
+                control.
             mesh_size (float): The target size of the mesh elements. This
                 option is used with gmsh. Default is infinity, whihch turns off
                 this control.
@@ -1448,12 +1453,6 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
         sub_out = meshpy.triangle.subdivide_facets(n_subs, pts, facets,
                                                    facet_nums)
         pts, facets, facet_nums = sub_out
-    elif periodic:
-        # TetGen triangulates polygonal facets itself, so the facets on
-        # opposite periodic faces are triangulated here, identically, and
-        # passed as triangles
-        facets, facet_nums = _triangulate_periodic_facets(polymesh, kps,
-                                                          facets, facet_nums)
 
     # create groups/regions
     pts_arr = np.array(polymesh.points)
@@ -1511,20 +1510,6 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
         else:
             regions.append(cell_cen.tolist() + [seed_num, phase_vol])
 
-    # build inputs
-    if n_dim == 2:
-        info = meshpy.triangle.MeshInfo()
-    else:
-        info = meshpy.tet.MeshInfo()
-
-    info.set_points(pts)
-    info.set_facets(facets, facet_nums)
-    info.set_holes(holes)
-
-    info.regions.resize(len(regions))
-    for i, r in enumerate(regions):
-        info.regions[i] = tuple(r)
-
     # run MeshPy
     # The maximum element volume is set per region above, using the global
     # value as the default for the phases that do not set their own. Only
@@ -1532,16 +1517,16 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     # (global) constraint would cap the per-phase values and, in 2D, an
     # infinite one is formatted as 'ainf', which Triangle reads as the
     # switches -a -i -n -f.
-    # A periodic mesh must keep the nodes of the boundary facets as they are
-    # (Triangle's -Y switch), so that opposite faces have matching nodes.
+    # A periodic mesh is built like a non-periodic one, then made periodic
+    # (see _build_periodic_2d and _build_periodic_3d).
     if n_dim == 2:
-        tri_mesh = meshpy.triangle.build(info,
-                                         attributes=True,
-                                         volume_constraints=True,
-                                         max_volume=None,
-                                         min_angle=min_angle,
-                                         generate_faces=True,
-                                         allow_boundary_steiner=not periodic)
+        if periodic:
+            tri_pts, tri_elems, tri_e_atts = _build_periodic_2d(
+                polymesh, phases, labels, kps, pts, facets, facet_nums,
+                holes, regions, min_angle, max_volume)
+        else:
+            tri_mesh = _build_2d(pts, facets, facet_nums, holes, regions,
+                                 min_angle, True)
     else:
         opts = meshpy.tet.Options('pq')
         opts.mindihedral = min_angle
@@ -1550,25 +1535,33 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
         opts.regionattrib = 1
         opts.facesout = 1
         if periodic:
-            opts.nobisect = 1  # -Y: keep the boundary facets as given
-        tri_mesh = meshpy.tet.build(info, options=opts)
+            tri_mesh = _build_periodic_3d(polymesh, phases, kps, pts,
+                                          facet_nums, holes, regions, opts,
+                                          max_volume, max_edge_length)
+        else:
+            info = _tet_info(pts, facets, facet_nums, holes, regions)
+            tri_mesh = meshpy.tet.build(info, options=opts)
 
     # return mesh
-    tri_pts = np.array(tri_mesh.points)
-    tri_elems = np.array(tri_mesh.elements)
-    tri_e_atts = np.array(tri_mesh.element_attributes, dtype='int')
-
-    tri_faces = np.array(tri_mesh.faces)
-    tri_f_atts = np.array(tri_mesh.face_markers)
-    f_mask = tri_f_atts > 0
-    tri_f = tri_faces[f_mask]
-    tri_fa = tri_f_atts[f_mask] - 1
-
     if periodic:
-        # With -Y, TetGen can leave sub-faces unmarked and its region
-        # attributes then leak between cells: use the geometry instead
+        # The element attributes and the facets are taken from the
+        # geometry of the polymesh (TetGen can leave sub-faces unmarked
+        # when it may not modify the facets, and its region attributes
+        # then leak between cells)
+        if n_dim == 3:
+            tri_pts = np.array(tri_mesh.points)
+            tri_elems = np.array(tri_mesh.elements)
         tri_e_atts, tri_f, tri_fa = _attributes_from_polymesh(
             tri_pts, tri_elems, polymesh, labels)
+    else:
+        tri_pts = np.array(tri_mesh.points)
+        tri_elems = np.array(tri_mesh.elements)
+        tri_e_atts = np.array(tri_mesh.element_attributes, dtype='int')
+        tri_faces = np.array(tri_mesh.faces)
+        tri_f_atts = np.array(tri_mesh.face_markers)
+        f_mask = tri_f_atts > 0
+        tri_f = tri_faces[f_mask]
+        tri_fa = tri_f_atts[f_mask] - 1
 
     tri_args = (tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa)
     return tri_args
@@ -1990,53 +1983,955 @@ def _facet_in_normal(pts, cen_pt):
     return un, f_cen
 
 
-def _triangulate_periodic_facets(polymesh, kps, facets, facet_nums):
-    """Triangulate the facets on the periodic faces of a 3D polymesh.
+_FACE_MIN_ANGLE = 20.0  # quality of the triangles on the periodic faces (3D)
+_MAX_EDGE_SUBDIVISIONS = 400
+_MAX_PERIODIC_PASSES = 8
 
-    Each facet on a lower periodic face is split into a fan of triangles
-    and its image on the upper face into the corresponding triangles (the
-    images of the same points), so that TetGen, which keeps the boundary
-    facets as given with the -Y switch, produces matching triangles on
-    opposite faces.
+
+def _facet_sizes(polymesh, phases, facet_nums, max_volume, max_edge_length):
+    """Target edge length of the elements on each facet.
+
+    The facets on the periodic faces are triangulated before meshing: to
+    the maximum edge length, and to the edge length of the regular
+    tetrahedron with the maximum volume of the phase of the cell on the
+    facet.
+
+    Returns:
+        dict: Maps the polymesh facet number to the edge length.
+
+    """
+    n_dim = len(polymesh.points[0])
+    h_facets = {}
+    for f_num in facet_nums:
+        h_val = max_edge_length
+        for reg in polymesh.facet_neighbors[f_num - 1]:
+            if reg < 0:
+                continue
+            phase = phases[polymesh.phase_numbers[reg]]
+            vol = phase.get('max_volume', max_volume)
+            if np.isfinite(vol):
+                if n_dim == 2:
+                    h_val = min(h_val, np.sqrt(4 * vol / np.sqrt(3)))
+                else:
+                    h_val = min(h_val, (6 * np.sqrt(2) * vol) ** (1.0 / 3))
+        h_facets[f_num - 1] = h_val
+    return h_facets
+
+
+def _edge_key(kp_a, kp_b):
+    return (min(kp_a, kp_b), max(kp_a, kp_b))
+
+
+def _points_on_segment(new_pts, pt_a, pt_b):
+    """Parameters (0 < t < 1) of the points that lie on a segment."""
+    if len(new_pts) == 0:
+        return []
+    rel = np.array(new_pts) - pt_a
+    seg = pt_b - pt_a
+    len2 = np.dot(seg, seg)
+    t_vals = rel.dot(seg) / len2
+    dists = np.linalg.norm(rel - np.outer(t_vals, seg), axis=1)
+    on_seg = (t_vals > 1e-9) & (t_vals < 1 - 1e-9)
+    on_seg &= dists <= 1e-9 * np.sqrt(len2)
+    return sorted(t_vals[on_seg].tolist())
+
+
+def _merge_params(t_vals, sides=None, n_max=_MAX_EDGE_SUBDIVISIONS,
+                  min_gap=1e-6):
+    """Subdivision of a segment from the parameters of points on it.
+
+    The points come from the refinement of the facets that share the
+    segment and of its periodic images, so each face of a periodic pair
+    contributes a set of points. Points closer than ``min_gap`` (relative
+    to the segment) are merged, and a point is dropped when a point of
+    another side (``sides``, one value per parameter) is kept closer than
+    0.4 times the gap to the next point: the subdivision is as fine as the
+    finest side, not the union of the sides.
+
+    Returns:
+        list: The sorted parameters (0 < t < 1) of the subdivision points,
+        at most n_max - 1 of them.
+
+    """
+    if sides is None:
+        sides = [None] * len(t_vals)
+    order = np.argsort(t_vals)
+    ts = [t_vals[i] for i in order]
+    ss = [sides[i] for i in order]
+    kept_t = [0.0]
+    kept_s = [None]
+    for i, (t_val, side) in enumerate(zip(ts, ss)):
+        if not (0 < t_val < 1 - min_gap) or t_val - kept_t[-1] <= min_gap:
+            continue
+        gap_next = (ts[i + 1] if i + 1 < len(ts) else 1.0) - t_val
+        if (side is not None and kept_s[-1] is not None and
+                kept_s[-1] != side and t_val - kept_t[-1] < 0.4 * gap_next):
+            continue
+        kept_t.append(t_val)
+        kept_s.append(side)
+    merged = kept_t[1:]
+    if len(merged) >= n_max:
+        merged = [i / n_max for i in range(1, n_max)]
+    return merged
+
+
+def _triangle_polygon(loop_pts, h_val, allow_boundary_steiner, extra_pts=(),
+                      quality=True):
+    """Triangulate a planar convex polygon in 3D with Triangle.
+
+    With ``quality``, the triangles have a minimum angle of 20 degrees
+    and, if ``h_val`` is finite, at most the area of the equilateral
+    triangle with that edge length; Steiner points are added on the edges
+    of the polygon only if allowed. Without it, the triangulation is the
+    constrained Delaunay triangulation of the points. The extra points,
+    inside the polygon, are vertices of the triangulation.
+
+    Returns:
+        tuple: The points (the polygon points, then the extra points, in
+        order, then the new ones) as an array, and the triangles (lists of
+        point indices).
+
+    """
+    loop_pts = np.asarray(loop_pts, dtype='float')
+    n_pts = len(loop_pts)
+    extra_pts = np.asarray(extra_pts, dtype='float').reshape(-1, 3)
+    n_in = n_pts + len(extra_pts)
+
+    # orthonormal basis of the plane of the polygon
+    normal = np.zeros(3)
+    for i in range(n_pts):
+        normal += np.cross(loop_pts[i - 1], loop_pts[i])
+    normal /= np.linalg.norm(normal)
+    edges = np.roll(loop_pts, -1, axis=0) - loop_pts
+    u_vec = edges[np.argmax(np.linalg.norm(edges, axis=1))]
+    u_vec = u_vec - np.dot(u_vec, normal) * normal
+    u_vec /= np.linalg.norm(u_vec)
+    v_vec = np.cross(normal, u_vec)
+    origin = loop_pts[0]
+    in_pts = np.vstack([loop_pts, extra_pts])
+    rel = in_pts - origin
+    pts_2d = np.column_stack([rel.dot(u_vec), rel.dot(v_vec)])
+
+    info = meshpy.triangle.MeshInfo()
+    info.set_points(pts_2d.tolist())
+    info.set_facets([(i, (i + 1) % n_pts) for i in range(n_pts)])
+    max_area = None
+    min_angle = None
+    if quality:
+        min_angle = _FACE_MIN_ANGLE
+        if np.isfinite(h_val):
+            max_area = 0.25 * np.sqrt(3) * h_val * h_val
+    tri = meshpy.triangle.build(info, max_volume=max_area,
+                                min_angle=min_angle, quality_meshing=quality,
+                                allow_boundary_steiner=allow_boundary_steiner)
+
+    # Triangle keeps the input points first, in order
+    out_2d = np.array(tri.points)
+    if len(out_2d) < n_in or not np.allclose(out_2d[:n_in], pts_2d):
+        raise RuntimeError('Triangle did not keep the input points of a '
+                           'facet.')
+    out_pts = origin + np.outer(out_2d[:, 0], u_vec)
+    out_pts += np.outer(out_2d[:, 1], v_vec)
+    out_pts[:n_in] = in_pts
+    for axis in range(3):
+        if np.ptp(loop_pts[:, axis]) <= 1e-12:
+            out_pts[:, axis] = loop_pts[0, axis]
+    tris = [list(elem) for elem in np.array(tri.elements)]
+    return out_pts, tris
+
+
+def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
+                           max_edge_length, edge_t, face_pts):
+    """Triangulate the facets of a periodic 3D polymesh.
+
+    Each facet is triangulated with Triangle (with a minimum angle of 20
+    degrees and at most the area given by the mesh size, see
+    :func:`_facet_sizes`). The edges of the facets are subdivided where
+    Triangle refines them and at the extra parameters in ``edge_t``, and
+    the triangulations contain the extra points in ``face_pts``. An edge
+    on a periodic face is subdivided identically to its periodic images,
+    and the facets on the upper periodic faces get the images of the
+    points and triangles of the facets on the lower faces, so that the
+    nodes on opposite faces match.
 
     Args:
         polymesh (PolyMesh): The periodic polymesh.
+        phases (list): The phases.
         kps (dict): Maps polymesh point numbers to the point numbers of the
             mesher input.
-        facets (list): Facets of the mesher input (lists of point numbers).
-        facet_nums (list): Polymesh facet number + 1 of each facet.
+        pts (list): Points of the mesher input.
+        facet_nums (list): Polymesh facet number + 1 of each facet of the
+            mesher input.
+        max_volume (float): The default maximum volume of the elements.
+        max_edge_length (float): The maximum edge length.
+        edge_t (dict): Maps an edge (pair of polymesh point numbers, in
+            increasing order) to parameters of extra points on it.
+        face_pts (dict): Maps a facet number to extra points in the facet
+            (for a facet on an upper periodic face, they are stored with
+            the facet on the lower face).
 
     Returns:
-        tuple: The new facets and facet numbers.
+        tuple: The new points, facets (triangles) and facet numbers.
 
     """
-    f_index = {f_num - 1: i for i, f_num in enumerate(facet_nums)}
-    replaced = {}
-    for axis, f_pairs in (polymesh.periodic_facets or {}).items():
-        kp_map = dict(polymesh.periodic_points[axis])
+    pts = [list(p) for p in pts]
+    p_arr = np.array(polymesh.points)
+    n_dim = p_arr.shape[1]
+    lengths = p_arr.max(axis=0) - p_arr.min(axis=0)
+    scale = lengths.max()
+    per_pts = polymesh.periodic_points or {}
+    per_facets = polymesh.periodic_facets or {}
+    lo_hi = {axis: dict(pairs) for axis, pairs in per_pts.items()}
+    hi_lo = {axis: {b: a for a, b in pairs} for axis, pairs in
+             per_pts.items()}
+    h_facets = _facet_sizes(polymesh, phases, facet_nums, max_volume,
+                            max_edge_length)
+
+    upper = {}
+    for axis, f_pairs in per_facets.items():
         for f_lo, f_hi in f_pairs:
-            if f_lo not in f_index or f_hi not in f_index:
+            upper[f_lo] = (axis, f_hi)
+    is_upper = set([f_hi for _, f_hi in upper.values()])
+
+    # 1. Edges of the facets; an edge and its periodic images are
+    # subdivided identically
+    edge_keys = set()
+    for f_num in facet_nums:
+        loop = polymesh.facets[f_num - 1]
+        for i in range(len(loop)):
+            edge_keys.add(_edge_key(loop[i - 1], loop[i]))
+
+    parent = {key: key for key in edge_keys}
+
+    def find(key):
+        while parent[key] != key:
+            parent[key] = parent[parent[key]]
+            key = parent[key]
+        return key
+
+    for kp_map in lo_hi.values():
+        for key in edge_keys:
+            if key[0] in kp_map and key[1] in kp_map:
+                image = _edge_key(kp_map[key[0]], kp_map[key[1]])
+                if image in edge_keys:
+                    parent[find(key)] = find(image)
+
+    def to_root(key, t_vals):
+        # the parameters along key, in the orientation of its class root
+        root = find(key)
+        seg = p_arr[key[1]] - p_arr[key[0]]
+        seg_root = p_arr[root[1]] - p_arr[root[0]]
+        if np.dot(seg, seg_root) >= 0:
+            return list(t_vals)
+        return [1 - t for t in t_vals]
+
+    # 2. Parameters of the points on the edges: the edges of the periodic
+    # facets are subdivided to the maximum edge length, and all the edges
+    # at the extra parameters
+    periodic_facets = set(upper) | is_upper
+    splits = {}
+    for f_num in facet_nums:
+        f = f_num - 1
+        if f not in periodic_facets or not np.isfinite(max_edge_length):
+            continue
+        loop = polymesh.facets[f]
+        for i in range(len(loop)):
+            key = _edge_key(loop[i - 1], loop[i])
+            edge_len = np.linalg.norm(p_arr[key[1]] - p_arr[key[0]])
+            n_sub = int(np.ceil(edge_len / max_edge_length))
+            t_vals = [k / n_sub for k in range(1, n_sub)]
+            splits.setdefault(find(key), []).extend(
+                [(t, None) for t in to_root(key, t_vals)])
+    for key, vals in edge_t.items():
+        if key in edge_keys:
+            ts = to_root(key, [t for t, _ in vals])
+            splits.setdefault(find(key), []).extend(
+                zip(ts, [s for _, s in vals]))
+
+    # 3. Subdivide the edges; the images of an edge get translated copies of
+    # its points, recorded in image_map (lower point -> upper point)
+    edge_pts = {}
+    image_map = {axis: {kps[a]: kps[b] for a, b in pairs} for axis, pairs in
+                 per_pts.items()}
+    for key in sorted(edge_keys):
+        if key in edge_pts:
+            continue
+        pt_a, pt_b = p_arr[key[0]], p_arr[key[1]]
+        edge_len = np.linalg.norm(pt_b - pt_a)
+        min_gap = max(1e-6, 1e-6 * scale / edge_len)
+        vals = splits.get(find(key), [])
+        t_vals = _merge_params([t for t, _ in vals], [s for _, s in vals],
+                               min_gap=min_gap)
+        t_vals = sorted(to_root(key, t_vals))
+        ids = []
+        for t_val in t_vals:
+            ids.append(len(pts))
+            pts.append((pt_a + t_val * (pt_b - pt_a)).tolist())
+        edge_pts[key] = ids
+
+        queue = [key]
+        while queue:
+            kp_a, kp_b = queue.pop()
+            ids = edge_pts[(kp_a, kp_b)]
+            for axis in lo_hi:
+                for kp_map, sign in ((lo_hi[axis], 1), (hi_lo[axis], -1)):
+                    if kp_a not in kp_map or kp_b not in kp_map:
+                        continue
+                    im_a, im_b = kp_map[kp_a], kp_map[kp_b]
+                    im_key = _edge_key(im_a, im_b)
+                    if im_key not in edge_keys:
+                        continue
+                    if im_key not in edge_pts:
+                        shift = np.zeros(n_dim)
+                        shift[axis] = sign * lengths[axis]
+                        im_ids = []
+                        for pid in ids:
+                            im_ids.append(len(pts))
+                            pts.append((np.array(pts[pid]) + shift).tolist())
+                        if im_a != im_key[0]:
+                            im_ids = im_ids[::-1]
+                        edge_pts[im_key] = im_ids
+                        queue.append(im_key)
+                    im_ids = edge_pts[im_key]
+                    if im_a != im_key[0]:
+                        im_ids = im_ids[::-1]
+                    for pid, im_pid in zip(ids, im_ids):
+                        if sign > 0:
+                            image_map[axis][pid] = im_pid
+                        else:
+                            image_map[axis][im_pid] = pid
+
+    # 4. Facet loops with the new points
+    loops = {}
+    for f_num in facet_nums:
+        loop = polymesh.facets[f_num - 1]
+        new_loop = []
+        for i in range(len(loop)):
+            kp_a, kp_b = loop[i], loop[(i + 1) % len(loop)]
+            new_loop.append(kps[kp_a])
+            key = _edge_key(kp_a, kp_b)
+            ids = edge_pts[key]
+            new_loop.extend(ids if kp_a == key[0] else ids[::-1])
+        loops[f_num - 1] = new_loop
+
+    # 5. Triangulate the facets with their edges fixed; the facets on the
+    # upper periodic faces are the images of those on the lower faces. The
+    # facets on the periodic faces are refined to the mesh size when one is
+    # given (TetGen cannot refine them afterwards), the others are the
+    # constrained Delaunay triangulations of their points.
+    new_facets = []
+    new_nums = []
+    for f_num in facet_nums:
+        f = f_num - 1
+        if f in is_upper:
+            continue
+        loop_ids = loops[f]
+        extra = face_pts.get(f, [])
+        quality = f in periodic_facets
+        h_val = h_facets[f]
+        if quality and np.isfinite(h_val):
+            # the area bound is met by equilateral triangles of that edge
+            # length; a smaller area keeps the edges of the other triangles
+            # at about the maximum edge length, and the elements on the
+            # faces, which TetGen may not split, below the maximum volume
+            h_val = 0.75 * h_val
+        out_pts, tris = _triangle_polygon([pts[k] for k in loop_ids],
+                                          h_val, False, extra, quality)
+        ids = list(loop_ids)
+        new_ids = []
+        for pt in out_pts[len(loop_ids):]:
+            new_ids.append(len(pts))
+            ids.append(len(pts))
+            pts.append(pt.tolist())
+        tris = [[ids[k] for k in tri] for tri in tris]
+        new_facets.extend(tris)
+        new_nums.extend([f_num] * len(tris))
+        if f not in upper:
+            continue
+
+        p_axis, f_hi = upper[f]
+        kp_map = image_map[p_axis]
+        shift = np.zeros(n_dim)
+        shift[p_axis] = lengths[p_axis]
+        for pid in new_ids:
+            kp_map[pid] = len(pts)
+            pts.append((np.array(pts[pid]) + shift).tolist())
+        new_facets.extend([[kp_map[k] for k in tri] for tri in tris])
+        new_nums.extend([f_hi + 1] * len(tris))
+    return pts, new_facets, new_nums
+
+
+def _merge_face_points(raw, loop_pts, tol_dup):
+    """Points inside a facet from the refinement of both periodic faces.
+
+    A point of one side is dropped when a point of another side is kept
+    within 0.4 times its distance to the nearest point of its own side (or
+    vertex of the facet), so that the facet is as refined as the finest
+    side, not the union of the sides. Points closer than ``tol_dup`` are
+    merged.
+
+    Args:
+        raw (list): Pairs of a point and its side.
+        loop_pts (numpy.ndarray): The vertices of the facet.
+        tol_dup (float): Distance below which points are the same.
+
+    Returns:
+        list: The points kept.
+
+    """
+    by_side = {}
+    for pt, side in raw:
+        by_side.setdefault(side, []).append(pt)
+    kept = []
+    kept_side = []
+    for side in sorted(by_side, key=lambda s: -len(by_side[s])):
+        pts_s = np.array(by_side[side])
+        tree = cKDTree(np.vstack([pts_s, loop_pts]))
+        d_own = tree.query(pts_s, k=2)[0][:, 1]
+        for pt, s_own in zip(pts_s, d_own):
+            if kept:
+                dists = np.linalg.norm(np.array(kept) - pt, axis=1)
+                j = int(np.argmin(dists))
+                if dists[j] <= tol_dup:
+                    continue
+                if kept_side[j] != side and dists[j] < 0.4 * s_own:
+                    continue
+            kept.append(pt.tolist())
+            kept_side.append(side)
+    return kept
+
+
+def _collect_facet_points_3d(new_pts, polymesh, edge_t, face_pts):
+    """Record the points that TetGen added on the facets of a polymesh.
+
+    A point on an edge of a facet is added to the parameters of that edge
+    (``edge_t``), a point inside a facet to the extra points of the facet
+    (``face_pts``); points inside the cells are ignored. A point on an
+    upper periodic face is moved to the lower face and recorded with the
+    facet there, so that the next triangulation of the facets has the
+    point, and its images, on both faces. Each point is recorded with its
+    side (the periodic faces it was on), and the points of the two faces
+    of a pair are merged so that the facets are as refined as the finest
+    side (see :func:`_merge_params` and :func:`_merge_face_points`).
+
+    Returns:
+        int: The number of points recorded.
+
+    """
+    p_arr = np.array(polymesh.points)
+    mins = p_arr.min(axis=0)
+    lengths = p_arr.max(axis=0) - mins
+    maxs = mins + lengths
+    scale = lengths.max()
+    tol = 1e-9 * scale
+    tol_dup = 1e-6 * scale
+    per_axes = polymesh.periodic_axes
+    to_lower = {}
+    for axis, f_pairs in (polymesh.periodic_facets or {}).items():
+        for f_lo, f_hi in f_pairs:
+            to_lower[f_hi] = (axis, f_lo)
+
+    new_pts = np.asarray(new_pts, dtype='float').reshape(-1, 3)
+    if len(new_pts) == 0:
+        return 0
+
+    # 1. Facets whose plane contains each point, among the facets of the
+    # cells that contain it
+    cell_geom = _CellGeometry(polymesh, p_arr)
+    point_facets = {}
+    for r_num in range(len(polymesh.regions)):
+        r_mins, r_maxs = cell_geom.limits(r_num)
+        in_box = np.all((new_pts >= r_mins - tol) & (new_pts <= r_maxs + tol),
+                        axis=1)
+        cand = np.nonzero(in_box)[0]
+        if len(cand) == 0:
+            continue
+        f_nums, normals, centers = cell_geom.facets(r_num)
+        rel_pos = new_pts[cand][:, np.newaxis, :] - centers
+        dp = np.einsum('efd,fd->ef', rel_pos, normals)
+        inside = np.all(dp >= -tol, axis=1)
+        for i, row in zip(cand[inside], dp[inside]):
+            for k in np.nonzero(np.abs(row) <= tol)[0]:
+                point_facets.setdefault(i, set()).add(int(f_nums[k]))
+
+    # 2. Record the points on edges and inside facets, with their sides
+    n_found = 0
+    raw_face = {}
+    for i, f_set in point_facets.items():
+        pt = np.array(new_pts[i])
+        side = tuple([int(bool(per_axes[k]) and abs(pt[k] - maxs[k]) <= tol)
+                      for k in range(3)])
+        f_list = sorted(f_set)
+        if len(f_list) > 1:
+            loop = polymesh.facets[f_list[0]]
+            for k in range(len(loop)):
+                key = _edge_key(loop[k - 1], loop[k])
+                t_vals = _points_on_segment([pt], p_arr[key[0]],
+                                            p_arr[key[1]])
+                if t_vals:
+                    known = edge_t.setdefault(key, [])
+                    edge_len = np.linalg.norm(p_arr[key[1]] - p_arr[key[0]])
+                    if all([abs(t_vals[0] - t) * edge_len > tol_dup
+                            for t, _ in known]):
+                        known.append((t_vals[0], side))
+                        n_found += 1
+                    break
+        else:
+            f = f_list[0]
+            if f in to_lower:
+                axis, f = to_lower[f]
+                pt[axis] -= lengths[axis]
+            raw_face.setdefault(f, []).append((pt, side))
+    for f, raw in raw_face.items():
+        merged = _merge_face_points(raw, p_arr[polymesh.facets[f]], tol_dup)
+        face_pts.setdefault(f, []).extend(merged)
+        n_found += len(merged)
+    return n_found
+
+
+def _tet_info(pts, facets, facet_nums, holes, regions):
+    """Build the TetGen input."""
+    info = meshpy.tet.MeshInfo()
+    info.set_points(pts)
+    info.set_facets(facets, facet_nums)
+    info.set_holes(holes)
+    info.regions.resize(len(regions))
+    for i, region in enumerate(regions):
+        info.regions[i] = tuple(region)
+    return info
+
+
+def _build_periodic_3d(polymesh, phases, kps, pts, facet_nums, holes, regions,
+                       opts, max_volume, max_edge_length):
+    """Build a periodic tetrahedral mesh with TetGen, in two passes.
+
+    In the first pass, the facets are triangulated (identically on
+    opposite periodic faces) and TetGen meshes the domain as usual, adding
+    points on the facets where its quality and size settings require it.
+    The facets are then triangulated again with these points, the facets
+    on opposite periodic faces getting the points of both, and TetGen
+    meshes the domain without changing the facets (-Y): the mesh then has
+    matching nodes on opposite faces, facets refined as in the first pass,
+    and TetGen still refines the interior of the cells.
+
+    Returns:
+        The mesh built by MeshPy.
+
+    """
+    pts_1, facets_1, nums_1 = _triangulate_facets_3d(
+        polymesh, phases, kps, pts, facet_nums, max_volume, max_edge_length,
+        {}, {})
+    info = _tet_info(pts_1, facets_1, nums_1, holes, regions)
+    tri_mesh = meshpy.tet.build(info, options=opts)
+    tri_pts = np.array(tri_mesh.points)
+    n_in = len(pts_1)
+    if len(tri_pts) < n_in or not np.allclose(tri_pts[:n_in], pts_1):
+        raise RuntimeError('TetGen did not keep the input points.')
+
+    edge_t = {}
+    face_pts = {}
+    _collect_facet_points_3d(tri_pts[n_in:], polymesh, edge_t, face_pts)
+    pts_2, facets_2, nums_2 = _triangulate_facets_3d(
+        polymesh, phases, kps, pts, facet_nums, max_volume, max_edge_length,
+        edge_t, face_pts)
+    info = _tet_info(pts_2, facets_2, nums_2, holes, regions)
+    opts.nobisect = 1
+    return meshpy.tet.build(info, options=opts)
+
+
+def _build_2d(pts, facets, facet_nums, holes, regions, min_angle,
+              allow_boundary_steiner):
+    """Build a 2D mesh with Triangle."""
+    info = meshpy.triangle.MeshInfo()
+    info.set_points(pts)
+    info.set_facets(facets, facet_nums)
+    info.set_holes(holes)
+    info.regions.resize(len(regions))
+    for i, region in enumerate(regions):
+        info.regions[i] = tuple(region)
+    return meshpy.triangle.build(info, attributes=True,
+                                 volume_constraints=True, max_volume=None,
+                                 min_angle=min_angle, generate_faces=True,
+                                 allow_boundary_steiner=allow_boundary_steiner)
+
+
+def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh):
+    """Add the points that Triangle put on the periodic faces to the facets.
+
+    Triangle refines the boundary segments of a mesh where its quality and
+    size settings require it, but not the same way on opposite periodic
+    faces. The points it added on a facet of a periodic face and on the
+    image of the facet on the opposite face are inserted in both facets,
+    as images of each other, so that the next mesh has matching nodes on
+    opposite faces. The points of the two facets are merged so that the
+    facets are as refined as the finest of the two (see
+    :func:`_merge_params`).
+
+    Args:
+        tri_pts (numpy.ndarray): Points of the mesh built by Triangle.
+        pts (list): Points of the mesher input.
+        facets (list): Facets (segments) of the mesher input.
+        facet_nums (list): Polymesh facet number + 1 of each facet.
+        polymesh (PolyMesh): The periodic polymesh.
+
+    Returns:
+        tuple: The new points, facets and facet numbers, and the number of
+        points that Triangle added on the periodic faces.
+
+    """
+    pts = [list(p) for p in pts]
+    new_pts = np.array(tri_pts)[len(pts):]
+    p_arr = np.array(polymesh.points)
+    mins = p_arr.min(axis=0)
+    lengths = p_arr.max(axis=0) - mins
+    scale = lengths.max()
+    tol = 1e-9 * scale
+    per_axes = polymesh.periodic_axes
+
+    # facets on the periodic faces, with the parameters of the new points
+    seg_t = {}
+    ends = {}
+    for i, f_num in enumerate(facet_nums):
+        if f_num <= 0:
+            continue  # a facet of a copied cell, outside the domain
+        wall = min(polymesh.facet_neighbors[f_num - 1])
+        if wall >= 0 or not per_axes[(-wall - 1) // 2]:
+            continue
+        pt_a, pt_b = np.array(pts[facets[i][0]]), np.array(pts[facets[i][1]])
+        seg_t[i] = _points_on_segment(new_pts, pt_a, pt_b)
+        ends[i] = (pt_a, pt_b)
+    n_new = sum([len(t_vals) for t_vals in seg_t.values()])
+    if n_new == 0:
+        return pts, [list(f) for f in facets], list(facet_nums), 0
+
+    # a facet on a lower periodic face and its image on the upper face,
+    # matched by their midpoints
+    seg_ids = sorted(ends)
+    mids = np.array([0.5 * (ends[i][0] + ends[i][1]) for i in seg_ids])
+    tree = cKDTree(mids)
+    pair_of = {}
+    for i in seg_ids:
+        pt_a, pt_b = ends[i]
+        for axis, flag in enumerate(per_axes):
+            if not flag or not np.allclose([pt_a[axis], pt_b[axis]],
+                                           mins[axis], atol=tol):
                 continue
-            loop_lo = polymesh.facets[f_lo]
-            loop_hi = [kp_map[kp] for kp in loop_lo]
-            tris_lo = [[kps[loop_lo[0]], kps[loop_lo[k]], kps[loop_lo[k + 1]]]
-                       for k in range(1, len(loop_lo) - 1)]
-            tris_hi = [[kps[loop_hi[0]], kps[loop_hi[k]], kps[loop_hi[k + 1]]]
-                       for k in range(1, len(loop_hi) - 1)]
-            replaced[f_index[f_lo]] = tris_lo
-            replaced[f_index[f_hi]] = tris_hi
+            shift = np.zeros(len(mins))
+            shift[axis] = lengths[axis]
+            dist, k = tree.query(0.5 * (pt_a + pt_b) + shift)
+            j = seg_ids[k]
+            if dist <= tol and j != i:
+                same = np.allclose(ends[j][0], pt_a + shift, atol=tol)
+                pair_of[i] = (j, shift, same)
+    is_upper = set([j for j, _, _ in pair_of.values()])
+
+    def chain(kp_a, ids, kp_b):
+        kp_list = [kp_a] + ids + [kp_b]
+        return [[kp_list[k], kp_list[k + 1]] for k in range(len(kp_list) - 1)]
 
     new_facets = []
     new_nums = []
     for i, (facet, f_num) in enumerate(zip(facets, facet_nums)):
-        if i in replaced:
-            for tri in replaced[i]:
-                new_facets.append(tri)
-                new_nums.append(f_num)
-        else:
-            new_facets.append(facet)
+        if i not in seg_t:
+            new_facets.append(list(facet))
             new_nums.append(f_num)
-    return new_facets, new_nums
+            continue
+        if i in is_upper:
+            continue
+        pt_a, pt_b = ends[i]
+        t_vals = list(seg_t[i])
+        sides = [0] * len(t_vals)
+        if i in pair_of:
+            j, shift, same = pair_of[i]
+            t_vals += [t if same else 1 - t for t in seg_t[j]]
+            sides += [1] * len(seg_t[j])
+        ids = []
+        for t_val in _merge_params(t_vals, sides):
+            ids.append(len(pts))
+            pts.append((pt_a + t_val * (pt_b - pt_a)).tolist())
+        new_facets.extend(chain(facet[0], ids, facet[1]))
+        new_nums.extend([f_num] * (len(ids) + 1))
+        if i in pair_of:
+            j, shift, same = pair_of[i]
+            im_ids = []
+            for pid in ids:
+                im_ids.append(len(pts))
+                pts.append((np.array(pts[pid]) + shift).tolist())
+            if not same:
+                im_ids = im_ids[::-1]
+            new_facets.extend(chain(facets[j][0], im_ids, facets[j][1]))
+            new_nums.extend([facet_nums[j]] * (len(im_ids) + 1))
+    return pts, new_facets, new_nums, n_new
+
+
+def _unmatched_periodic_nodes(pts, polymesh):
+    """Nodes on a periodic face without an image on the opposite face.
+
+    Returns:
+        list: Tuples of the node number, the axis and the value of the
+        coordinate of the opposite face.
+
+    """
+    pts = np.asarray(pts, dtype='float')
+    p_arr = np.array(polymesh.points)
+    mins = p_arr.min(axis=0)
+    lengths = p_arr.max(axis=0) - mins
+    tol = 1e-9 * lengths.max()
+    unmatched = []
+    for axis, flag in enumerate(polymesh.periodic_axes):
+        if not flag:
+            continue
+        others = [i for i in range(len(mins)) if i != axis]
+        for value, opposite in ((mins[axis], mins[axis] + lengths[axis]),
+                                (mins[axis] + lengths[axis], mins[axis])):
+            on_face = np.nonzero(np.abs(pts[:, axis] - value) <= tol)[0]
+            on_opp = np.nonzero(np.abs(pts[:, axis] - opposite) <= tol)[0]
+            if len(on_opp) == 0:
+                unmatched.extend([(kp, axis, opposite) for kp in on_face])
+                continue
+            tree = cKDTree(pts[on_opp][:, others])
+            dists, _ = tree.query(pts[on_face][:, others])
+            for kp, dist in zip(on_face, dists):
+                if dist > tol:
+                    unmatched.append((kp, axis, opposite))
+    return unmatched
+
+
+def _mirror_boundary_points_2d(tri_pts, tri_elems, tri_e_atts, polymesh):
+    """Give every node on a periodic face an image on the opposite face.
+
+    A node without an image is mirrored by splitting the boundary edge of
+    the opposite face, and the triangle behind it, at the image. This is
+    only needed for the few points that Triangle keeps adding on the
+    periodic faces when their refinement does not converge.
+
+    Returns:
+        tuple: The points, elements and element attributes, and the number
+        of nodes mirrored.
+
+    """
+    pts = [list(p) for p in tri_pts]
+    elems = [list(e) for e in tri_elems]
+    atts = list(tri_e_atts)
+    p_arr = np.array(polymesh.points)
+    tol = 1e-9 * (p_arr.max(axis=0) - p_arr.min(axis=0)).max()
+    n_mirrored = 0
+    for kp, axis, opposite in _unmatched_periodic_nodes(tri_pts, polymesh):
+        other = 1 - axis
+        image = np.array(pts[kp])
+        image[axis] = opposite
+        # a node added by the mirroring of another node may be its image
+        arr = np.array(pts)
+        on_opp = np.abs(arr[:, axis] - opposite) <= tol
+        if np.any(np.abs(arr[on_opp, other] - image[other]) <= tol):
+            continue
+        new_kp = len(pts)
+        split = False
+        for e_num, elem in enumerate(elems):
+            e_pts = np.array([pts[k] for k in elem])
+            on_line = np.abs(e_pts[:, axis] - opposite) <= tol
+            if np.sum(on_line) != 2:
+                continue
+            k_a, k_b = [elem[k] for k in np.nonzero(on_line)[0]]
+            v_a, v_b = pts[k_a][other], pts[k_b][other]
+            if not (min(v_a, v_b) + tol < image[other] <
+                    max(v_a, v_b) - tol):
+                continue
+            pts.append(image.tolist())
+            # keep the orientation of the split triangle
+            order = list(elem)
+            i_a, i_b = order.index(k_a), order.index(k_b)
+            tri_1 = list(order)
+            tri_1[i_b] = new_kp
+            tri_2 = list(order)
+            tri_2[i_a] = new_kp
+            elems[e_num] = tri_1
+            elems.append(tri_2)
+            atts.append(atts[e_num])
+            split = True
+            break
+        if not split:
+            e_str = 'A node on a periodic face has no image and cannot be '
+            e_str += 'mirrored.'
+            raise RuntimeError(e_str)
+        n_mirrored += 1
+    return (np.array(pts), np.array(elems), np.array(atts, dtype='int'),
+            n_mirrored)
+
+
+def _ghost_layer(polymesh, phases, labels, kps, pts, facets, facet_nums,
+                 regions, holes, max_volume):
+    """Add periodic images of the cells outside the periodic faces.
+
+    The cells that touch a periodic face are copied outside that face,
+    translated by the length of the domain along the axis (and, for the
+    cells that touch several periodic faces, along each combination of
+    the axes). The mesher then sees the same geometry on both sides of a
+    periodic face, and around both faces of a pair, and refines them the
+    same way. The elements outside the domain are removed after meshing.
+
+    Args:
+        polymesh (PolyMesh): The periodic polymesh.
+        phases (list): The phases.
+        labels (numpy.ndarray): The label of each region of the polymesh.
+        kps (dict): Maps polymesh point numbers to mesher point numbers.
+        pts (list): Points of the mesher input.
+        facets (list): Facets of the mesher input.
+        facet_nums (list): Polymesh facet number + 1 of each facet.
+        regions (list): Region points of the mesher input.
+        holes (list): Hole points of the mesher input.
+        max_volume (float): The default maximum volume of the elements.
+
+    Returns:
+        tuple: The points, facets, facet numbers (0 for the facets of the
+        copies), region points and holes, extended with the copies.
+
+    """
+    pts = [list(p) for p in pts]
+    facets = [list(f) for f in facets]
+    facet_nums = list(facet_nums)
+    regions = [list(r) for r in regions]
+    holes = [list(h) for h in holes]
+    p_arr = np.array(polymesh.points)
+    n_dim = p_arr.shape[1]
+    lengths = p_arr.max(axis=0) - p_arr.min(axis=0)
+    per_axes = polymesh.periodic_axes
+
+    # the periodic faces touched by each cell, and the translations of its
+    # copies: +1 moves the cell by the domain length, from the lower face
+    touched = {}
+    for f_num, neighs in enumerate(polymesh.facet_neighbors):
+        wall = min(neighs)
+        if wall < 0:
+            axis, side = divmod(-wall - 1, 2)
+            if per_axes[axis]:
+                sign = 1 if side == 0 else -1
+                touched.setdefault(max(neighs), {})[axis] = sign
+    copies = {}
+    for reg, signs in touched.items():
+        axes = sorted(signs)
+        copies[reg] = []
+        for n_sel in range(1, len(axes) + 1):
+            for combo in itertools.combinations(axes, n_sel):
+                copies[reg].append(tuple([signs[a] if a in combo else 0
+                                          for a in range(n_dim)]))
+
+    # points by location, so that a location reached from a point and from
+    # its periodic image, with different translations, is one point
+    scale = lengths.max()
+    by_location = {}
+    for i, pt in enumerate(pts):
+        by_location.setdefault(tuple(np.round(np.array(pt) / scale, 9)), i)
+    ghost_pts = {}
+
+    def image_id(kp, trans):
+        # the mesher point of a polymesh point moved by a translation
+        key = (kp, trans)
+        if key in ghost_pts:
+            return ghost_pts[key]
+        shift = np.array([s * lengths[a] for a, s in enumerate(trans)])
+        new_pt = p_arr[kp] + shift
+        loc = tuple(np.round(new_pt / scale, 9))
+        if loc not in by_location:
+            by_location[loc] = len(pts)
+            pts.append(new_pt.tolist())
+        ghost_pts[key] = by_location[loc]
+        return ghost_pts[key]
+
+    existing = set([tuple(sorted(f)) for f in facets])
+    done = set()
+    for reg, trans_list in copies.items():
+        phase = phases[polymesh.phase_numbers[reg]]
+        mat_type = phase.get('material_type', 'solid')
+        reg_kps = set([kp for f in polymesh.regions[reg]
+                       for kp in polymesh.facets[f]])
+        center = p_arr[sorted(reg_kps)].mean(axis=0)
+        for trans in trans_list:
+            shift = np.array([s * lengths[a] for a, s in enumerate(trans)])
+            cen = (center + shift).tolist()
+            if mat_type in _misc.kw_void:
+                holes.append(cen)
+            else:
+                regions.append(cen + [int(labels[reg]),
+                                      phase.get('max_volume', max_volume)])
+            for f in polymesh.regions[reg]:
+                if (f, trans) in done:
+                    continue
+                done.add((f, trans))
+                neighs = polymesh.facet_neighbors[f]
+                other = neighs[0] if neighs[1] == reg else neighs[1]
+                # a facet removed between merged cells is removed between
+                # their copies too, and the copy of a facet on a periodic
+                # face is the facet on the opposite face (possibly
+                # subdivided), which the input already has
+                if (other >= 0 and trans in copies.get(other, []) and
+                        not facet_check(neighs, polymesh, phases)):
+                    continue
+                if other < 0 and per_axes[(-other - 1) // 2]:
+                    continue
+                ids = [image_id(kp, trans) for kp in polymesh.facets[f]]
+                key = tuple(sorted(ids))
+                if key in existing:
+                    continue
+                existing.add(key)
+                facets.append(ids)
+                facet_nums.append(0)
+    return pts, facets, facet_nums, regions, holes
+
+
+def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
+                       facet_nums, holes, regions, min_angle, max_volume):
+    """Build a periodic triangular mesh with Triangle.
+
+    The cells next to the periodic faces are copied outside the faces
+    (see :func:`_ghost_layer`) and the mesh is built like a non-periodic
+    one; Triangle then refines both faces of a pair the same way, up to
+    the order of its operations. If some nodes on the periodic faces have
+    no image on the opposite face, the points Triangle added on the faces
+    and their images are put on both faces and the mesh is built again.
+    The elements outside the domain are removed, and the few nodes that
+    may remain without an image are mirrored by splitting the elements
+    behind them.
+
+    Returns:
+        tuple: The points, elements and element attributes.
+
+    """
+    pts, facets, facet_nums, regions, holes = _ghost_layer(
+        polymesh, phases, labels, kps, pts, facets, facet_nums, regions,
+        holes, max_volume)
+    p_arr = np.array(polymesh.points)
+    mins = p_arr.min(axis=0)
+    maxs = p_arr.max(axis=0)
+    tol = 1e-9 * (maxs - mins).max()
+    for _ in range(_MAX_PERIODIC_PASSES):
+        tri_mesh = _build_2d(pts, facets, facet_nums, holes, regions,
+                             min_angle, True)
+
+        # the elements inside the domain
+        tri_pts = np.array(tri_mesh.points)
+        tri_elems = np.array(tri_mesh.elements)
+        tri_e_atts = np.array(tri_mesh.element_attributes, dtype='int')
+        cens = tri_pts[tri_elems].mean(axis=1)
+        inside = np.all((cens >= mins - tol) & (cens <= maxs + tol), axis=1)
+        tri_elems = tri_elems[inside]
+        tri_e_atts = tri_e_atts[inside]
+        used = np.unique(tri_elems)
+        renum = np.full(len(tri_pts), -1)
+        renum[used] = np.arange(len(used))
+        tri_pts = tri_pts[used]
+        tri_elems = renum[tri_elems]
+
+        if not _unmatched_periodic_nodes(tri_pts, polymesh):
+            break
+        pts, facets, facet_nums, n_new = _split_periodic_boundary_2d(
+            np.array(tri_mesh.points), pts, facets, facet_nums, polymesh)
+        if n_new == 0:
+            break
+
+    tri_pts, tri_elems, tri_e_atts, _ = _mirror_boundary_points_2d(
+        tri_pts, tri_elems, tri_e_atts, polymesh)
+    return tri_pts, tri_elems, tri_e_atts
 
 
 def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):

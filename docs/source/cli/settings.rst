@@ -348,7 +348,8 @@ This field defines the maximum edge length along a grain boundary in a 2D
 triangular mesh.
 A small maximum edge length will increase resolution of the mesh at grain
 boundaries.
-Currently this feature has no equivalent in 3D.
+In 3D, it applies only to the triangles on the boundary of a periodic domain
+(the interior of a 3D mesh is controlled by the maximum volume).
 The default value is ``<mesh_max_edge_length> inf </mesh_max_edge_length>``,
 which effectively turns off the edge length quality control.
 

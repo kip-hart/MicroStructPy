@@ -17,8 +17,14 @@ Added
   Laguerre tessellation is periodic across those faces (cells crossing a
   face are cut and their pieces tile the domain), and the triangular,
   tetrahedral and raster meshes have matching nodes on opposite faces
-  (Triangle/TetGen run with ``-Y``; the polygons on opposite faces are
-  triangulated identically). The pairs of periodic points/nodes and facets
+  with the quality and size settings (``min_angle``, ``max_volume``, the
+  ``max_volume`` of each phase, ``max_edge_length``) acting as on
+  non-periodic meshes: in 2D the cells next to the periodic faces are
+  copied outside the faces while meshing, so that Triangle refines both
+  faces the same way; in 3D the facets are triangulated with the points
+  TetGen adds on them in a first pass, identically on opposite faces, and
+  the mesh is built again with the facets fixed. The pairs of periodic
+  points/nodes and facets
   are stored in the meshes and their text files; the Abaqus output has a
   node set per periodic face in matching order; the verification unwraps
   grains that are split by the faces. Cells of the same amorphous phase

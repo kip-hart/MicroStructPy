@@ -341,3 +341,14 @@ matching order.
 The mesher must be Triangle/TetGen for periodic microstructures (with gmsh the
 nodes on opposite faces are not guaranteed to match), and the mesh size of a
 raster mesh must divide the domain length along the periodic axes.
+The mesh quality and size settings (``mesh_min_angle``, ``mesh_max_volume``,
+the ``max_volume`` of each phase and ``mesh_max_edge_length``) apply to
+periodic meshes as to non-periodic ones. In 2D, the cells next to the
+periodic faces are copied outside the faces while meshing, so that Triangle
+refines both faces of a pair the same way, and the mesh is built again with
+the points it added on the faces when some nodes have no image. In 3D, the
+mesh is built once as usual, then the facets are triangulated with the points
+TetGen added on them (the facets on opposite periodic faces with the points
+of both) and the mesh is built again with the facets fixed; the elements next
+to the periodic faces are slightly more numerous and of slightly lower
+quality than in a non-periodic mesh.
