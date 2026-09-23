@@ -8,8 +8,9 @@ from microstructpy.meshing import PolyMesh
 from microstructpy.meshing import RasterMesh
 from microstructpy.meshing import TriMesh
 from microstructpy.meshing import trimesh as trimesh_module
-from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
+from periodic_helpers import check_periodic_pairs
+from periodic_helpers import wedge_seeds_2d
 
 
 # --------------------------------------------------------------------------- #
@@ -43,37 +44,18 @@ def _element_areas(mesh):
 
 
 def _check_periodic_mesh(mesh, domain, per_axes):
-    pts = np.array(mesh.points)
-    lims = np.array(domain.limits)
+    """Every node on a periodic face is paired with its exact image, and
+    the facets on the faces (edges in 2D, triangles in 3D) are paired."""
     assert mesh.periodic_axes == list(per_axes)
-    for axis, flag in enumerate(per_axes):
-        if not flag:
-            assert axis not in mesh.periodic_nodes
-            continue
-        lb, ub = lims[axis]
-        shift = np.zeros(2)
-        shift[axis] = ub - lb
-        pairs = mesh.periodic_nodes[axis]
-        low = set(np.nonzero(np.isclose(pts[:, axis], lb))[0])
-        high = set(np.nonzero(np.isclose(pts[:, axis], ub))[0])
-        # every node on a periodic face is paired, exactly
-        assert len(pairs) == len(low) == len(high) > 0
-        assert set([lo for lo, _ in pairs]) == low
-        assert set([hi for _, hi in pairs]) == high
-        for lo, hi in pairs:
-            assert np.array_equal(pts[hi], pts[lo] + shift)
-        # facets (edges) on the faces are paired
-        kp_map = dict(pairs)
-        f_pairs = dict(mesh.periodic_facets[axis])
-        n_low = 0
-        for f_num, facet in enumerate(mesh.facets):
-            if all([kp in low for kp in facet]):
-                n_low += 1
-                assert f_num in f_pairs
-                image = mesh.facets[f_pairs[f_num]]
-                assert set(image) == set([kp_map[kp] for kp in facet])
-        # the edges on a face connect its nodes in a chain
-        assert n_low == len(pairs) - 1
+    faces = check_periodic_pairs(mesh.points, mesh.facets,
+                                 mesh.periodic_nodes, mesh.periodic_facets,
+                                 per_axes, domain)
+    for axis, (low, high, n_low) in faces.items():
+        if domain.n_dim == 2:
+            # the edges on a face connect its nodes in a chain
+            assert n_low == len(low) - 1
+        else:
+            assert n_low > 0
 
 
 # --------------------------------------------------------------------------- #
@@ -174,20 +156,9 @@ def test_periodic_trimesh_abaqus_node_sets(periodic_case, tmp_path):
 def _wedge_polymesh(angle_deg):
     """A square of side 3, periodic in x, with a facet meeting the face
     x = 3 at ``angle_deg`` (see the tests of the edge optimization)."""
-    rng = np.random.RandomState(0)
-    ang = np.radians(angle_deg)
-    positions = [[2.5, 1.0],
-                 [2.5 + 0.5 * np.cos(ang), 1.0 + 0.5 * np.sin(ang)]]
-    for x in (0.75, 1.75):
-        for y in (0.75, 1.75, 2.75):
-            if (x, y) != (0.75, 0.75):
-                positions.append([x + 0.03 * (2 * rng.rand() - 1),
-                                  y + 0.03 * (2 * rng.rand() - 1)])
-    positions.append([2.75, 2.75])
-    seeds = SeedList([Seed.factory('circle', r=0.2, position=p)
-                      for p in positions])
     domain = msp.geometry.Square(side_length=3, corner=(0, 0))
-    return PolyMesh.from_seeds(seeds, domain, periodic='x')
+    return PolyMesh.from_seeds(wedge_seeds_2d(angle_deg), domain,
+                               periodic='x')
 
 
 def _min_edge(mesh):
@@ -293,42 +264,10 @@ def _element_volumes(mesh):
     return np.linalg.det(rel) / 6.0
 
 
-def _check_periodic_mesh_3d(mesh, domain, per_axes):
-    pts = np.array(mesh.points)
-    lims = np.array(domain.limits)
-    assert mesh.periodic_axes == list(per_axes)
-    for axis, flag in enumerate(per_axes):
-        if not flag:
-            assert axis not in mesh.periodic_nodes
-            continue
-        lb, ub = lims[axis]
-        shift = np.zeros(3)
-        shift[axis] = ub - lb
-        pairs = mesh.periodic_nodes[axis]
-        low = set(np.nonzero(np.isclose(pts[:, axis], lb))[0])
-        high = set(np.nonzero(np.isclose(pts[:, axis], ub))[0])
-        assert len(pairs) == len(low) == len(high) > 0
-        assert set([lo for lo, _ in pairs]) == low
-        assert set([hi for _, hi in pairs]) == high
-        for lo, hi in pairs:
-            assert np.array_equal(pts[hi], pts[lo] + shift)
-        # the triangles on the faces are paired
-        kp_map = dict(pairs)
-        f_pairs = dict(mesh.periodic_facets[axis])
-        n_low = 0
-        for f_num, facet in enumerate(mesh.facets):
-            if all([kp in low for kp in facet]):
-                n_low += 1
-                assert f_num in f_pairs
-                image = mesh.facets[f_pairs[f_num]]
-                assert set(image) == set([kp_map[kp] for kp in facet])
-        assert n_low > 0
-
-
 def test_periodic_tetmesh_nodes_match(periodic_case_3d):
     domain, phases, seeds, pmesh = periodic_case_3d
     mesh = TriMesh.from_polymesh(pmesh, phases, min_angle=10)
-    _check_periodic_mesh_3d(mesh, domain, [True, True, True])
+    _check_periodic_mesh(mesh, domain, [True, True, True])
     vols = _element_volumes(mesh)
     assert np.all(np.abs(vols) > 0)
     assert np.isclose(np.abs(vols).sum(), domain.volume)
@@ -342,7 +281,7 @@ def test_periodic_tetmesh_single_axis():
     seeds.position(domain, rtol=0.0, rng_seed=3, periodic='z')
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic='z')
     mesh = TriMesh.from_polymesh(pmesh, phases, min_angle=10)
-    _check_periodic_mesh_3d(mesh, domain, [False, False, True])
+    _check_periodic_mesh(mesh, domain, [False, False, True])
     assert np.isclose(np.abs(_element_volumes(mesh)).sum(), domain.volume)
 
 

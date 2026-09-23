@@ -1,7 +1,4 @@
 """Tests for periodic polygonal and polyhedral meshes."""
-import copy
-import itertools
-
 import numpy as np
 import pytest
 import scipy.stats
@@ -11,6 +8,9 @@ from microstructpy.meshing import PolyMesh
 from microstructpy.meshing.polymesh import kp_loop
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
+from periodic_helpers import check_periodic_pairs
+from periodic_helpers import seed_volumes
+from periodic_helpers import tiled_reference_volumes
 
 
 # --------------------------------------------------------------------------- #
@@ -29,74 +29,15 @@ def _periodic_seeds(domain, per_axes, rng_seed=0, fill=0.55):
     return seeds
 
 
-def _seed_areas(pmesh, n_seeds):
-    areas = np.zeros(n_seeds)
-    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
-        areas[seed_num] += vol
-    return areas
-
-
-def _tiled_reference_areas(seeds, domain, per_axes):
-    """Areas of the cells of the seeds in a periodic tessellation, computed
-    as a non-periodic tessellation of the seeds tiled across the periodic
-    axes (3 copies per periodic axis)."""
-    lims = np.array(domain.limits)
-    lengths = lims[:, 1] - lims[:, 0]
-    options = [[-length, 0.0, length] if flag else [0.0]
-               for length, flag in zip(lengths, per_axes)]
-    tiled = SeedList()
-    for t in itertools.product(*options):
-        for seed in seeds:
-            copy_seed = copy.deepcopy(seed)
-            copy_seed.position = list(np.array(seed.position) + np.array(t))
-            tiled.append(copy_seed)
-    n_seeds = len(seeds)
-    big_lims = [(lb - length, ub + length) if flag else (lb, ub)
-                for (lb, ub), length, flag in zip(lims, lengths, per_axes)]
-    big_domain = msp.geometry.Rectangle(limits=big_lims)
-    pmesh = PolyMesh.from_seeds(tiled, big_domain)
-    # the cells of the original copies (the zero translation)
-    i_zero = [i for i, t in enumerate(itertools.product(*options))
-              if not any(t)][0]
-    areas = np.zeros(n_seeds)
-    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
-        block, local = divmod(seed_num, n_seeds)
-        if block == i_zero:
-            areas[local] += vol
-    return areas
-
-
 def _check_periodic_structure(pmesh, domain, per_axes):
     """Points and facets on the periodic faces are paired and are exact
-    translates of each other."""
-    pts = np.array(pmesh.points)
-    lims = np.array(domain.limits)
-    lengths = lims[:, 1] - lims[:, 0]
+    translates of each other, and the facets on the faces are wall
+    facets."""
     assert pmesh.periodic_axes == list(per_axes)
-    for axis, flag in enumerate(per_axes):
-        if not flag:
-            assert axis not in pmesh.periodic_points
-            continue
-        lb, ub = lims[axis]
-        shift = np.zeros(2)
-        shift[axis] = lengths[axis]
-        pairs = pmesh.periodic_points[axis]
-        low = set(np.nonzero(np.isclose(pts[:, axis], lb))[0])
-        high = set(np.nonzero(np.isclose(pts[:, axis], ub))[0])
-        assert len(pairs) == len(low) == len(high)
-        assert set([lo for lo, _ in pairs]) == low
-        assert set([hi for _, hi in pairs]) == high
-        for lo, hi in pairs:
-            assert np.array_equal(pts[hi], pts[lo] + shift)
-        # facets on the lower face are paired with facets on the upper face
-        kp_map = dict(pairs)
-        f_pairs = dict(pmesh.periodic_facets[axis])
-        for f_num, facet in enumerate(pmesh.facets):
-            if all([kp in low for kp in facet]):
-                assert f_num in f_pairs
-                image = pmesh.facets[f_pairs[f_num]]
-                assert set(image) == set([kp_map[kp] for kp in facet])
-        # every boundary facet on the faces is a wall facet
+    faces = check_periodic_pairs(pmesh.points, pmesh.facets,
+                                 pmesh.periodic_points,
+                                 pmesh.periodic_facets, per_axes, domain)
+    for axis, (low, high, _) in faces.items():
         for f_num, neighs in enumerate(pmesh.facet_neighbors):
             facet = pmesh.facets[f_num]
             if all([kp in low for kp in facet]):
@@ -123,7 +64,7 @@ def test_two_seeds_periodic_in_x():
     # cell 0 is cut by the periodic face: [0, 0.35] and [0.85, 1]
     assert len(pmesh.regions) == 3
     assert sorted(pmesh.seed_numbers) == [0, 0, 1]
-    areas = _seed_areas(pmesh, 2)
+    areas = seed_volumes(pmesh, 2)
     assert np.allclose(areas, [0.5, 0.5])
     pieces = sorted([v for v, s in zip(pmesh.volumes, pmesh.seed_numbers)
                      if s == 0])
@@ -167,8 +108,8 @@ def test_periodic_matches_tiled_reference(per_axes):
     assert np.isclose(sum(pmesh.volumes), domain.area)
     assert np.all(np.array(pmesh.volumes) > 0)
     assert set(pmesh.seed_numbers) == set(range(len(seeds)))
-    areas = _seed_areas(pmesh, len(seeds))
-    ref = _tiled_reference_areas(seeds, domain, per_axes)
+    areas = seed_volumes(pmesh, len(seeds))
+    ref = tiled_reference_volumes(seeds, domain, per_axes)
     assert np.allclose(areas, ref, rtol=1e-9, atol=1e-12)
     _check_periodic_structure(pmesh, domain, per_axes)
 
@@ -238,67 +179,6 @@ def test_periodic_errors():
 # --------------------------------------------------------------------------- #
 # 3D                                                                          #
 # --------------------------------------------------------------------------- #
-def _seed_volumes(pmesh, n_seeds):
-    vols = np.zeros(n_seeds)
-    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
-        vols[seed_num] += vol
-    return vols
-
-
-def _tiled_reference_volumes(seeds, domain, per_axes):
-    lims = np.array(domain.limits)
-    lengths = lims[:, 1] - lims[:, 0]
-    options = [[-length, 0.0, length] if flag else [0.0]
-               for length, flag in zip(lengths, per_axes)]
-    tiled = SeedList()
-    for t in itertools.product(*options):
-        for seed in seeds:
-            copy_seed = copy.deepcopy(seed)
-            copy_seed.position = list(np.array(seed.position) + np.array(t))
-            tiled.append(copy_seed)
-    big_lims = [(lb - length, ub + length) if flag else (lb, ub)
-                for (lb, ub), length, flag in zip(lims, lengths, per_axes)]
-    pmesh = PolyMesh.from_seeds(tiled, msp.geometry.Box(limits=big_lims))
-    i_zero = [i for i, t in enumerate(itertools.product(*options))
-              if not any(t)][0]
-    n_seeds = len(seeds)
-    vols = np.zeros(n_seeds)
-    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
-        block, local = divmod(seed_num, n_seeds)
-        if block == i_zero:
-            vols[local] += vol
-    return vols
-
-
-def _check_periodic_structure_3d(pmesh, domain, per_axes):
-    pts = np.array(pmesh.points)
-    lims = np.array(domain.limits)
-    lengths = lims[:, 1] - lims[:, 0]
-    assert pmesh.periodic_axes == list(per_axes)
-    for axis, flag in enumerate(per_axes):
-        if not flag:
-            assert axis not in pmesh.periodic_points
-            continue
-        lb, ub = lims[axis]
-        shift = np.zeros(3)
-        shift[axis] = lengths[axis]
-        pairs = pmesh.periodic_points[axis]
-        low = set(np.nonzero(np.isclose(pts[:, axis], lb))[0])
-        high = set(np.nonzero(np.isclose(pts[:, axis], ub))[0])
-        assert len(pairs) == len(low) == len(high) > 0
-        for lo, hi in pairs:
-            assert np.array_equal(pts[hi], pts[lo] + shift)
-        kp_map = dict(pairs)
-        f_pairs = dict(pmesh.periodic_facets[axis])
-        n_low = 0
-        for f_num, facet in enumerate(pmesh.facets):
-            if all([kp in low for kp in facet]):
-                n_low += 1
-                assert f_num in f_pairs
-                image = pmesh.facets[f_pairs[f_num]]
-                assert set(image) == set([kp_map[kp] for kp in facet])
-                assert min(pmesh.facet_neighbors[f_num]) == -(2 * axis + 1)
-        assert n_low > 0
 
 
 def test_two_spheres_periodic_in_x():
@@ -307,11 +187,11 @@ def test_two_spheres_periodic_in_x():
                       Seed.factory('sphere', r=0.2, position=(0.7, .5, .5))])
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x')
     assert sorted(pmesh.seed_numbers) == [0, 0, 1]
-    assert np.allclose(_seed_volumes(pmesh, 2), [0.5, 0.5])
+    assert np.allclose(seed_volumes(pmesh, 2), [0.5, 0.5])
     pieces = sorted([v for v, s in zip(pmesh.volumes, pmesh.seed_numbers)
                      if s == 0])
     assert np.allclose(pieces, [0.05, 0.45])
-    _check_periodic_structure_3d(pmesh, domain, [True, False, False])
+    _check_periodic_structure(pmesh, domain, [True, False, False])
 
 
 def test_single_sphere_tiles_the_cube():
@@ -322,7 +202,7 @@ def test_single_sphere_tiles_the_cube():
     assert len(pmesh.points) == 27
     assert len(pmesh.facets) == 36
     assert np.isclose(sum(pmesh.volumes), 1.0)
-    _check_periodic_structure_3d(pmesh, domain, [True, True, True])
+    _check_periodic_structure(pmesh, domain, [True, True, True])
     for axis in range(3):
         assert len(pmesh.periodic_points[axis]) == 9
         assert len(pmesh.periodic_facets[axis]) == 4
@@ -342,11 +222,11 @@ def test_periodic_3d_matches_tiled_reference(per_axes):
     assert np.isclose(sum(pmesh.volumes), domain.volume)
     assert np.all(np.array(pmesh.volumes) > 0)
     assert set(pmesh.seed_numbers) == set(range(len(seeds)))
-    vols = _seed_volumes(pmesh, len(seeds))
-    ref = _tiled_reference_volumes(seeds, domain, per_axes)
+    vols = seed_volumes(pmesh, len(seeds))
+    ref = tiled_reference_volumes(seeds, domain, per_axes)
     # vertices within 1e-5 of the faces are snapped onto them
     assert np.allclose(vols, ref, rtol=1e-6, atol=1e-6)
-    _check_periodic_structure_3d(pmesh, domain, per_axes)
+    _check_periodic_structure(pmesh, domain, per_axes)
 
 
 def test_periodic_3d_file_round_trip(tmp_path):

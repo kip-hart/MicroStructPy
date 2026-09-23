@@ -19,12 +19,12 @@ from matplotlib import pyplot as plt
 
 from microstructpy import geometry
 from microstructpy.meshing.polymesh import PolyMesh
-from microstructpy.meshing.polymesh import _edge_lengths
 from microstructpy.meshing.polymesh import _loop_area
 from microstructpy.meshing.polymesh import _segment_cross
 from microstructpy.meshing.polymesh import kp_loop
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
+from periodic_helpers import min_edge
 
 
 # --------------------------------------------------------------------------- #
@@ -87,10 +87,6 @@ def _check_partition(pmesh, domain, n_seeds):
     for pt in _random_interior_points(domain, 200):
         n_in = sum([path.contains_point(pt) for path in paths])
         assert n_in == 1
-
-
-def _min_edge_length(pmesh):
-    return min([e['length'] for e in _edge_lengths(pmesh).values()])
 
 
 # --------------------------------------------------------------------------- #
@@ -193,7 +189,7 @@ def test_edge_opt(capsys):
     seeds_orig = copy.deepcopy(seeds)
 
     pmesh_0 = PolyMesh.from_seeds(seeds, domain)
-    min_len_0 = _min_edge_length(pmesh_0)
+    min_len_0 = min_edge(pmesh_0)
 
     capsys.readouterr()
     pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt=True, n_iter=10,
@@ -202,7 +198,7 @@ def test_edge_opt(capsys):
     assert captured.out == ''
 
     # the minimum edge length does not decrease
-    assert _min_edge_length(pmesh) >= min_len_0
+    assert min_edge(pmesh) >= min_len_0
 
     # the seeds are in the accepted state: re-tessellating them
     # reproduces the returned mesh

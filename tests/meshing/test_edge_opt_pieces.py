@@ -14,6 +14,8 @@ from microstructpy.meshing.polymesh import _select_target
 from microstructpy.meshing.polymesh import _wedge_geometry
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
+from periodic_helpers import min_edge
+from periodic_helpers import wedge_seeds_2d
 
 
 # --------------------------------------------------------------------------- #
@@ -63,10 +65,6 @@ def _pieces(pmesh, domain):
     scale = max([ub - lb for lb, ub in domain.limits])
     feats = _mesh_features(pmesh, [True] * n_dim, domain.limits, scale)
     return [f for f in feats if f['kind'] == 'piece']
-
-
-def _min_edge(pmesh):
-    return min([e['length'] for e in _edge_lengths(pmesh).values()])
 
 
 def _feature(kind, size, key, seeds=()):
@@ -213,7 +211,7 @@ def test_edge_opt_fixes_thin_piece_2d():
               if p['size'] < margin]
     assert len(thin_0) == 1
     assert np.isclose(thin_0[0], 0.025, atol=0.01)
-    min_edge_0 = _min_edge(pmesh_0)
+    min_edge_0 = min_edge(pmesh_0)
 
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic=True, edge_opt=True,
                                 n_iter=2, periodic_margin=margin)
@@ -222,7 +220,7 @@ def test_edge_opt_fixes_thin_piece_2d():
     # the mesh did not get shorter
     thin = [p['size'] for p in _pieces(pmesh, domain) if p['size'] < margin]
     assert thin == []
-    assert _min_edge(pmesh) >= min_edge_0 - 1e-9
+    assert min_edge(pmesh) >= min_edge_0 - 1e-9
 
     # the mesh is periodic and the seeds reproduce it
     assert pmesh.periodic_axes == [True, True]
@@ -254,13 +252,13 @@ def test_edge_opt_fixes_thin_piece_3d():
               if p['size'] < margin]
     assert len(thin_0) == 2
     assert min(thin_0) < 0.01
-    min_edge_0 = _min_edge(pmesh_0)
+    min_edge_0 = min_edge(pmesh_0)
 
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic=True, edge_opt=True,
                                 n_iter=5, periodic_margin=margin)
     thin = [p['size'] for p in _pieces(pmesh, domain) if p['size'] < margin]
     assert thin == []
-    assert _min_edge(pmesh) >= min_edge_0 - 1e-9
+    assert min_edge(pmesh) >= min_edge_0 - 1e-9
     assert np.isclose(sum(pmesh.volumes), domain.volume)
     pmesh_re = PolyMesh.from_seeds(seeds, domain, periodic=True)
     assert np.allclose(np.sort(pmesh_re.volumes), np.sort(pmesh.volumes),
@@ -270,25 +268,6 @@ def test_edge_opt_fixes_thin_piece_3d():
 # --------------------------------------------------------------------------- #
 # Wedges (corners at the periodic faces narrower than the mesh angle)         #
 # --------------------------------------------------------------------------- #
-def _wedge_seeds_2d(angle_deg=15.0):
-    """Circles in a square of side 3, periodic in x. The seeds A and B are
-    0.5 apart along a line tilted by ``angle_deg`` from the x axis, so
-    their facet (normal to that line) meets the face x = 3 at that angle,
-    at about (3, 0.1): the cell of B has a wedge there. The other seeds
-    form a jittered grid away from them."""
-    rng = np.random.RandomState(0)
-    ang = np.radians(angle_deg)
-    positions = [[2.5, 1.0],
-                 [2.5 + 0.5 * np.cos(ang), 1.0 + 0.5 * np.sin(ang)]]
-    for x in (0.75, 1.75):
-        for y in (0.75, 1.75, 2.75):
-            if (x, y) == (0.75, 0.75):
-                continue  # its image would cut the corner of the wedge
-            positions.append([x + 0.03 * (2 * rng.rand() - 1),
-                              y + 0.03 * (2 * rng.rand() - 1)])
-    positions.append([2.75, 2.75])
-    return SeedList([Seed.factory('circle', r=0.2, position=p)
-                     for p in positions])
 
 
 def _wedge_seeds_3d(angle_deg=15.0):
@@ -350,7 +329,7 @@ def test_wedge_geometry():
 
 def test_wedge_features_2d():
     domain = geometry.Square(side_length=3, corner=(0, 0))
-    seeds = _wedge_seeds_2d(15.0)
+    seeds = wedge_seeds_2d(15.0)
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x')
     # no wedges narrower than 10 degrees; two narrower than 25: the corner
     # of the cell of B (seed 1) on the face x = 3, and its image on the
@@ -398,16 +377,16 @@ def test_wedge_features_3d():
 def test_edge_opt_opens_wedge_2d():
     np.random.seed(0)
     domain = geometry.Square(side_length=3, corner=(0, 0))
-    seeds = _wedge_seeds_2d(15.0)
+    seeds = wedge_seeds_2d(15.0)
     pmesh_0 = PolyMesh.from_seeds(seeds, domain, periodic='x')
     assert len(_wedges(pmesh_0, domain, [True, False], 25.0)) == 2
-    min_edge_0 = _min_edge(pmesh_0)
+    min_edge_0 = min_edge(pmesh_0)
 
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x', edge_opt=True,
                                 n_iter=5, periodic_margin=0.05,
                                 min_angle=25.0)
     assert _wedges(pmesh, domain, [True, False], 25.0) == []
-    assert _min_edge(pmesh) >= min_edge_0 - 1e-9
+    assert min_edge(pmesh) >= min_edge_0 - 1e-9
     assert np.isclose(sum(pmesh.volumes), domain.area)
     pmesh_re = PolyMesh.from_seeds(seeds, domain, periodic='x')
     assert np.allclose(np.sort(pmesh_re.volumes), np.sort(pmesh.volumes),
@@ -421,10 +400,10 @@ def test_edge_opt_opens_wedge_3d():
     pmesh_0 = PolyMesh.from_seeds(seeds, domain, periodic='x')
     n_0 = len(_wedges(pmesh_0, domain, [True, False, False], 25.0))
     assert n_0 >= 1
-    min_edge_0 = _min_edge(pmesh_0)
+    min_edge_0 = min_edge(pmesh_0)
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x', edge_opt=True,
                                 n_iter=5, periodic_margin=0.05,
                                 min_angle=25.0)
     assert len(_wedges(pmesh, domain, [True, False, False], 25.0)) < n_0
-    assert _min_edge(pmesh) >= min_edge_0 - 1e-9
+    assert min_edge(pmesh) >= min_edge_0 - 1e-9
     assert np.isclose(sum(pmesh.volumes), domain.volume)
