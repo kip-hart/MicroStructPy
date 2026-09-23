@@ -59,24 +59,31 @@ def test_from_info_does_not_mutate_rng_seeds():
 # --------------------------------------------------------------------------- #
 # Overlap tolerance                                                           #
 # --------------------------------------------------------------------------- #
-def test_calc_rtol_values():
+def test_calc_rtol_matches_paper():
+    # Eq. (14): sigma = 0.5 -> cv = 0.53 -> alpha = 0.70 (paper, Sec. 3.1)
+    cv = np.sqrt(np.exp(0.25) - 1)
+    numer = 0.182 * cv * cv - 0.0135 * cv + 0.198
+    denom = cv * cv - 0.613 * cv + 0.390
+    assert np.isclose(numer / denom, 0.70, atol=0.005)
+
+    # build seeds with exactly that coefficient of variation
     rng = np.random.RandomState(0)
     areas = np.exp(-9 + 0.5 * rng.normal(size=4000))
     seeds = [Seed.factory('circle', area=a) for a in areas]
     cv_s = scipy.stats.variation(areas)
-    expected = ((0.362954 * cv_s ** 2 - 0.419069 * cv_s + 0.184959) /
-                (cv_s ** 2 - 1.05989 * cv_s + 0.365096))
+    expected = ((0.182 * cv_s ** 2 - 0.0135 * cv_s + 0.198) /
+                (cv_s ** 2 - 0.613 * cv_s + 0.390))
     assert np.isclose(calc_rtol(seeds), expected)
 
     seeds_3d = [Seed.factory('sphere', volume=a) for a in areas]
-    expected_3d = ((0.471115 * cv_s ** 2 - 0.602324 * cv_s + 0.297562) /
-                   (cv_s ** 2 - 1.08469 * cv_s + 0.428216))
+    expected_3d = ((0.457 * cv_s ** 2 - 0.575 * cv_s + 0.253) /
+                   (cv_s ** 2 - 1.07 * cv_s + 0.419))
     assert np.isclose(calc_rtol(seeds_3d), expected_3d)
 
     # constant sizes: cv = 0 (a single seed as well)
     same = [Seed.factory('circle', r=1) for _ in range(3)]
-    assert np.isclose(calc_rtol(same), 0.184959 / 0.365096)
-    assert np.isclose(calc_rtol(same[:1]), 0.184959 / 0.365096)
+    assert np.isclose(calc_rtol(same), 0.198 / 0.390)
+    assert np.isclose(calc_rtol(same[:1]), 0.198 / 0.390)
 
 
 def test_position_uses_calc_rtol(monkeypatch):

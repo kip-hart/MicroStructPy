@@ -1199,10 +1199,10 @@ def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
 def calc_rtol(seeds):
     """Calculate relative overlap tolerance.
 
-    The tolerance is a rational polynomial fit to the coefficient of
-    variation in seed area/volume, which minimizes the error between the
-    input and output size distributions (Hart and Rimoli, *Comput. Methods
-    Appl. Mech. Engrg.* 370 (2020) 113242).
+    The tolerance is the error-minimizing rational polynomial fit to the
+    coefficient of variation in seed area/volume, Eqs. (14) and (15) of
+    Hart and Rimoli, *Comput. Methods Appl. Mech. Engrg.* 370 (2020)
+    113242.
 
     Args:
         seeds (SeedList or list): The seeds, used for their volumes and
@@ -1215,11 +1215,11 @@ def calc_rtol(seeds):
     cv = scipy.stats.variation(vols) if len(vols) > 1 else 0.0
     n_dim = seeds[0].geometry.n_dim
     if n_dim == 2:
-        numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
-        denom = cv * cv - 1.05989 * cv + 0.365096
+        numer = 0.182 * cv * cv - 0.0135 * cv + 0.198
+        denom = cv * cv - 0.613 * cv + 0.390
     elif n_dim == 3:
-        numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
-        denom = cv * cv - 1.08469 * cv + 0.428216
+        numer = 0.457 * cv * cv - 0.575 * cv + 0.253
+        denom = cv * cv - 1.07 * cv + 0.419
     else:
         raise ValueError('Cannot calculate rtol for {}-D.'.format(n_dim))
     return numer / denom

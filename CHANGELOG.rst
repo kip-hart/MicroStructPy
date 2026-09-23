@@ -95,6 +95,11 @@ Fixed
 
 Changed
 '''''''
+- The overlap tolerance fit ``rtol='fit'`` uses the coefficients published
+  in Hart and Rimoli, CMAME 370 (2020) 113242, Eqs. (14) and (15). For very
+  wide size distributions this allows less overlap than before (2D
+  asymptote 0.18 instead of 0.36), so some seeds of high-cv inputs may be
+  rejected during placement.
 - ``Ellipsoid.limits`` is exact for rotated ellipsoids (it was sampled).
 - A ``Seed`` created with a ``position`` (or a geometry with a center) has
   its breakdown at that position; the geometry center is no longer reset
