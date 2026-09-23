@@ -52,8 +52,8 @@ class SeedList(object):
     # ----------------------------------------------------------------------- #
     # Constructors                                                            #
     # ----------------------------------------------------------------------- #
-    def __init__(self, seeds=[]):
-        self.seeds = seeds
+    def __init__(self, seeds=None):
+        self.seeds = [] if seeds is None else seeds
 
     @classmethod
     def from_file(cls, filename):
@@ -145,6 +145,10 @@ class SeedList(object):
                 phase['shape'] = default_shapes[n_dim]
 
         # compute volume of each phase
+        # work on a copy: the seeds are updated below and the caller's
+        # dictionary must not change
+        rng_seeds = dict(rng_seeds)
+
         vol_rng = rng_seeds.get('fraction', 0)
         np.random.seed(vol_rng)
 
@@ -187,7 +191,9 @@ class SeedList(object):
             seed_shape = phase['shape']
             seed_args = {'phase': phase_num}
             kw_n = 0
-            for kw in set(phase) - set(_misc.gen_kws):
+            # sorted: the RNG seed chain depends on the keyword order, and
+            # set iteration order changes from one process to the next
+            for kw in sorted(set(phase) - set(_misc.gen_kws)):
                 # set the RNG seed
                 rng_seed = rng_seeds.get(kw, 0)
                 np.random.seed(rng_seed)
@@ -295,7 +301,7 @@ class SeedList(object):
 
         .. versionadded:: 1.1
         """
-        if type(self) == type(seedlist):
+        if isinstance(seedlist, SeedList):
             return SeedList(self.seeds + seedlist.seeds)
         else:
             return SeedList(self.seeds + seedlist)
@@ -441,7 +447,7 @@ class SeedList(object):
         for seed_num, seed in enumerate(self):
             phase_num = seed.phase
             for key, val in kwargs.items():
-                if type(val) in (list, np.array):
+                if isinstance(val, (list, np.ndarray)):
                     if index_by == 'seed' and len(val) > seed_num:
                         seed_args[seed_num][key] = val[seed_num]
                     elif index_by == 'material' and len(val) > phase_num:
@@ -575,7 +581,8 @@ class SeedList(object):
             rects = [Rectangle(xy=xyi, width=wi, height=hi, angle=ai) for
                      xyi, wi, hi, ai in zip(rect_data['xy'], rect_data['w'],
                      rect_data['h'], rect_data['angle'])]
-            rc = collections.PatchCollection(rects, match_original=False, **rect_kwargs)
+            rc = collections.PatchCollection(rects, match_original=False,
+                                             **rect_kwargs)
             ax.add_collection(rc)
 
             # Plot Polygons
@@ -593,7 +600,7 @@ class SeedList(object):
                     p_kwargs[p].update(seed_kwargs)
             else:
                 for key, val in kwargs.items():
-                    if type(val) in (list, np.array):
+                    if isinstance(val, (list, np.ndarray)):
                         for i, elem in enumerate(val):
                             p_kwargs[i][key] = elem
                     else:
@@ -661,7 +668,7 @@ class SeedList(object):
         for seed_num, seed in enumerate(self):
             phase_num = seed.phase
             for key, val in kwargs.items():
-                if type(val) in (list, np.array):
+                if isinstance(val, (list, np.ndarray)):
                     if index_by == 'seed' and len(val) > seed_num:
                         seed_args[seed_num][key] = val[seed_num]
                     elif index_by == 'material' and len(val) > phase_num:
@@ -670,7 +677,7 @@ class SeedList(object):
                     seed_args[seed_num][key] = val
 
         n = self[0].geometry.n_dim
-        if n == 2 or plt.gca().get_axes():
+        if n == 2 or plt.gcf().axes:
             ax = plt.gca()
         else:
             ax = plt.gcf().add_subplot(projection=Axes3D.name)
@@ -730,7 +737,7 @@ class SeedList(object):
                     p_kwargs[p].update(seed_kwargs)
             else:
                 for key, val in kwargs.items():
-                    if type(val) in (list, np.array):
+                    if isinstance(val, (list, np.ndarray)):
                         for i, elem in enumerate(val):
                             p_kwargs[i][key] = elem
                     else:
@@ -842,7 +849,12 @@ class SeedList(object):
         distribs = []
         n_phases = max([s.phase for s in self]) + 1
         for i in range(n_phases):
-            distribs.append(pos_dists.get(i, u_dist))
+            dist = pos_dists.get(i, u_dist)
+            if isinstance(dist, (list, tuple)):
+                # 'random' along an axis means uniform across the domain
+                dist = [u if (isinstance(d, str) and d.lower() == 'random')
+                        else d for d, u in zip(dist, u_dist)]
+            distribs.append(dist)
 
         # Add hold seeds
         n_seeds = len(self)
@@ -860,15 +872,8 @@ class SeedList(object):
         i_position = i_sort[~posd_sort]
 
         # allowable overlap, relative to radius
-        cv = scipy.stats.variation(vols)
-        if domain.n_dim == 2 and rtol == 'fit':
-            numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
-            denom = cv * cv - 1.05989 * cv + 0.365096
-            rtol = numer / denom
-        elif rtol == 'fit':
-            numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
-            denom = cv * cv - 1.08469 * cv + 0.428216
-            rtol = numer / denom
+        if isinstance(rtol, str) and rtol == 'fit':
+            rtol = calc_rtol(self)
 
         # position the remaining seeds
         i_reject = []
@@ -950,118 +955,12 @@ class SeedList(object):
         self.seeds = self[keep_mask].seeds
 
 
-def _get_n_dim(phases):
-    n_dim = None
-    for phase in phases:
-        if 'shape' in phase:
-            n_dim = geometry.factory(phase['shape']).n_dim
-    if n_dim is None:
-        e_str = 'Number of dimensions could not be determined from phase '
-        e_str += 'shapes. Consider setting the shape of a phase, or'
-        e_str += ' specifying the number of dimensions.'
-        raise ValueError(e_str)
-    return n_dim
-
-
-def _set_sample_rng_seeds(phases, rng_seeds, maxint):
-    rng_keys = list({k for p in phases for k in p} - set(_misc.gen_kws))
-    rng_keys.extend(['fraction', 'phase'])
-
-    n_keys = len(rng_keys)
-    int_step = maxint / n_keys
-    sample_seeds = {}
-    for i, k in enumerate(rng_keys):
-        rng_seed = int(rng_seeds.get(k, 0) + i * int_step)
-        sample_seeds[k] = rng_seed % maxint
-    return sample_seeds
-
-
-def _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int):
-    # compute volume of each phase
-    vol_rng = sample_rng_seeds['fraction']
-    n_phases = len(phases)
-    rel_vols = np.ones(n_phases)
-    for i, phase in enumerate(phases):
-        vol = phase.get('fraction', 1)
-        try:
-            v_sample = -1
-            while v_sample < 0:
-                v_sample = vol.rvs(random_state=vol_rng)
-                vol_rng = (vol_rng + 1) % max_int
-            rel_vols[i] = v_sample
-        except AttributeError:
-            rel_vols[i] = vol
-    vol_fracs = rel_vols / sum(rel_vols)
-
-    # Compute the average grain volume of each phase
-    if n_dim == 2:
-        avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
-                    for p in phases]
-    else:
-        avg_vols = [geometry.factory(p['shape']).volume_expectation(**p)
-                    for p in phases]
-    weights = vol_fracs / np.array(avg_vols)
-    pop_fracs = weights / sum(weights)
-    return pop_fracs
-
-
-def _sample_phase_args(phase, sample_rng_seeds, n_dim, maxint):
-    seed_kwargs = {}
-    for kw in set(phase) - set(_misc.gen_kws):
-        rng_seed = sample_rng_seeds[kw]
-
-        # Sample, with special cases for orientation
-        if kw not in _misc.ori_kws:
-            try:
-                val = phase[kw].rvs(random_state=rng_seed)
-            except AttributeError:
-                val = phase[kw]
-            seed_kwargs[kw] = val
-        elif (phase[kw] == 'random') and (n_dim == 2):
-            np.random.seed(rng_seed)
-            ang_dist = scipy.stats.uniform(loc=0, scale=360)
-            seed_kwargs['angle_deg'] = ang_dist.rvs(random_state=rng_seed)
-        elif phase[kw] == 'random':
-            quat_dist = scipy.stats.norm()
-            elems = quat_dist.rvs(4, random_state=rng_seed)
-            mag = np.linalg.norm(elems)
-            elems /= mag
-            val = Quaternion(elems).rotation_matrix
-            seed_kwargs[kw] = val
-        elif kw in ['rot_seq', 'rot_seq_deg', 'rot_seq_rad']:
-            seq = []
-            val = phase[kw]
-            if not isinstance(val, list):
-                val = [val]
-            for rot_i, rotation in enumerate(val):
-                rot_dict = {str(kw): rotation[kw] for kw in rotation}
-                ax = rot_dict.get('axis', 'x')
-                ang_dist = rot_dict.get('angle', 0)
-                rot_rng = (rng_seed + rot_i) % maxint
-                try:
-                    ang = ang_dist.rvs(random_state=rot_rng)
-                except AttributeError:
-                    ang = ang_dist
-                seq.append((ax, ang))
-            seed_kwargs[kw] = seq
-        else:
-            try:
-                val = phase[kw].rvs(random_state=rng_seed)
-            except AttributeError:
-                val = phase[kw]
-            seed_kwargs[kw] = val
-
-        # Update the RNG seed
-        sample_rng_seeds[kw] = (rng_seed + 1) % maxint
-    return seed_kwargs
-
-
 def _plt_args(seeds, index_by, kwargs):
     seed_args = [{} for seed in seeds]
     for seed_num, seed in enumerate(seeds):
         phase_num = seed.phase
         for key, val in kwargs.items():
-            if type(val) in (list, np.array):
+            if isinstance(val, (list, np.ndarray)):
                 if index_by == 'seed' and len(val) > seed_num:
                     seed_args[seed_num][key] = val[seed_num]
                 elif index_by == 'material' and len(val) > phase_num:
@@ -1161,7 +1060,8 @@ def _plot_2d(ax, seeds, seed_args):
 
     # Plot Rectangles
     rects = [Rectangle(**rect_inps) for rect_inps in rect_data]
-    rc = collections.PatchCollection(rects, match_original=False, **rect_kwargs)
+    rc = collections.PatchCollection(rects, match_original=False,
+                                     **rect_kwargs)
     ax.add_collection(rc)
 
     ax.autoscale_view()
@@ -1204,7 +1104,7 @@ def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
                 p_kwargs[seed.phase].update(seed_kwargs)
         else:
             for key, val in kwargs.items():
-                if type(val) in (list, np.array):
+                if isinstance(val, (list, np.ndarray)):
                     for i, elem in enumerate(val):
                         p_kwargs[i][key] = elem
                 else:
@@ -1222,20 +1122,32 @@ def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
 
 
 def calc_rtol(seeds):
-    """Calculate relative overlap tolerance."""
-    cv = scipy.stats.variation([s.volume for s in seeds])
+    """Calculate relative overlap tolerance.
+
+    The tolerance is a rational polynomial fit to the coefficient of
+    variation in seed area/volume, which minimizes the error between the
+    input and output size distributions (Hart and Rimoli, *Comput. Methods
+    Appl. Mech. Engrg.* 370 (2020) 113242).
+
+    Args:
+        seeds (SeedList or list): The seeds, used for their volumes and
+            number of dimensions.
+
+    Returns:
+        float: The relative overlap tolerance, between 0 and 1.
+    """
+    vols = [s.volume for s in seeds]
+    cv = scipy.stats.variation(vols) if len(vols) > 1 else 0.0
     n_dim = seeds[0].geometry.n_dim
     if n_dim == 2:
         numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
         denom = cv * cv - 1.05989 * cv + 0.365096
-        rtol = numer / denom
     elif n_dim == 3:
         numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
         denom = cv * cv - 1.08469 * cv + 0.428216
-        rtol = numer / denom
     else:
         raise ValueError('Cannot calculate rtol for {}-D.'.format(n_dim))
-    return rtol
+    return numer / denom
 
 
 def sample_pos(distribution, n=1):
@@ -1285,12 +1197,35 @@ def sample_pos(distribution, n=1):
         return pos
 
 
-def sample_pos_within(distribution, n, domain):
+def sample_pos_within(distribution, n, domain, max_rounds=1000):
+    """Sample a position distribution, rejecting points outside the domain.
+
+    Args:
+        distribution (list or scipy.stats distribution): The position
+            distribution, see :func:`sample_pos`.
+        n (int): Number of samples.
+        domain (from :mod:`microstructpy.geometry`): The domain.
+        max_rounds (int): *(optional)* Maximum number of rejection-sampling
+            rounds of ``n`` samples each before giving up.
+
+    Returns:
+        numpy.ndarray: An n x d array of positions within the domain.
+
+    Raises:
+        ValueError: If no sample fell within the domain after ``max_rounds``
+            rounds, which indicates that the distribution does not cover
+            the domain.
+    """
     pos = []
+    n_rounds = 0
     while len(pos) < n:
-        samples = sample_pos(distribution, n)
+        if n_rounds >= max_rounds:
+            e_str = 'Could not sample positions within the domain after '
+            e_str += str(max_rounds) + ' rounds. Check that the position '
+            e_str += 'distribution overlaps the domain.'
+            raise ValueError(e_str)
+        samples = np.array(sample_pos(distribution, n)).reshape(n, -1)
         mask = domain.within(samples)
         pos.extend(samples[mask])
-    if n == 1:
-        return pos
+        n_rounds += 1
     return np.array(pos[:n])
