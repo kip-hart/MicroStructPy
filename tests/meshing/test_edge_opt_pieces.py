@@ -11,6 +11,7 @@ from microstructpy.meshing.polymesh import _edge_lengths
 from microstructpy.meshing.polymesh import _mesh_features
 from microstructpy.meshing.polymesh import _nearest_image
 from microstructpy.meshing.polymesh import _select_target
+from microstructpy.meshing.polymesh import _wedge_geometry
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
 
@@ -264,3 +265,166 @@ def test_edge_opt_fixes_thin_piece_3d():
     pmesh_re = PolyMesh.from_seeds(seeds, domain, periodic=True)
     assert np.allclose(np.sort(pmesh_re.volumes), np.sort(pmesh.volumes),
                        rtol=0, atol=1e-9)
+
+
+# --------------------------------------------------------------------------- #
+# Wedges (corners at the periodic faces narrower than the mesh angle)         #
+# --------------------------------------------------------------------------- #
+def _wedge_seeds_2d(angle_deg=15.0):
+    """Circles in a square of side 3, periodic in x. The seeds A and B are
+    0.5 apart along a line tilted by ``angle_deg`` from the x axis, so
+    their facet (normal to that line) meets the face x = 3 at that angle,
+    at about (3, 0.1): the cell of B has a wedge there. The other seeds
+    form a jittered grid away from them."""
+    rng = np.random.RandomState(0)
+    ang = np.radians(angle_deg)
+    positions = [[2.5, 1.0],
+                 [2.5 + 0.5 * np.cos(ang), 1.0 + 0.5 * np.sin(ang)]]
+    for x in (0.75, 1.75):
+        for y in (0.75, 1.75, 2.75):
+            if (x, y) == (0.75, 0.75):
+                continue  # its image would cut the corner of the wedge
+            positions.append([x + 0.03 * (2 * rng.rand() - 1),
+                              y + 0.03 * (2 * rng.rand() - 1)])
+    positions.append([2.75, 2.75])
+    return SeedList([Seed.factory('circle', r=0.2, position=p)
+                     for p in positions])
+
+
+def _wedge_seeds_3d(angle_deg=15.0):
+    """The 2D configuration extruded along z in a cube of side 3, periodic
+    in x: the facet of A and B contains the z direction and meets the
+    face x = 3 along a line, with a dihedral angle of ``angle_deg``."""
+    rng = np.random.RandomState(0)
+    ang = np.radians(angle_deg)
+    positions = [[2.5, 1.0, 1.5],
+                 [2.5 + 0.5 * np.cos(ang), 1.0 + 0.5 * np.sin(ang), 1.5]]
+    for x in (0.75, 1.75):
+        for y in (0.75, 1.75, 2.75):
+            for z in (0.75, 2.25):
+                positions.append([x + 0.03 * (2 * rng.rand() - 1),
+                                  y + 0.03 * (2 * rng.rand() - 1),
+                                  z + 0.03 * (2 * rng.rand() - 1)])
+    positions.append([2.75, 2.75, 0.75])
+    positions.append([2.75, 2.75, 2.25])
+    return SeedList([Seed.factory('sphere', r=0.2, position=p)
+                     for p in positions])
+
+
+def _wedges(pmesh, domain, per_axes, min_angle):
+    scale = max([ub - lb for lb, ub in domain.limits])
+    feats = _mesh_features(pmesh, per_axes, domain.limits, scale, min_angle)
+    return [f for f in feats if f['kind'] == 'wedge']
+
+
+def test_wedge_geometry():
+    # 2D: a vertex on the wall, the wall edge along -x and a facet at 20
+    # degrees from it, 0.5 long
+    ang = np.radians(20)
+    pts = np.array([[0.0, 0.0], [-1.0, 0.0],
+                    [-0.5 * np.cos(ang), 0.5 * np.sin(ang)]])
+    angle, length, u_vec, where = _wedge_geometry(pts, [0, 1], [0, 2], [0],
+                                                  np.array([-0.5, 0.05]))
+    assert np.isclose(angle, ang)
+    assert np.isclose(length, 0.5)
+    assert np.allclose(u_vec, [-np.cos(ang), np.sin(ang)])
+    assert np.allclose(where, [0, 0])
+
+    # 3D: the wall facet in the plane y = 0, the cell above it, and a
+    # facet leaving their common edge (along x) at 20 degrees
+    d = np.array([0.0, np.sin(ang), np.cos(ang)])
+    pts = np.array([[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1],
+                    [1, 0, 0] + 0.5 * d, [0, 0, 0] + 0.5 * d], dtype=float)
+    cen = np.array([0.5, 0.1, 0.6])
+    angle, length, u_vec, where = _wedge_geometry(pts, [0, 1, 2, 3],
+                                                  [0, 1, 4, 5], [0, 1], cen)
+    assert np.isclose(angle, ang)
+    assert np.isclose(length, 0.5)
+    assert np.allclose(u_vec, d)
+    assert np.allclose(where, [0.5, 0, 0])
+    # the same with the facets listed in the other order round the edge
+    angle_2, _, _, _ = _wedge_geometry(pts, [3, 2, 1, 0], [5, 4, 1, 0],
+                                       [1, 0], cen)
+    assert np.isclose(angle_2, ang)
+
+
+def test_wedge_features_2d():
+    domain = geometry.Square(side_length=3, corner=(0, 0))
+    seeds = _wedge_seeds_2d(15.0)
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x')
+    # no wedges narrower than 10 degrees; two narrower than 25: the corner
+    # of the cell of B (seed 1) on the face x = 3, and its image on the
+    # face x = 0, where the facet continues into the piece of A (seed 0)
+    assert _wedges(pmesh, domain, [True, False], 10.0) == []
+    wedges = _wedges(pmesh, domain, [True, False], 25.0)
+    assert len(wedges) == 2
+    by_seed = {w['seed']: w for w in wedges}
+    assert set(by_seed) == {0, 1}
+    w = by_seed[1]
+    assert w['neighbor'] == 0
+    assert (w['axis'], w['side']) == (0, 1)
+    assert np.isclose(np.degrees(w['angle']), 15.0, atol=1.0)
+    assert 0 < w['size'] < 0.25 * 3 * np.sin(w['angle'])
+    # the direction is along the facet, away from the face
+    assert w['u_vec'][0] < 0
+    assert np.isclose(np.linalg.norm(w['u_vec']), 1)
+    w_0 = by_seed[0]
+    assert w_0['neighbor'] == 1
+    assert (w_0['axis'], w_0['side']) == (0, 0)
+    assert np.isclose(np.degrees(w_0['angle']), 15.0, atol=1.0)
+    assert w_0['u_vec'][0] > 0
+    # no wedges at all without a minimum angle
+    assert _wedges(pmesh, domain, [True, False], 0.0) == []
+    # no wedges on non-periodic faces (y is not periodic)
+    assert all([f['axis'] == 0 for f in wedges])
+
+
+def test_wedge_features_3d():
+    domain = geometry.Cube(side_length=3, corner=(0, 0, 0))
+    seeds = _wedge_seeds_3d(15.0)
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x')
+    wedges = _wedges(pmesh, domain, [True, False, False], 25.0)
+    mine = [w for w in wedges if w['seed'] == 1]
+    assert len(mine) >= 1
+    for w in mine:
+        assert w['neighbor'] == 0
+        assert (w['axis'], w['side']) == (0, 1)
+        assert np.isclose(np.degrees(w['angle']), 15.0, atol=1.0)
+        assert w['u_vec'][0] < 0
+        assert np.isclose(w['u_vec'][2], 0, atol=0.05)
+    assert _wedges(pmesh, domain, [True, False, False], 10.0) == []
+
+
+def test_edge_opt_opens_wedge_2d():
+    np.random.seed(0)
+    domain = geometry.Square(side_length=3, corner=(0, 0))
+    seeds = _wedge_seeds_2d(15.0)
+    pmesh_0 = PolyMesh.from_seeds(seeds, domain, periodic='x')
+    assert len(_wedges(pmesh_0, domain, [True, False], 25.0)) == 2
+    min_edge_0 = _min_edge(pmesh_0)
+
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x', edge_opt=True,
+                                n_iter=5, periodic_margin=0.05,
+                                min_angle=25.0)
+    assert _wedges(pmesh, domain, [True, False], 25.0) == []
+    assert _min_edge(pmesh) >= min_edge_0 - 1e-9
+    assert np.isclose(sum(pmesh.volumes), domain.area)
+    pmesh_re = PolyMesh.from_seeds(seeds, domain, periodic='x')
+    assert np.allclose(np.sort(pmesh_re.volumes), np.sort(pmesh.volumes),
+                       rtol=0, atol=1e-9)
+
+
+def test_edge_opt_opens_wedge_3d():
+    np.random.seed(0)
+    domain = geometry.Cube(side_length=3, corner=(0, 0, 0))
+    seeds = _wedge_seeds_3d(15.0)
+    pmesh_0 = PolyMesh.from_seeds(seeds, domain, periodic='x')
+    n_0 = len(_wedges(pmesh_0, domain, [True, False, False], 25.0))
+    assert n_0 >= 1
+    min_edge_0 = _min_edge(pmesh_0)
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x', edge_opt=True,
+                                n_iter=5, periodic_margin=0.05,
+                                min_angle=25.0)
+    assert len(_wedges(pmesh, domain, [True, False, False], 25.0)) < n_0
+    assert _min_edge(pmesh) >= min_edge_0 - 1e-9
+    assert np.isclose(sum(pmesh.volumes), domain.volume)

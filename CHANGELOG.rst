@@ -62,6 +62,12 @@ Added
   back into the domain. The CLI writes and plots the seeds again after the
   optimization, so that the seed files match the polygonal mesh. The
   periodic examples use ``periodic_margin`` ``auto`` and ``edge_opt``.
+  With ``min_angle`` (the minimum angle of the mesh to be built, passed by
+  the CLI from ``mesh_min_angle``), the corners of the cells at the
+  periodic faces narrower than that angle are features too, since the
+  mesher cannot reach the minimum angle there and fills them with shells of
+  very small elements: the seeds on both sides of the facet are moved along
+  it to open the corner.
 
 Fixed
 '''''

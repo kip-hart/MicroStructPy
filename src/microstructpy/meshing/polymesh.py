@@ -558,7 +558,8 @@ class PolyMesh(object):
     # ----------------------------------------------------------------------- #
     @classmethod
     def from_seeds(cls, seedlist, domain, edge_opt=False, n_iter=100,
-                   verbose=False, periodic=False, periodic_margin=0.0):
+                   verbose=False, periodic=False, periodic_margin=0.0,
+                   min_angle=0.0):
         """Create from :class:`.SeedList` and a domain.
 
         This function creates a polygon/polyhedron mesh from a seed list and
@@ -578,7 +579,11 @@ class PolyMesh(object):
         into pieces, and a piece that is thin (the cell barely crosses the
         face) forces very small elements: with a positive `periodic_margin`,
         the optimization also thickens or removes the pieces thinner than
-        the margin.
+        the margin. A corner of a cell at a periodic face that is narrower
+        than the minimum angle of the mesh (`min_angle`) forces very small
+        elements too, since the mesher cannot reach that angle in the
+        corner and refines it in shells instead: such corners are opened
+        by the optimization like thin pieces.
 
         Args:
             seedlist (SeedList): A list of seeds in the microstructure.
@@ -616,6 +621,17 @@ class PolyMesh(object):
                 cell no longer crosses the face. Ignored if `edge_opt` is
                 False or the mesh is not periodic. Defaults to 0 (only the
                 shortest edge is optimized).
+            min_angle (float): *(optional)* The minimum angle (2D) or
+                dihedral angle (3D) of the mesh that will be built from
+                this one, in degrees (the `min_angle` of
+                :meth:`.TriMesh.from_polymesh`). With `edge_opt` in
+                periodic meshes, a corner of a cell at a periodic face that
+                is narrower than this angle (between a facet and the face)
+                is a feature like a thin piece, with the size of the small
+                elements that the mesher would put in it (a quarter of the
+                thickness of the wedge at the end of its shorter side), and
+                the seeds on both sides of the facet are moved along it to
+                open the corner. Defaults to 0 (no such corners).
 
         Returns:
             PolyMesh: A polygon/polyhedron mesh.
@@ -873,7 +889,8 @@ class PolyMesh(object):
         # short edge (and thin periodic piece) optimization
         if edge_opt:
             pmesh = _optimize_features(cls, pmesh, seedlist, domain, n_iter,
-                                       verbose, periodic, periodic_margin)
+                                       verbose, periodic, periodic_margin,
+                                       min_angle)
         return pmesh
 
     # ----------------------------------------------------------------------- #
@@ -2283,13 +2300,14 @@ _MAX_OPT_TRIALS_PER_ITER = 50  # safety cap: total trials <= this * n_iter
 
 
 def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
-                       periodic, periodic_margin):
+                       periodic, periodic_margin, min_angle=0.0):
     """Lengthen the shortest features of a mesh by moving its seeds.
 
     The features are the edges of the mesh and, in periodic meshes, the
-    thicknesses of the pieces of the cells at the periodic faces. The
+    thicknesses of the pieces of the cells at the periodic faces and the
+    corners of the cells at the faces narrower than ``min_angle``. The
     target is the shortest feature or, with a positive margin, the
-    thinnest piece under the margin. The seeds around the target are
+    thinnest piece or corner under the margin. The seeds around the target are
     displaced on a copy of the seed list and the trial is kept when the
     shortest feature that it changes gets longer: every feature that it
     creates is longer than the shortest one that it removes (for the
@@ -2311,7 +2329,7 @@ def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
     scale = max([ub - lb for lb, ub in domain.limits])
     tol = 1e-9 * scale
 
-    features = _mesh_features(pmesh, per_axes, dom_lims, scale)
+    features = _mesh_features(pmesh, per_axes, dom_lims, scale, min_angle)
     n_kp_space = int(np.log10(max(len(pmesh.points), 1))) + 1
     n_iter_space = int(np.log10(max(n_iter, 1))) + 1
 
@@ -2347,7 +2365,7 @@ def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
                 new_pmesh = None
             if new_pmesh is not None:
                 new_features = _mesh_features(new_pmesh, per_axes, dom_lims,
-                                              scale)
+                                              scale, min_angle)
                 accepted = _accept_trial(new_features, features, tol)
 
         if accepted:
@@ -2365,11 +2383,13 @@ def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
     return pmesh
 
 
-def _mesh_features(pmesh, per_axes, dom_lims, scale):
-    """Edges of the mesh and pieces of the cells at the periodic faces.
+def _mesh_features(pmesh, per_axes, dom_lims, scale, min_angle=0.0):
+    """Edges of the mesh, pieces of the cells at the periodic faces and
+    corners of the cells at the faces narrower than ``min_angle``.
 
-    Each feature is a dict with its ``kind`` ('edge' or 'piece'), ``size``
-    (length or thickness normal to the face), a ``key`` that identifies it
+    Each feature is a dict with its ``kind`` ('edge', 'piece' or 'wedge'),
+    ``size`` (length, thickness normal to the face, or the size of the
+    elements that the corner forces), a ``key`` that identifies it
     geometrically across re-tessellations and the ``seeds`` around it.
     """
     pts = np.array(pmesh.points, dtype='float')
@@ -2419,17 +2439,134 @@ def _mesh_features(pmesh, per_axes, dom_lims, scale):
                 'axis': axis,
                 'side': side,
                 })
+    features += _wedge_features(pmesh, pts, seed_nums, per_axes, scale,
+                                min_angle)
     return features
 
 
+def _wedge_features(pmesh, pts, seed_nums, per_axes, scale, min_angle):
+    """Corners of the cells at the periodic faces narrower than
+    ``min_angle`` (degrees): the angle between a facet of the cell and the
+    face, at a vertex on the face in 2D and along an edge on the face in
+    3D. The mesher cannot reach the minimum angle in such a corner and
+    refines it in shells of elements down to about a quarter of the
+    thickness of the wedge at the end of its shorter side, which is the
+    ``size`` of the feature. The facet turns when the seeds on its two
+    sides move along it: ``u_vec`` is that direction, away from the
+    face."""
+    q_min = np.radians(min_angle)
+    if q_min <= 0:
+        return []
+    n_dim = pts.shape[1]
+    features = []
+    for r, region in enumerate(pmesh.regions):
+        walls = []
+        inner = []
+        for f in region:
+            neighs = pmesh.facet_neighbors[f]
+            if min(neighs) < 0:
+                axis, side = divmod(-min(neighs) - 1, 2)
+                if per_axes[axis]:
+                    walls.append((f, axis, side))
+            else:
+                inner.append(f)
+        if not walls:
+            continue
+        kps = sorted({kp for f in region for kp in pmesh.facets[f]})
+        cen = pts[kps].mean(axis=0)
+        for f_wall, axis, side in walls:
+            wall_set = set(pmesh.facets[f_wall])
+            for f in inner:
+                shared = [kp for kp in pmesh.facets[f] if kp in wall_set]
+                if len(shared) != n_dim - 1:
+                    continue
+                wedge = _wedge_geometry(pts, pmesh.facets[f_wall],
+                                        pmesh.facets[f], shared, cen)
+                if wedge is None:
+                    continue
+                angle, length, u_vec, where = wedge
+                if not angle < q_min:
+                    continue
+                n_r = [n for n in pmesh.facet_neighbors[f] if n != r][0]
+                if seed_nums[n_r] == seed_nums[r]:
+                    continue
+                features.append({
+                    'kind': 'wedge',
+                    'size': 0.25 * length * np.sin(angle),
+                    'key': ('wedge', seed_nums[r], axis, side) +
+                    tuple(np.round(where / scale, 6)),
+                    'seeds': sorted({seed_nums[r], seed_nums[n_r]}),
+                    'seed': seed_nums[r],
+                    'neighbor': seed_nums[n_r],
+                    'axis': axis,
+                    'side': side,
+                    'angle': angle,
+                    'min_angle': q_min,
+                    'u_vec': u_vec,
+                    })
+    return features
+
+
+def _wedge_geometry(pts, wall_facet, facet, shared, cen):
+    """Angle of the corner between a wall facet and a facet of a convex
+    cell at their shared vertex (2D) or edge (3D), the shorter extent of
+    the two facets from it, the unit vector along the facet away from the
+    wall, and the location of the corner; None if degenerate."""
+    if len(shared) == 1:
+        kp = shared[0]
+        a_vec = pts[[k for k in wall_facet if k != kp][0]] - pts[kp]
+        b_vec = pts[[k for k in facet if k != kp][0]] - pts[kp]
+        len_a = np.linalg.norm(a_vec)
+        len_b = np.linalg.norm(b_vec)
+        if len_a == 0 or len_b == 0:
+            return None
+        cos_ang = np.dot(a_vec, b_vec) / (len_a * len_b)
+        angle = np.arccos(np.clip(cos_ang, -1, 1))
+        return angle, min(len_a, len_b), b_vec / len_b, pts[kp]
+
+    e_pt = pts[shared[0]]
+    e_vec = pts[shared[1]] - e_pt
+    e_len = np.linalg.norm(e_vec)
+    if e_len == 0:
+        return None
+    e_vec /= e_len
+    normals = []
+    extents = []
+    for loop in (wall_facet, facet):
+        loop_pts = pts[loop]
+        n_vec = np.zeros(3)
+        for i in range(len(loop_pts)):
+            n_vec += np.cross(loop_pts[i], loop_pts[(i + 1) % len(loop_pts)])
+        n_len = np.linalg.norm(n_vec)
+        if n_len == 0:
+            return None
+        n_vec /= n_len
+        if np.dot(n_vec, loop_pts.mean(axis=0) - cen) < 0:
+            n_vec = -n_vec  # outward from the cell
+        normals.append(n_vec)
+        rel = loop_pts - e_pt
+        rel -= np.outer(rel @ e_vec, e_vec)
+        extents.append(np.max(np.linalg.norm(rel, axis=1)))
+    # the interior dihedral angle, from the outward normals
+    cos_ang = np.dot(normals[0], normals[1])
+    angle = np.pi - np.arccos(np.clip(cos_ang, -1, 1))
+    u_vec = pts[facet].mean(axis=0) - e_pt
+    u_vec -= np.dot(u_vec, e_vec) * e_vec
+    u_len = np.linalg.norm(u_vec)
+    if u_len == 0 or min(extents) == 0:
+        return None
+    where = 0.5 * (pts[shared[0]] + pts[shared[1]])
+    return angle, min(extents), u_vec / u_len, where
+
+
 def _select_target(features, margin, stuck):
-    """The shortest feature, or the thinnest piece under the margin, that
-    is not stuck; None when there is no such target."""
+    """The shortest feature, or the thinnest piece or corner under the
+    margin, that is not stuck; None when there is no such target."""
     sizes = np.array([f['size'] for f in features])
     order = np.argsort(sizes, kind='stable')
     cands = [order[0]]
-    cands += [i for i in order
-              if features[i]['kind'] == 'piece' and sizes[i] < margin]
+    cands += [i for i in order if features[i]['kind'] in ('piece', 'wedge')
+              and sizes[i] < margin]
     for i in cands:
         if features[i]['key'] not in stuck:
             return features[i]
@@ -2448,9 +2585,27 @@ def _trial_steps(target, seedlist, n_attempts, margin, dom_lims, per_axes,
     others move the seed of the piece normal to the face, and the seeds
     of its neighbors along their lines to the seed of the piece (normal to
     their facets with it), by random fractions of the margin or of 0.1
-    times their equivalent radii, whichever is larger.
+    times their equivalent radii, whichever is larger. Wedge: the facet
+    turns with the line between the seeds on its two sides, so the first
+    trial moves them along the facet, in opposite directions, by the
+    amount that opens the corner to the minimum angle plus 2 degrees, and
+    the others move them along the facet by random fractions as above.
     """
     steps = {}
+    if target['kind'] == 'wedge':
+        u_vec = target['u_vec']
+        seed_w, seed_n = target['seed'], target['neighbor']
+        if n_attempts == 0:
+            pos_w = np.array(seedlist[seed_w].position, dtype='float')
+            pos_n = np.array(seedlist[seed_n].position, dtype='float')
+            if dom_lims is not None:
+                pos_n = _nearest_image(pos_n.reshape(1, -1), pos_w,
+                                       dom_lims, per_axes)[0]
+            phi = target['min_angle'] + np.radians(2) - target['angle']
+            delta = 0.5 * phi * np.linalg.norm(pos_n - pos_w)
+            # the corner opens when the facet turns away from the wall:
+            # the line between the seeds turns towards the facet
+            return {seed_w: delta * u_vec, seed_n: -delta * u_vec}
     if target['kind'] == 'piece':
         axis = target['axis']
         grow = np.zeros(n_dim)
@@ -2473,7 +2628,10 @@ def _trial_steps(target, seedlist, n_attempts, margin, dom_lims, per_axes,
         else:
             r_eq = np.cbrt(3 * seed.volume / (4 * np.pi))
         step_max = 0.1 * r_eq
-        if target['kind'] == 'piece':
+        if target['kind'] == 'wedge':
+            step_max = max(step_max, margin)
+            u_vec = target['u_vec']
+        elif target['kind'] == 'piece':
             step_max = max(step_max, margin)
             if seed_num == target['seed']:
                 u_vec = grow
@@ -2548,9 +2706,14 @@ def _target_string(target, n_attempts, n_iter, n_kp_space, n_iter_space):
         kp_fmt = '{0:' + str(n_kp_space) + 'd}'
         s = 'min length: {0:.3e} | edge: '.format(target['size'])
         s += ', '.join([kp_fmt.format(kp) for kp in target['kps']])
-    else:
+    elif target['kind'] == 'piece':
         face = 'xyz'[target['axis']] + '-+'[target['side']]
         s = 'thickness: {0:.3e} | piece: seed {1:d}, face {2}'
         s = s.format(target['size'], target['seed'], face)
+    else:
+        face = 'xyz'[target['axis']] + '-+'[target['side']]
+        s = 'corner: {0:.3e} | wedge: seed {1:d}, face {2}, {3:.1f} deg'
+        s = s.format(target['size'], target['seed'], face,
+                     np.degrees(target['angle']))
     s += ' | n iter: {0:' + str(n_iter_space) + 'd} / {1:d}'
     return s.format(n_attempts, n_iter)

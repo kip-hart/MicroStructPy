@@ -392,7 +392,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             this process iterates until `n_iter` attempts have been made
             for a given edge. In periodic domains with a `periodic_margin`,
             the pieces of the cells at the periodic faces that are thinner
-            than the margin are optimized too. Defaults to False.
+            than the margin, and the corners of the cells at the faces
+            narrower than `mesh_min_angle`, are optimized too. Defaults to
+            False.
         edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
             edge (or thin piece) during optimization. Ignored if `edge_opt`
             set to False. Defaults to 100.
@@ -610,7 +612,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
         pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt, edge_opt_n_iter,
                                     verbose, periodic=periodic,
-                                    periodic_margin=margin)
+                                    periodic_margin=margin,
+                                    min_angle=mesh_min_angle)
         if edge_opt:
             # the optimization moved seeds: their files and plots are
             # updated to the seeds that produce the polygon mesh

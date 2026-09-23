@@ -49,12 +49,16 @@ seeds_2d.position(domain_2d, rng_seed=1, periodic=True,
 # the seeds slightly to remove the shortest edges of the polygonal mesh,
 # which would otherwise force very small triangles in the mesh; with the
 # margin, it also thickens or removes the pieces of the grains at the
-# periodic faces that are thinner than the margin.
+# periodic faces that are thinner than the margin, and opens the corners
+# of the grains at the faces that are narrower than the minimum angle of
+# the triangles, which the mesher would fill with very small triangles.
+min_angle = 25
 pmesh_2d = msp.meshing.PolyMesh.from_seeds(seeds_2d, domain_2d,
                                            periodic=True, edge_opt=True,
-                                           n_iter=25, periodic_margin=margin)
+                                           n_iter=25, periodic_margin=margin,
+                                           min_angle=min_angle)
 tmesh_2d = msp.meshing.TriMesh.from_polymesh(pmesh_2d, phases_2d,
-                                             min_angle=25,
+                                             min_angle=min_angle,
                                              max_volume=max_volume)
 
 # Plot the tiled polygonal mesh, with each grain in one color, and the

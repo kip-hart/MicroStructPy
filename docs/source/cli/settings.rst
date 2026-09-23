@@ -285,6 +285,11 @@ treats the thickness of each piece at a periodic face as a feature of the
 mesh, like an edge, and moves the seeds of every piece thinner than the
 margin (and of its neighbors) normal to the face, until the piece is at least
 as thick as the margin or the cell no longer crosses the face.
+A corner of a cell at a periodic face that is narrower than ``mesh_min_angle``
+is treated the same way: the mesher cannot reach the minimum angle in such a
+corner and fills it with shells of very small elements instead, so the
+optimizer moves the seeds on both sides of the facet along it to open the
+corner.
 A change is kept when the shortest feature it modifies gets longer, so the
 shorter features of the mesh never get worse.
 
