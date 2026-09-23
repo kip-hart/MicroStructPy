@@ -77,6 +77,10 @@ CLI Examples
     cli/colormap
     cli/periodic_2d
     cli/periodic_3d
+    cli/pbx_2d
+    cli/pbx_3d
+    cli/pbx_interface_2d
+    cli/pbx_interface_3d
 
 .. only:: html
 
@@ -114,6 +118,26 @@ CLI Examples
     :alt: Polyhedral mesh from periodic 3D example.
     :width: 32%
     :target: cli/periodic_3d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_2D/trimesh.png
+    :alt: Triangular mesh of binder and inclusions.
+    :width: 32%
+    :target: cli/pbx_2d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_3D/polymesh.png
+    :alt: Polyhedral mesh of binder and inclusions.
+    :width: 32%
+    :target: cli/pbx_3d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_interface_2D/trimesh.png
+    :alt: Triangular mesh refined at the interfaces.
+    :width: 32%
+    :target: cli/pbx_interface_2d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_interface_3D/trimesh.png
+    :alt: Tetrahedral mesh refined at the interfaces.
+    :width: 32%
+    :target: cli/pbx_interface_3d.html
 
 
 

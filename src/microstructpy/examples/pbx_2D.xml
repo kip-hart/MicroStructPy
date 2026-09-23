@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <name> Binder </name>
+        <material_type> matrix </material_type>
+        <fraction> 35 </fraction>
+        <shape> circle </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0.08 </loc>
+            <scale> 0.08 </scale>
+        </size>
+        <color> lightgray </color>
+    </material>
+
+    <material>
+        <name> Inclusions </name>
+        <material_type> crystalline </material_type>
+        <fraction> 65 </fraction>
+        <shape> circle </shape>
+        <size>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.35 </scale>
+            <s> 0.35 </s>
+        </size>
+        <color> darkorange </color>
+    </material>
+
+    <domain>
+        <shape> square </shape>
+        <side_length> 3 </side_length>
+        <corner> (0, 0) </corner>
+        <periodic> True </periodic>
+    </domain>
+
+    <settings>
+        <directory> pbx_2D </directory>
+        <verbose> True </verbose>
+        <rng_seeds>
+            <size> 1 </size>
+            <position> 1 </position>
+        </rng_seeds>
+
+        <!-- the overlap tolerance: with 0.5 all the seeds can be placed -->
+        <rtol> 0.5 </rtol>
+
+        <edge_opt> True </edge_opt>
+        <edge_opt_n_iter> 25 </edge_opt_n_iter>
+
+        <mesh_min_angle> 25 </mesh_min_angle>
+        <mesh_max_volume> 0.01 </mesh_max_volume>
+
+        <seeds_kwargs>
+            <linewidth> 0.3 </linewidth>
+        </seeds_kwargs>
+        <poly_kwargs>
+            <linewidth> 0.3 </linewidth>
+        </poly_kwargs>
+        <tri_kwargs>
+            <linewidth> 0.15 </linewidth>
+        </tri_kwargs>
+    </settings>
+</input>

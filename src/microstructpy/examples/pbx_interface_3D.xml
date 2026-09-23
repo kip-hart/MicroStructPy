@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <name> Binder </name>
+        <material_type> matrix </material_type>
+        <fraction> 35 </fraction>
+        <shape> sphere </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0.45 </loc>
+            <scale> 0.25 </scale>
+        </size>
+        <color> lightgray </color>
+    </material>
+
+    <material>
+        <name> Inclusions </name>
+        <material_type> crystalline </material_type>
+        <fraction> 65 </fraction>
+        <shape> sphere </shape>
+        <size>
+            <dist_type> lognorm </dist_type>
+            <scale> 0.8 </scale>
+            <s> 0.3 </s>
+        </size>
+        <color> darkorange </color>
+    </material>
+
+    <domain>
+        <shape> cube </shape>
+        <side_length> 3 </side_length>
+        <corner> (0, 0, 0) </corner>
+        <periodic> True </periodic>
+    </domain>
+
+    <settings>
+        <directory> pbx_interface_3D </directory>
+        <verbose> True </verbose>
+        <rng_seeds>
+            <size> 1 </size>
+            <position> 1 </position>
+        </rng_seeds>
+
+        <!-- small triangles on the grain boundaries (the interfaces between
+             the binder and the inclusions), larger tetrahedra inside the
+             grains -->
+        <!-- the overlap tolerance: with 0.7 all the seeds can be placed -->
+        <rtol> 0.7 </rtol>
+
+        <mesh_min_angle> 15 </mesh_min_angle>
+        <mesh_max_edge_length> 0.2 </mesh_max_edge_length>
+        <mesh_max_volume> 0.05 </mesh_max_volume>
+
+        <seeds_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </seeds_kwargs>
+        <poly_kwargs>
+            <linewidths> 0.2 </linewidths>
+        </poly_kwargs>
+        <tri_kwargs>
+            <linewidths> 0.1 </linewidths>
+        </tri_kwargs>
+    </settings>
+</input>
