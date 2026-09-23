@@ -1,4 +1,4 @@
-"""Tests for periodic polygonal meshes (2D)."""
+"""Tests for periodic polygonal and polyhedral meshes."""
 import copy
 import itertools
 
@@ -227,8 +227,138 @@ def test_periodic_errors():
     seeds = SeedList([Seed.factory('circle', r=0.2, position=(0.5, 0.5))])
     with pytest.raises(ValueError):
         PolyMesh.from_seeds(seeds, msp.geometry.Circle(r=1), periodic=True)
+    # only boxes can be periodic in 3D
     seeds_3d = SeedList([Seed.factory('sphere', r=0.2,
                                       position=(0.5, 0.5, 0.5))])
-    with pytest.raises(NotImplementedError):
-        PolyMesh.from_seeds(seeds_3d, msp.geometry.Cube(side_length=2),
+    with pytest.raises(ValueError):
+        PolyMesh.from_seeds(seeds_3d, msp.geometry.Sphere(r=1),
                             periodic=True)
+
+
+# --------------------------------------------------------------------------- #
+# 3D                                                                          #
+# --------------------------------------------------------------------------- #
+def _seed_volumes(pmesh, n_seeds):
+    vols = np.zeros(n_seeds)
+    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
+        vols[seed_num] += vol
+    return vols
+
+
+def _tiled_reference_volumes(seeds, domain, per_axes):
+    lims = np.array(domain.limits)
+    lengths = lims[:, 1] - lims[:, 0]
+    options = [[-length, 0.0, length] if flag else [0.0]
+               for length, flag in zip(lengths, per_axes)]
+    tiled = SeedList()
+    for t in itertools.product(*options):
+        for seed in seeds:
+            copy_seed = copy.deepcopy(seed)
+            copy_seed.position = list(np.array(seed.position) + np.array(t))
+            tiled.append(copy_seed)
+    big_lims = [(lb - length, ub + length) if flag else (lb, ub)
+                for (lb, ub), length, flag in zip(lims, lengths, per_axes)]
+    pmesh = PolyMesh.from_seeds(tiled, msp.geometry.Box(limits=big_lims))
+    i_zero = [i for i, t in enumerate(itertools.product(*options))
+              if not any(t)][0]
+    n_seeds = len(seeds)
+    vols = np.zeros(n_seeds)
+    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
+        block, local = divmod(seed_num, n_seeds)
+        if block == i_zero:
+            vols[local] += vol
+    return vols
+
+
+def _check_periodic_structure_3d(pmesh, domain, per_axes):
+    pts = np.array(pmesh.points)
+    lims = np.array(domain.limits)
+    lengths = lims[:, 1] - lims[:, 0]
+    assert pmesh.periodic_axes == list(per_axes)
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            assert axis not in pmesh.periodic_points
+            continue
+        lb, ub = lims[axis]
+        shift = np.zeros(3)
+        shift[axis] = lengths[axis]
+        pairs = pmesh.periodic_points[axis]
+        low = set(np.nonzero(np.isclose(pts[:, axis], lb))[0])
+        high = set(np.nonzero(np.isclose(pts[:, axis], ub))[0])
+        assert len(pairs) == len(low) == len(high) > 0
+        for lo, hi in pairs:
+            assert np.array_equal(pts[hi], pts[lo] + shift)
+        kp_map = dict(pairs)
+        f_pairs = dict(pmesh.periodic_facets[axis])
+        n_low = 0
+        for f_num, facet in enumerate(pmesh.facets):
+            if all([kp in low for kp in facet]):
+                n_low += 1
+                assert f_num in f_pairs
+                image = pmesh.facets[f_pairs[f_num]]
+                assert set(image) == set([kp_map[kp] for kp in facet])
+                assert min(pmesh.facet_neighbors[f_num]) == -(2 * axis + 1)
+        assert n_low > 0
+
+
+def test_two_spheres_periodic_in_x():
+    domain = msp.geometry.Cube(side_length=1, corner=(0, 0, 0))
+    seeds = SeedList([Seed.factory('sphere', r=0.2, position=(0.2, .5, .5)),
+                      Seed.factory('sphere', r=0.2, position=(0.7, .5, .5))])
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x')
+    assert sorted(pmesh.seed_numbers) == [0, 0, 1]
+    assert np.allclose(_seed_volumes(pmesh, 2), [0.5, 0.5])
+    pieces = sorted([v for v, s in zip(pmesh.volumes, pmesh.seed_numbers)
+                     if s == 0])
+    assert np.allclose(pieces, [0.05, 0.45])
+    _check_periodic_structure_3d(pmesh, domain, [True, False, False])
+
+
+def test_single_sphere_tiles_the_cube():
+    domain = msp.geometry.Cube(side_length=1, corner=(0, 0, 0))
+    seeds = SeedList([Seed.factory('sphere', r=0.2, position=(.3, .6, .8))])
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic=True)
+    assert len(pmesh.regions) == 8
+    assert len(pmesh.points) == 27
+    assert len(pmesh.facets) == 36
+    assert np.isclose(sum(pmesh.volumes), 1.0)
+    _check_periodic_structure_3d(pmesh, domain, [True, True, True])
+    for axis in range(3):
+        assert len(pmesh.periodic_points[axis]) == 9
+        assert len(pmesh.periodic_facets[axis]) == 4
+
+
+@pytest.mark.parametrize('per_axes', [[True, True, True],
+                                      [True, False, True]])
+def test_periodic_3d_matches_tiled_reference(per_axes):
+    phases = [{'shape': 'sphere', 'size': scipy.stats.uniform(0.3, 0.2)},
+              {'shape': 'ellipsoid', 'size': scipy.stats.uniform(0.35, 0.15),
+               'ratio_ab': 2, 'ratio_ac': 1.5, 'orientation': 'random'}]
+    domain = msp.geometry.Box(limits=[(0, 2), (-1, 1), (0.5, 2.5)])
+    seeds = SeedList.from_info(phases, 0.4 * domain.volume)
+    seeds.position(domain, rtol=0.0, rng_seed=1, periodic=per_axes)
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic=per_axes)
+
+    assert np.isclose(sum(pmesh.volumes), domain.volume)
+    assert np.all(np.array(pmesh.volumes) > 0)
+    assert set(pmesh.seed_numbers) == set(range(len(seeds)))
+    vols = _seed_volumes(pmesh, len(seeds))
+    ref = _tiled_reference_volumes(seeds, domain, per_axes)
+    # vertices within 1e-5 of the faces are snapped onto them
+    assert np.allclose(vols, ref, rtol=1e-6, atol=1e-6)
+    _check_periodic_structure_3d(pmesh, domain, per_axes)
+
+
+def test_periodic_3d_file_round_trip(tmp_path):
+    domain = msp.geometry.Cube(side_length=2)
+    phases = [{'shape': 'sphere', 'size': scipy.stats.uniform(0.4, 0.2)}]
+    seeds = SeedList.from_info(phases, 0.4 * domain.volume)
+    seeds.position(domain, rtol=0.0, rng_seed=2, periodic='xy')
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='xy')
+    fname = str(tmp_path / 'polymesh.txt')
+    pmesh.write(fname)
+    loaded = PolyMesh.from_file(fname)
+    assert loaded == pmesh
+    assert loaded.periodic_axes == [True, True, False]
+    assert {k: [tuple(p) for p in v] for k, v in
+            loaded.periodic_points.items()} == pmesh.periodic_points

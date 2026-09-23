@@ -27,6 +27,9 @@ from matplotlib import patches
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from scipy.spatial import ConvexHull
+from scipy.spatial import QhullError
+from scipy.spatial import cKDTree
 from scipy.spatial import distance
 
 from microstructpy import _misc
@@ -606,10 +609,6 @@ class PolyMesh(object):
         is_periodic = any(per_axes)
         if is_periodic:
             dom_lims = _misc.periodic_domain_limits(domain)
-            if domain.n_dim != 2:
-                e_str = 'Periodic tessellations are currently supported in '
-                e_str += '2D only.'
-                raise NotImplementedError(e_str)
 
         # Collect all breakdowns
         bkdwn2seed = np.array([], dtype='int')
@@ -721,8 +720,9 @@ class PolyMesh(object):
             # Cells of a periodic tessellation wrap across the periodic
             # faces: split them at those faces and translate the outside
             # pieces into the domain
-            voro, bkdwn2seed = _periodic_pieces_2d(voro, bkdwn2seed, lims,
-                                                   per_axes)
+            pieces_fun = {2: _periodic_pieces_2d, 3: _periodic_pieces_3d}
+            voro, bkdwn2seed = pieces_fun[n_dim](voro, bkdwn2seed, lims,
+                                                 per_axes)
 
         # Get only the cells within the domain
         cell_mask = np.full(len(bkdwn2seed), True, dtype='bool')
@@ -837,6 +837,16 @@ class PolyMesh(object):
         vols = [cell['volume'] for cell in voro]
 
         # Create initial mesh
+        if is_periodic:
+            # merge clusters of nearly coincident points, consistently on
+            # both periodic faces
+            eps = _MERGE_TOL * max([ub - lb for lb, ub in dom_lims])
+            collapsed = _collapse_close_points(pts_global, facet_list,
+                                               facet_neighbor_list,
+                                               region_list, eps)
+            pts_global, facet_list, facet_neighbor_list, region_list = \
+                collapsed
+
         pmesh = cls(pts_global, facet_list, region_list, bkdwn2seed,
                     phase_nums, facet_neighbor_list, vols)
         if is_periodic:
@@ -1264,6 +1274,95 @@ def _wrap_points(bkdwn, dom_lims, per_axes):
     return bkdwn
 
 
+# Vertices closer than this fraction of the largest domain length to a
+# periodic face are snapped onto it before the cells are cut there.
+_SNAP_TOL = 1e-5
+
+
+def _snap_to_planes(pts, axis, values, snap_tol):
+    """Snap the coordinates along an axis that are within a tolerance of
+    the given values onto those values (returns a copy)."""
+    pts = np.array(pts, dtype='float')
+    for value in values:
+        mask = np.abs(pts[:, axis] - value) <= snap_tol
+        pts[mask, axis] = value
+    return pts
+
+
+# Points closer than this fraction of the largest domain length are merged
+# in a periodic mesh (Voro++ can produce clusters of nearly coincident
+# vertices, which the periodic faces must share consistently).
+_MERGE_TOL = 1e-6
+
+
+def _collapse_close_points(pts, facets, facet_neighbors, regions, eps):
+    """Merge the points of a mesh that are closer than ``eps``.
+
+    Clusters of close points are replaced by their mean. Facets left with
+    fewer than ``n_dim`` distinct points are removed, along with their
+    entries in the regions.
+
+    Args:
+        pts (list): The points.
+        facets (list): Facets (lists of point numbers).
+        facet_neighbors (list): Neighbors of each facet.
+        regions (list): Regions (lists of facet numbers).
+        eps (float): Merging distance.
+
+    Returns:
+        tuple: The new points, facets, facet neighbors and regions.
+
+    """
+    pts = np.array(pts, dtype='float')
+    n_pts, n_dim = pts.shape
+    pairs = cKDTree(pts).query_pairs(eps)
+    if not pairs:
+        return pts.tolist(), facets, facet_neighbors, regions
+
+    parent = list(range(n_pts))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i, j in pairs:
+        ri, rj = find(i), find(j)
+        if ri != rj:
+            parent[max(ri, rj)] = min(ri, rj)
+    roots = [find(i) for i in range(n_pts)]
+
+    clusters = {}
+    for i, root in enumerate(roots):
+        clusters.setdefault(root, []).append(i)
+    new_pts = []
+    root_ids = {}
+    for root in sorted(clusters):
+        root_ids[root] = len(new_pts)
+        new_pts.append(pts[clusters[root]].mean(axis=0))
+    kp_new = [root_ids[roots[i]] for i in range(n_pts)]
+
+    new_facets = []
+    new_neighs = []
+    f_new = {}
+    for f_num, facet in enumerate(facets):
+        loop = []
+        for kp in facet:
+            kp_n = kp_new[kp]
+            if not loop or loop[-1] != kp_n:
+                loop.append(kp_n)
+        if len(loop) > 1 and loop[0] == loop[-1]:
+            loop.pop()
+        if len(set(loop)) >= n_dim:
+            f_new[f_num] = len(new_facets)
+            new_facets.append(loop)
+            new_neighs.append(facet_neighbors[f_num])
+    new_regions = [[f_new[f] for f in region if f in f_new]
+                   for region in regions]
+    return np.array(new_pts).tolist(), new_facets, new_neighs, new_regions
+
+
 def _cell_loop(cell):
     """Vertex loop of a 2D pyvoro cell and the adjacent cell of each edge.
 
@@ -1301,10 +1400,11 @@ def _clip_loop(pts, adj, axis, value, keep_below, wall, tol):
 
     """
     n_kp = len(pts)
+    on_line = np.abs(pts[:, axis] - value) <= tol
     if keep_below:
-        inside = pts[:, axis] <= value + tol
+        inside = (pts[:, axis] <= value + tol) | on_line
     else:
-        inside = pts[:, axis] >= value - tol
+        inside = (pts[:, axis] >= value - tol) | on_line
 
     new_pts = []
     new_adj = []
@@ -1315,6 +1415,12 @@ def _clip_loop(pts, adj, axis, value, keep_below, wall, tol):
             new_pts.append(p)
             new_adj.append(adj[k])
         if inside[k] != inside[k1]:
+            if inside[k] and on_line[k]:
+                # p itself is the crossing point; the next edge is the cut
+                new_adj[-1] = wall
+                continue
+            if inside[k1] and on_line[k1]:
+                continue  # q itself is the crossing point
             t = (value - p[axis]) / (q[axis] - p[axis])
             x = p + t * (q - p)
             x[axis] = value
@@ -1363,7 +1469,7 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
     """
     lengths = [ub - lb for lb, ub in lims]
     tol = 1e-10 * max(lengths)
-    area_tol = 1e-12 * np.prod(lengths)
+    snap_tol = _SNAP_TOL * max(lengths)
 
     # Cut the cells at the periodic faces
     pieces = []  # (cell number, vertices, edge adjacencies)
@@ -1378,6 +1484,10 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
             wall_hi = -(2 * axis + 2)
             new_parts = []
             for pts, adj in parts:
+                # vertices next to a cut line are snapped onto it, so that
+                # the two cells sharing an edge are cut consistently and
+                # no sliver pieces are created
+                pts = _snap_to_planes(pts, axis, (lb, ub), snap_tol)
                 extent = pts[:, axis].max() - pts[:, axis].min()
                 if extent > length + tol:
                     e_str = 'A cell of the periodic tessellation is wider '
@@ -1399,9 +1509,9 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
                                               (above, -length)):
                     if len(p_pts) < 3:
                         continue
-                    if _loop_area(p_pts, list(range(len(p_pts)))) < area_tol:
-                        continue
                     p_pts = np.array(p_pts)
+                    if p_pts[:, axis].max() - p_pts[:, axis].min() <= tol:
+                        continue  # flat piece, lies on the cut line
                     p_pts[:, axis] += shift
                     new_parts.append((p_pts, p_adj))
             parts = new_parts
@@ -1449,6 +1559,298 @@ def _matching_piece(pt_a, pt_b, candidates, pieces, tol):
         if d_a <= tol and d_b <= tol:
             return piece_num
     return None
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Periodic Tessellation - 3D                                                  #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def _clip_polyhedron(verts, faces, axis, value, keep_below, wall, tol):
+    """Clip a convex polyhedron by an axis-aligned plane.
+
+    Args:
+        verts (numpy.ndarray): N x 3 vertices.
+        faces (list): (vertex loop, adjacent cell) pairs.
+        axis (int): Axis of the clipping plane.
+        value (float): Position of the plane along the axis.
+        keep_below (bool): Keep the side below the plane (True) or above.
+        wall (int): Adjacent cell id of the face created on the plane.
+        tol (float): Vertices within this distance of the plane are on it.
+
+    Returns:
+        tuple: The clipped vertices and faces (empty if nothing is kept).
+
+    """
+    on_plane = np.abs(verts[:, axis] - value) <= tol
+    if keep_below:
+        inside = (verts[:, axis] <= value + tol) | on_plane
+    else:
+        inside = (verts[:, axis] >= value - tol) | on_plane
+    if np.all(inside):
+        return verts, faces
+    if not np.any(inside):
+        return np.zeros((0, 3)), []
+
+    new_verts = []
+    kp_map = {}
+    for kp, is_in in enumerate(inside):
+        if is_in:
+            kp_map[kp] = len(new_verts)
+            new_verts.append(verts[kp])
+
+    # intersection points are computed once per edge, so that the two
+    # faces sharing the edge use the same point
+    edge_cut = {}
+
+    def cut_point(kp_a, kp_b):
+        key = (min(kp_a, kp_b), max(kp_a, kp_b))
+        if key not in edge_cut:
+            p, q = verts[key[0]], verts[key[1]]
+            t = (value - p[axis]) / (q[axis] - p[axis])
+            x = p + t * (q - p)
+            x[axis] = value
+            edge_cut[key] = len(new_verts)
+            new_verts.append(x)
+        return edge_cut[key]
+
+    new_faces = []
+    for loop, adj in faces:
+        n_kp = len(loop)
+        new_loop = []
+        for k in range(n_kp):
+            kp_a, kp_b = loop[k], loop[(k + 1) % n_kp]
+            if inside[kp_a]:
+                new_loop.append(kp_map[kp_a])
+            if inside[kp_a] != inside[kp_b]:
+                # A vertex on the plane is itself the crossing point: no
+                # new (coincident) vertex is created for it.
+                if inside[kp_a] and not on_plane[kp_a]:
+                    new_loop.append(cut_point(kp_a, kp_b))
+                elif inside[kp_b] and not on_plane[kp_b]:
+                    new_loop.append(cut_point(kp_a, kp_b))
+        # drop repeated consecutive vertices (edges lying on the plane)
+        loop_out = []
+        for kp in new_loop:
+            if not loop_out or loop_out[-1] != kp:
+                loop_out.append(kp)
+        if len(loop_out) > 1 and loop_out[0] == loop_out[-1]:
+            loop_out.pop()
+        if len(loop_out) >= 3:
+            new_faces.append((loop_out, adj))
+
+    new_verts = np.array(new_verts)
+
+    # The cap face is the cross-section of the (convex) polyhedron by the
+    # plane: the convex hull of the cut points and the vertices on the
+    # plane. This does not depend on the orientation of the faces.
+    cap_ids = set(edge_cut.values())
+    cap_ids |= set([kp_map[kp] for kp in range(len(verts))
+                    if inside[kp] and on_plane[kp]])
+    cap_loop = _plane_hull_loop(new_verts, sorted(cap_ids), axis, tol)
+    if len(cap_loop) >= 3:
+        new_faces.append((cap_loop, wall))
+    # faces lying on the plane are walls
+    for i, (loop, adj) in enumerate(new_faces):
+        if np.all(np.abs(new_verts[loop, axis] - value) <= tol):
+            new_faces[i] = (loop, wall)
+    return new_verts, new_faces
+
+
+def _plane_hull_loop(verts, ids, axis, tol):
+    """Loop of the points (given by id) that bound the convex hull of a set
+    of coplanar points, in a plane normal to ``axis``.
+
+    Points that lie on an edge of the hull (collinear) are included, so
+    that the loop shares every vertex with the faces around it.
+
+    Returns:
+        list: The point ids in loop order (empty if fewer than 3 points
+        span the hull).
+
+    """
+    if len(ids) < 3:
+        return []
+    others = [i for i in range(verts.shape[1]) if i != axis]
+    pts_2d = verts[ids][:, others]
+    try:
+        hull = ConvexHull(pts_2d)
+    except QhullError:
+        return []  # collinear points: the cross-section is degenerate
+    hull_ids = [int(i) for i in hull.vertices]
+    loop = [ids[i] for i in hull_ids]
+
+    # insert the points lying on hull edges
+    on_hull = set(hull_ids)
+    rest = [i for i in range(len(ids)) if i not in on_hull]
+    if rest:
+        new_loop = []
+        n_hull = len(hull_ids)
+        for k in range(n_hull):
+            i_a, i_b = hull_ids[k], hull_ids[(k + 1) % n_hull]
+            p_a, p_b = pts_2d[i_a], pts_2d[i_b]
+            d_ab = p_b - p_a
+            length = np.linalg.norm(d_ab)
+            new_loop.append(ids[i_a])
+            on_edge = []
+            for i in rest:
+                rel = pts_2d[i] - p_a
+                t = np.dot(rel, d_ab) / (length * length)
+                if -1e-12 < t < 1 + 1e-12:
+                    dist = abs(rel[0] * d_ab[1] - rel[1] * d_ab[0]) / length
+                    if dist <= tol:
+                        on_edge.append((t, ids[i]))
+            new_loop.extend([kp for _, kp in sorted(on_edge)])
+        loop = new_loop
+    return loop
+
+
+def _polyhedron_volume(verts, faces):
+    """Volume of a convex polyhedron given by its faces (fan from the
+    centroid of the vertices)."""
+    cen = verts.mean(axis=0)
+    volume = 0.0
+    for loop, _ in faces:
+        p0 = verts[loop[0]]
+        for k in range(1, len(loop) - 1):
+            p1, p2 = verts[loop[k]], verts[loop[k + 1]]
+            volume += abs(np.dot(np.cross(p1 - p0, p2 - p0), cen - p0))
+    return volume / 6.0
+
+
+def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
+    """Split the cells of a periodic 3D tessellation at the periodic faces.
+
+    The 3D counterpart of :func:`_periodic_pieces_2d`: each wrapped cell is
+    clipped by the planes of the periodic faces, the outside pieces are
+    translated into the domain, cut faces become domain boundary facets
+    (Voro++ wall ids -1 ... -6) and the adjacent cells of the other faces
+    are resolved to the pieces that share them.
+
+    Args:
+        voro (list): The cells from pyvoro.
+        bkdwn2seed (numpy.ndarray): Seed number of each cell.
+        lims (list): (lower, upper) bounds of the domain, per axis.
+        per_axes (list): Periodicity flag of each axis.
+
+    Returns:
+        tuple: The pieces, in the pyvoro cell format, and the seed number
+        of each piece.
+
+    """
+    lengths = [ub - lb for lb, ub in lims]
+    tol = 1e-10 * max(lengths)
+    snap_tol = _SNAP_TOL * max(lengths)
+
+    pieces = []  # (cell number, vertices, faces)
+    for cell_num, cell in enumerate(voro):
+        verts = np.array(cell['vertices'], dtype='float')
+        faces = [(list(f['vertices']), f['adjacent_cell'])
+                 for f in cell['faces']]
+        parts = [(verts, faces)]
+        for axis, flag in enumerate(per_axes):
+            if not flag:
+                continue
+            lb, ub = lims[axis]
+            length = ub - lb
+            wall_lo = -(2 * axis + 1)
+            wall_hi = -(2 * axis + 2)
+            new_parts = []
+            for p_verts, p_faces in parts:
+                # vertices next to a cut plane are snapped onto it (see
+                # _periodic_pieces_2d)
+                p_verts = _snap_to_planes(p_verts, axis, (lb, ub), snap_tol)
+                extent = p_verts[:, axis].max() - p_verts[:, axis].min()
+                if extent > length + tol:
+                    e_str = 'A cell of the periodic tessellation is wider '
+                    e_str += 'than the domain along axis ' + str(axis)
+                    e_str += '. More seeds are needed for a periodic '
+                    e_str += 'microstructure.'
+                    raise ValueError(e_str)
+                below = _clip_polyhedron(p_verts, p_faces, axis, lb, True,
+                                         wall_hi, tol)
+                rest = _clip_polyhedron(p_verts, p_faces, axis, lb, False,
+                                        wall_lo, tol)
+                if len(rest[0]) == 0:
+                    inner, above = rest, rest
+                else:
+                    inner = _clip_polyhedron(rest[0], rest[1], axis, ub,
+                                             True, wall_hi, tol)
+                    above = _clip_polyhedron(rest[0], rest[1], axis, ub,
+                                             False, wall_lo, tol)
+                for (q_verts, q_faces), shift in ((below, length),
+                                                  (inner, 0),
+                                                  (above, -length)):
+                    if len(q_verts) < 4 or len(q_faces) < 4:
+                        continue
+                    q_verts = np.array(q_verts)
+                    if q_verts[:, axis].max() - q_verts[:, axis].min() <= tol:
+                        continue  # flat piece, lies on the cut plane
+                    q_verts[:, axis] += shift
+                    new_parts.append((q_verts, q_faces))
+            parts = new_parts
+        for p_verts, p_faces in parts:
+            pieces.append((cell_num, p_verts, p_faces))
+
+    # Resolve the adjacent cells of the faces to pieces
+    cell_pieces = {}
+    for piece_num, (cell_num, _, _) in enumerate(pieces):
+        cell_pieces.setdefault(cell_num, []).append(piece_num)
+
+    new_voro = []
+    for piece_num, (cell_num, verts, faces) in enumerate(pieces):
+        out_faces = []
+        for loop, adj_cell in faces:
+            if adj_cell >= 0:
+                candidates = [p for p in cell_pieces.get(adj_cell, [])
+                              if p != piece_num]
+                adj_cell = _matching_piece_3d(verts[loop], candidates,
+                                              pieces, tol)
+                if adj_cell is None:
+                    adj_cell = _wall_of_face(verts[loop], lims, tol)
+            out_faces.append({'adjacent_cell': int(adj_cell),
+                              'vertices': list(loop)})
+        adjacency = [[] for _ in range(len(verts))]
+        for face in out_faces:
+            loop = face['vertices']
+            for k in range(len(loop)):
+                kp_a, kp_b = loop[k], loop[(k + 1) % len(loop)]
+                if kp_b not in adjacency[kp_a]:
+                    adjacency[kp_a].append(kp_b)
+                if kp_a not in adjacency[kp_b]:
+                    adjacency[kp_b].append(kp_a)
+        new_voro.append({'vertices': verts.tolist(),
+                         'faces': out_faces,
+                         'adjacency': adjacency,
+                         'original': voro[cell_num]['original'],
+                         'volume': _polyhedron_volume(verts, faces)})
+    new_bkdwn2seed = np.array([bkdwn2seed[cell_num]
+                               for cell_num, _, _ in pieces], dtype='int')
+    return new_voro, new_bkdwn2seed
+
+
+def _matching_piece_3d(face_pts, candidates, pieces, tol):
+    """Piece among the candidates that has vertices at all the points."""
+    for piece_num in candidates:
+        pts = pieces[piece_num][1]
+        dists = np.linalg.norm(face_pts[:, None, :] - pts[None, :, :],
+                               axis=2)
+        if np.all(dists.min(axis=1) <= tol):
+            return piece_num
+    return None
+
+
+def _wall_of_face(face_pts, lims, tol):
+    """Wall id of a face lying on a face of the domain."""
+    for axis, (lb, ub) in enumerate(lims):
+        if np.all(np.abs(face_pts[:, axis] - lb) <= tol):
+            return -(2 * axis + 1)
+        if np.all(np.abs(face_pts[:, axis] - ub) <= tol):
+            return -(2 * axis + 2)
+    e_str = 'Cannot resolve the neighbor of a face of the periodic '
+    e_str += 'tessellation at ' + str(np.round(face_pts.mean(axis=0), 6))
+    e_str += '.'
+    raise ValueError(e_str)
 
 
 def _wall_of_edge(pt_a, pt_b, lims, tol):
