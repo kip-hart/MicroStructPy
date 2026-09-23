@@ -21,7 +21,7 @@ The full text of the file is:
 Materials
 =========
 
-This is the 3D version of the :ref:`ex_pbx_2d` example: crystalline
+This is the 3D version of the :ref:`ex_pbx_2d`: crystalline
 inclusions (65% of the volume, spherical seeds with lognormal diameters) in
 a binder (a ``matrix`` phase, 35% of the volume, seeded with small spheres).
 

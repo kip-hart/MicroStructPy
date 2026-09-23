@@ -21,7 +21,7 @@ The full text of the file is:
 Materials
 =========
 
-The materials are those of the :ref:`ex_pbx_2d` example: crystalline
+The materials are those of the :ref:`ex_pbx_2d`: crystalline
 inclusions (65% of the area, circular seeds with lognormal diameters) in a
 binder (a ``matrix`` phase, 35% of the area, seeded with small circles).
 
@@ -59,7 +59,7 @@ Output Files
 
 The three plots that this file generates are the seeding, the polygon mesh,
 and the triangular mesh.
-The seeds and the polygonal mesh are those of the :ref:`ex_pbx_2d` example
+The seeds and the polygonal mesh are those of the :ref:`ex_pbx_2d`
 (:numref:`f_ex_pbx2d_seeds` and :numref:`f_ex_pbx2d_poly`), since the seeds
 and the settings of the optimization are the same; only the triangular mesh
 differs, shown in :numref:`f_ex_pbxint2d_tri`.

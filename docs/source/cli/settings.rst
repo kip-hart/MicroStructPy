@@ -395,7 +395,7 @@ tetrahedral mesh.
 A small maximum edge length will increase resolution of the mesh at grain
 boundaries, while the size of the elements inside the grains is controlled
 by the maximum volume (see the :ref:`ex_pbx_interface_2d` and
-:ref:`ex_pbx_interface_3d` examples).
+:ref:`ex_pbx_interface_3d`).
 The default value is ``<mesh_max_edge_length> inf </mesh_max_edge_length>``,
 which effectively turns off the edge length quality control.
 
