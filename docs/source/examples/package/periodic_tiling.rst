@@ -1,8 +1,8 @@
 .. _ex_periodic_tiling:
 
-=======================================
+========================================
 Periodic Microstructures and Their Tiles
-=======================================
+========================================
 
 Python Script
 =============
@@ -17,32 +17,56 @@ The full text of the script is:
 .. literalinclude:: ../../../../src/microstructpy/examples/periodic_tiling.py
     :language: python
 
-Periodic Microstructure in 2D
-=============================
+Domain
+======
 
-The domain is a :class:`.Square` of side length 2 and the two phases are
-circular grains and elliptical inclusions.
+The domain of the microstructure is a :class:`.Square` of side length 2,
+with its bottom left corner at the origin.
+The microstructure is periodic in both directions: a grain that crosses a
+face of the domain continues on the opposite face, and the meshes have
+matching nodes on opposite faces.
+The periodicity can be restricted to some axes, for example
+``periodic='x'``.
+
+Phases
+======
+
+There are two phases: circular grains, which occupy two thirds of the
+domain, and elliptical inclusions of aspect ratio 2, which occupy the
+remaining third.
+
+Seeds
+=====
+
 The seeds are created with :func:`~microstructpy.seeding.SeedList.from_info`
-and positioned with :func:`~microstructpy.seeding.SeedList.position`, with
+to fill 90% of the area, so that all of them can be placed, and positioned
+with :func:`~microstructpy.seeding.SeedList.position` with
 ``periodic=True``: a seed that crosses a face of the domain is also checked
 for overlaps on the opposite face.
 The ``periodic_margin`` keeps the seeds from ending within half a target
 edge length of a face, or crossing one by less, since such seeds leave thin
 pieces of grains on the opposite face and very small triangles there; it is
 capped at an eighth of the smallest grain, which needs about four elements
-across it.
+across it (the ``auto`` value of the CLI setting does the same).
+
+Polygon and Triangle Meshing
+============================
+
 The polygonal mesh is created with
 :func:`~microstructpy.meshing.PolyMesh.from_seeds`, again with
 ``periodic=True``, and the triangular mesh with
 :func:`~microstructpy.meshing.TriMesh.from_polymesh`, which reads the
 periodicity from the polygonal mesh.
 The edge optimization of the polygonal mesh (``edge_opt``) lengthens its
-shortest edges and, with the same margin, thickens or removes the pieces of
-the grains at the faces that are thinner than the margin.
-The periodicity can be restricted to some axes, for example
-``periodic='x'``.
+shortest edges and, with the same margin and the minimum angle of the
+triangular mesh, thickens or removes the pieces of the grains at the faces
+that are thinner than the margin and opens the corners of the grains at the
+faces that are narrower than the minimum angle.
 
-The polygonal mesh and the triangular mesh are then drawn four times, in a
+Plotting
+========
+
+The polygonal mesh and the triangular mesh are drawn four times, in a
 2 x 2 tiling of the domain.
 The grains cut by the faces of the domain are colored by seed number and
 continue across the faces, and the nodes of the triangular mesh on the face

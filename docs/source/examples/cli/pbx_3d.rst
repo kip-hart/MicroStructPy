@@ -34,7 +34,7 @@ directions.
 Settings
 ========
 
-The overlap tolerance ``rtol`` is set to 0.5 so that the small binder seeds
+The overlap tolerance ``rtol`` is set to 0.7 so that the small binder seeds
 can be placed between the inclusions, and the random number generator seeds
 make the microstructure repeatable.
 
@@ -44,8 +44,9 @@ volume of 0.02.
 The seeds are placed a margin away from the periodic faces (``periodic_margin``
 set to ``auto``: half the target edge length, or an eighth of the smallest
 grain if that is smaller) and the edge optimization moves the seeds that
-leave a thin piece of a grain on a face, or a very short edge, since either
-forces very small tetrahedra.
+leave a thin piece of a grain on a face, a corner narrower than the minimum
+angle of the mesh, or a very short edge, since any of these forces very
+small tetrahedra.
 
 
 Output Files

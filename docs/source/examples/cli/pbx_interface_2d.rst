@@ -18,11 +18,17 @@ The full text of the file is:
     :language: xml
 
 
-Materials and Domain
-====================
+Materials
+=========
 
-The materials and the domain are those of the :ref:`ex_pbx_2d` example:
-crystalline inclusions in a binder, in a square domain periodic in both
+The materials are those of the :ref:`ex_pbx_2d` example: crystalline
+inclusions (65% of the area, circular seeds with lognormal diameters) in a
+binder (a ``matrix`` phase, 35% of the area, seeded with small circles).
+
+Domain Geometry
+===============
+
+The materials fill a square domain of side length 3, periodic in both
 directions.
 
 Settings
@@ -43,8 +49,9 @@ The mesh has a minimum angle of 25 degrees.
 The seeds are placed a margin away from the periodic faces (``periodic_margin``
 set to ``auto``: half the target edge length, or an eighth of the smallest
 grain if that is smaller) and the edge optimization moves the seeds that
-leave a thin piece of a grain on a face, or a very short edge, since either
-forces very small triangles.
+leave a thin piece of a grain on a face, a corner narrower than the minimum
+angle of the mesh, or a very short edge, since any of these forces very
+small triangles.
 
 
 Output Files
@@ -52,7 +59,10 @@ Output Files
 
 The three plots that this file generates are the seeding, the polygon mesh,
 and the triangular mesh.
-The triangular mesh is shown in :numref:`f_ex_pbxint2d_tri`.
+The seeds and the polygonal mesh are those of the :ref:`ex_pbx_2d` example
+(:numref:`f_ex_pbx2d_seeds` and :numref:`f_ex_pbx2d_poly`), since the seeds
+and the settings of the optimization are the same; only the triangular mesh
+differs, shown in :numref:`f_ex_pbxint2d_tri`.
 
 .. _f_ex_pbxint2d_tri:
 .. figure:: ../../../../src/microstructpy/examples/pbx_interface_2D/trimesh.png

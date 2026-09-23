@@ -63,8 +63,10 @@ of the smallest grain if that is smaller.
 The edge optimization removes the shortest edges of the polygonal mesh, for
 the same reason, and with the margin it also thickens or removes the pieces
 of the grains at the periodic faces that are thinner than the margin, which
-the placement of the seeds alone cannot prevent: a grain extends beyond its
-seed, and its corners can cross a face by a small amount.
+the placement of the seeds alone cannot prevent (a grain extends beyond its
+seed, and its corners can cross a face by a small amount), and opens the
+corners of the grains at the faces that are narrower than the minimum angle
+of the mesh.
 
 The plots are colored by seed number, so that the pieces of a grain on
 opposite faces of the domain have the same color.

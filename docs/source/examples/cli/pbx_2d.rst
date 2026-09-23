@@ -51,8 +51,9 @@ The random number generator seeds make the microstructure repeatable.
 The seeds are placed a margin away from the periodic faces (``periodic_margin``
 set to ``auto``: half the target edge length, or an eighth of the smallest
 grain if that is smaller) and the edge optimization moves the seeds that
-leave a thin piece of a grain on a face, or a very short edge, since either
-forces very small triangles.
+leave a thin piece of a grain on a face, a corner narrower than the minimum
+angle of the mesh, or a very short edge, since any of these forces very
+small triangles.
 
 The mesh has a minimum angle of 25 degrees and a maximum element area of
 0.01.
