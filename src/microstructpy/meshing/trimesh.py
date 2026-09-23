@@ -67,12 +67,19 @@ class TriMesh(object):
     # Constructors                                                            #
     # ----------------------------------------------------------------------- #
     def __init__(self, points, elements, element_attributes=None, facets=None,
-                 facet_attributes=None):
+                 facet_attributes=None, periodic_axes=None,
+                 periodic_nodes=None, periodic_facets=None):
         self.points = points
         self.elements = elements
         self.element_attributes = element_attributes
         self.facets = facets
         self.facet_attributes = facet_attributes
+
+        # Periodicity: flags per axis, and the pairs of (low face, high face)
+        # nodes and facets that are periodic images of each other, per axis
+        self.periodic_axes = periodic_axes
+        self.periodic_nodes = periodic_nodes
+        self.periodic_facets = periodic_facets
 
     @classmethod
     def from_file(cls, filename):
@@ -100,8 +107,17 @@ class TriMesh(object):
             n_eas = 0
             n_facets = 0
             n_fas = 0
+            per_axes = None
+            per_nodes = []
+            per_fts = []
             for line in file.readlines():
-                if 'Mesh Points'.lower() in line.lower():
+                if 'Periodic Axes'.lower() in line.lower():
+                    stage = 'periodic axes'
+                elif 'Periodic Nodes'.lower() in line.lower():
+                    stage = 'periodic nodes'
+                elif 'Periodic Facets'.lower() in line.lower():
+                    stage = 'periodic facets'
+                elif 'Mesh Points'.lower() in line.lower():
                     n_pts = int(line.split(':')[1])
                     stage = 'points'
                 elif 'Mesh Elements'.lower() in line.lower():
@@ -129,6 +145,12 @@ class TriMesh(object):
                     elif stage == 'facet attributes':
                         if n_fas > 0:
                             facet_atts.append(_misc.from_str(line))
+                    elif stage == 'periodic axes':
+                        per_axes = [bool(int(f)) for f in line.split(',')]
+                    elif stage == 'periodic nodes':
+                        per_nodes.append([int(n) for n in line.split(',')])
+                    elif stage == 'periodic facets':
+                        per_fts.append([int(n) for n in line.split(',')])
                     else:
                         pass
 
@@ -139,7 +161,19 @@ class TriMesh(object):
         assert len(facets) == n_facets
         assert len(facet_atts) == n_fas
 
-        return cls(pts, elems, elem_atts, facets, facet_atts)
+        per_node_pairs = None
+        per_facet_pairs = None
+        if per_axes is not None:
+            per_node_pairs = {ax: [] for ax, f in enumerate(per_axes) if f}
+            per_facet_pairs = {ax: [] for ax, f in enumerate(per_axes) if f}
+            for ax, lo, hi in per_nodes:
+                per_node_pairs[ax].append((lo, hi))
+            for ax, lo, hi in per_fts:
+                per_facet_pairs[ax].append((lo, hi))
+
+        return cls(pts, elems, elem_atts, facets, facet_atts,
+                   periodic_axes=per_axes, periodic_nodes=per_node_pairs,
+                   periodic_facets=per_facet_pairs)
 
     @classmethod
     def from_polymesh(cls, polymesh, phases=None, mesher='Triangle/Tetgen',
@@ -198,18 +232,60 @@ class TriMesh(object):
                 this control.
 
         """
+        # A periodic polygon mesh gives a periodic triangular mesh: the
+        # nodes on opposite periodic faces are images of each other
+        per_axes = getattr(polymesh, 'periodic_axes', None)
+        periodic = per_axes is not None and any(per_axes)
+
         key = str(mesher).lower().strip()
         if key in ('triangle/tetgen', 'triangle', 'tetgen'):
             tri_args = _call_meshpy(polymesh, phases, min_angle, max_volume,
-                                    max_edge_length)
+                                    max_edge_length, periodic=periodic)
         elif key == 'gmsh':
+            if periodic:
+                e_str = 'Periodic meshes are not supported with gmsh; use '
+                e_str += 'the Triangle/TetGen mesher.'
+                raise NotImplementedError(e_str)
             tri_args = _call_gmsh(polymesh, phases, mesh_size, max_edge_length)
         else:
             e_str = 'Unknown mesher ' + repr(mesher) + '. Options are '
             e_str += "'Triangle/TetGen', 'Triangle', 'TetGen', and 'gmsh'."
             raise ValueError(e_str)
 
-        return cls(*tri_args)
+        mesh = cls(*tri_args)
+        if periodic:
+            dom_lims = _misc.periodic_bounds(polymesh.points, per_axes)
+            mesh._set_periodic_pairs(per_axes, dom_lims)
+        return mesh
+
+    # ----------------------------------------------------------------------- #
+    # Periodicity                                                             #
+    # ----------------------------------------------------------------------- #
+    def _set_periodic_pairs(self, per_axes, dom_lims):
+        """Pair the nodes and facets on opposite periodic faces.
+
+        The nodes on the lower face of each periodic axis are matched with
+        their images on the upper face and snapped to exact translates;
+        the facets on the faces are paired likewise. The results are stored
+        in ``periodic_axes``, ``periodic_nodes`` (dict: axis -> list of
+        (lower, upper) node numbers) and ``periodic_facets`` (dict: axis ->
+        list of (lower, upper) facet numbers).
+
+        Raises:
+            ValueError: If a node or facet on a periodic face has no image.
+
+        """
+        pts, per_nodes = _misc.pair_periodic_points(self.points, per_axes,
+                                                    dom_lims)
+        if self.facets is None:
+            per_facets = {axis: [] for axis in per_nodes}
+        else:
+            per_facets = _misc.pair_periodic_facets(self.facets, per_nodes)
+
+        self.points = pts
+        self.periodic_axes = [bool(f) for f in per_axes]
+        self.periodic_nodes = per_nodes
+        self.periodic_facets = per_facets
 
     # ----------------------------------------------------------------------- #
     # String and Representation Functions                                     #
@@ -246,6 +322,18 @@ class TriMesh(object):
             str_str += str(len(self.facet_attributes)) + '\n'
             str_str += '\n'.join(['\t' + str(a) for a in
                                   self.facet_attributes])
+
+        if self.periodic_axes is not None and any(self.periodic_axes):
+            flags = [int(bool(f)) for f in self.periodic_axes]
+            str_str += '\nPeriodic Axes: ' + str(len(flags)) + '\n'
+            str_str += '\t' + ', '.join([str(f) for f in flags])
+            for name, pairs in (('Periodic Nodes', self.periodic_nodes),
+                                ('Periodic Facets', self.periodic_facets)):
+                rows = [(ax, lo, hi) for ax in sorted(pairs or {})
+                        for lo, hi in pairs[ax]]
+                str_str += '\n' + name + ': ' + str(len(rows))
+                str_str += ''.join(['\n\t' + ', '.join([str(n) for n in row])
+                                    for row in rows])
 
         return str_str
 
@@ -320,6 +408,9 @@ class TriMesh(object):
             abaqus += ''.join([str(i + 1) + ''.join([', ' + str(int(kp) + 1)
                                                      for kp in elm]) + '\n' for
                                i, elm in enumerate(self.elements)])
+
+            # Node sets - periodic faces (in paired order)
+            abaqus += _abaqus_periodic_nsets(self)
 
             # Element sets - seed number
             elset_n_per = 16
@@ -759,6 +850,24 @@ class RasterMesh(TriMesh):
         sides = [lb + np.arange(0, dlen, mesh_size) for lb, dlen in
                  zip(mins, lens)]
 
+        # A periodic polymesh gives a periodic raster mesh: the grid must
+        # then reach the opposite faces exactly
+        per_axes = getattr(polymesh, 'periodic_axes', None)
+        periodic = per_axes is not None and any(per_axes)
+        if periodic:
+            for axis, flag in enumerate(per_axes):
+                if not flag:
+                    continue
+                length = maxs[axis] - mins[axis]
+                n_pix = int(round(length / mesh_size))
+                misfit = abs(n_pix * mesh_size - length)
+                if n_pix < 1 or misfit > 1e-8 * length:
+                    e_str = 'The mesh size of a periodic raster mesh must '
+                    e_str += 'divide the domain length along axis '
+                    e_str += str(axis) + ' (' + str(length) + ').'
+                    raise ValueError(e_str)
+                sides[axis] = np.linspace(mins[axis], maxs[axis], n_pix + 1)
+
         n_dim = len(mins)
         if n_dim not in _RASTER_CORNERS:
             e_str = 'Cannot create a raster mesh in ' + str(n_dim) + 'D.'
@@ -841,7 +950,11 @@ class RasterMesh(TriMesh):
         elems = node_n_conv[elems]
         facets = node_n_conv[facets]
 
-        return cls(nodes, elems, elem_atts, facets, facet_atts)
+        mesh = cls(nodes, elems, elem_atts, facets, facet_atts)
+        if periodic:
+            dom_lims = [(float(lb), float(ub)) for lb, ub in zip(mins, maxs)]
+            mesh._set_periodic_pairs(per_axes, dom_lims)
+        return mesh
 
     # ----------------------------------------------------------------------- #
     # String and Representation Functions                                     #
@@ -908,6 +1021,9 @@ class RasterMesh(TriMesh):
             abaqus += ''.join([str(i + 1) + ''.join([', ' + str(int(kp) + 1)
                                                      for kp in elem]) + '\n'
                                for i, elem in enumerate(self.elements)])
+
+            # Node sets - periodic faces (in paired order)
+            abaqus += _abaqus_periodic_nsets(self)
 
             # Element sets - seed number
             elset_n_per = 16
@@ -1276,7 +1392,7 @@ def _pt_ab(i, pt):
 
 
 def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
-                 max_edge_length=float('inf')):
+                 max_edge_length=float('inf'), periodic=False):
 
     # condition the phases input
     if phases is None:
@@ -1316,6 +1432,19 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
             n_float = np.linalg.norm(rel_pos) / max_edge_length
             n_int = max(1, np.ceil(n_float))
             n_subs[i] = n_int
+
+        # Facets on opposite periodic faces are subdivided identically, so
+        # that their nodes are images of each other
+        if periodic:
+            f_index = {f_num - 1: i for i, f_num in enumerate(facet_nums)}
+            for axis_pairs in (polymesh.periodic_facets or {}).values():
+                for f_lo, f_hi in axis_pairs:
+                    if f_lo in f_index and f_hi in f_index:
+                        n_max = max(n_subs[f_index[f_lo]],
+                                    n_subs[f_index[f_hi]])
+                        n_subs[f_index[f_lo]] = n_max
+                        n_subs[f_index[f_hi]] = n_max
+
         sub_out = meshpy.triangle.subdivide_facets(n_subs, pts, facets,
                                                    facet_nums)
         pts, facets, facet_nums = sub_out
@@ -1392,13 +1521,16 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     # (global) constraint would cap the per-phase values and, in 2D, an
     # infinite one is formatted as 'ainf', which Triangle reads as the
     # switches -a -i -n -f.
+    # A periodic mesh must keep the nodes of the boundary facets as they are
+    # (Triangle's -Y switch), so that opposite faces have matching nodes.
     if n_dim == 2:
         tri_mesh = meshpy.triangle.build(info,
                                          attributes=True,
                                          volume_constraints=True,
                                          max_volume=None,
                                          min_angle=min_angle,
-                                         generate_faces=True)
+                                         generate_faces=True,
+                                         allow_boundary_steiner=not periodic)
     else:
         opts = meshpy.tet.Options('pq')
         opts.mindihedral = min_angle
@@ -1794,6 +1926,43 @@ def _facet_in_normal(pts, cen_pt):
         vn = -vn  # flip so center is inward
     un = vn / np.linalg.norm(vn)
     return un, f_cen
+
+
+def _abaqus_periodic_nsets(mesh):
+    """Abaqus node sets of the periodic faces of a mesh.
+
+    For each periodic axis, two unsorted node sets are written,
+    ``Set-N-Periodic-<axis>-Low`` and ``Set-N-Periodic-<axis>-High``, whose
+    n-th entries are periodic images of each other (so that the pairs can
+    be tied by equations).
+
+    Args:
+        mesh (TriMesh): The mesh.
+
+    Returns:
+        str: The ``*Nset`` blocks, or an empty string for a non-periodic
+        mesh.
+
+    """
+    per_nodes = getattr(mesh, 'periodic_nodes', None)
+    if not per_nodes:
+        return ''
+    abaqus = ''
+    n_per = 16
+    for axis in sorted(per_nodes):
+        pairs = per_nodes[axis]
+        if not pairs:
+            continue
+        axis_name = 'XYZ'[axis]
+        for side, kps in (('Low', [lo for lo, _ in pairs]),
+                          ('High', [hi for _, hi in pairs])):
+            name = 'Set-N-Periodic-' + axis_name + '-' + side
+            abaqus += '*Nset, nset=' + name + ', unsorted\n'
+            for i in range(0, len(kps), n_per):
+                chunk = kps[i:i + n_per]
+                abaqus += ', '.join([str(int(kp) + 1) for kp in chunk])
+                abaqus += '\n'
+    return abaqus
 
 
 def _abaqus_exterior_unions(polymesh, defined_surfs):

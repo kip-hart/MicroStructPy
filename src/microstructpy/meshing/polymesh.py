@@ -942,68 +942,9 @@ class PolyMesh(object):
                 image on the opposite face.
 
         """
-        pts = np.array(self.points, dtype='float')
-        n_dim = pts.shape[1]
-        lengths = [ub - lb for lb, ub in dom_lims]
-        tol = 1e-8 * max(lengths)
-
-        per_points = {}
-        per_facets = {}
-        for axis, flag in enumerate(per_axes):
-            if not flag:
-                continue
-            lb, ub = dom_lims[axis]
-            shift = np.zeros(n_dim)
-            shift[axis] = ub - lb
-            others = [i for i in range(n_dim) if i != axis]
-
-            low = np.nonzero(np.abs(pts[:, axis] - lb) <= tol)[0]
-            high = np.nonzero(np.abs(pts[:, axis] - ub) <= tol)[0]
-            if len(low) != len(high):
-                e_str = 'The periodic faces along axis ' + str(axis)
-                e_str += ' have different numbers of points ('
-                e_str += str(len(low)) + ' and ' + str(len(high)) + ').'
-                raise ValueError(e_str)
-
-            pairs = []
-            if len(low) > 0:
-                dists = distance.cdist(pts[low][:, others],
-                                       pts[high][:, others])
-                for i_low, kp_low in enumerate(low):
-                    i_high = int(np.argmin(dists[i_low]))
-                    if dists[i_low, i_high] > tol:
-                        e_str = 'Point ' + str(kp_low) + ' on the lower '
-                        e_str += 'periodic face of axis ' + str(axis)
-                        e_str += ' has no image on the upper face.'
-                        raise ValueError(e_str)
-                    dists[:, i_high] = np.inf  # one-to-one
-                    kp_high = int(high[i_high])
-                    # snap the pair to exact periodic images
-                    pts[kp_low, axis] = lb
-                    pts[kp_high] = pts[kp_low] + shift
-                    pairs.append((int(kp_low), kp_high))
-            per_points[axis] = pairs
-
-            # facets on the faces
-            kp_map = {lo: hi for lo, hi in pairs}
-            low_set = set(kp_map)
-            high_set = set(kp_map.values())
-            high_facets = {}
-            for f_num, facet in enumerate(self.facets):
-                if all([kp in high_set for kp in facet]):
-                    high_facets[frozenset(facet)] = f_num
-            f_pairs = []
-            for f_num, facet in enumerate(self.facets):
-                if not all([kp in low_set for kp in facet]):
-                    continue
-                key = frozenset([kp_map[kp] for kp in facet])
-                if key not in high_facets:
-                    e_str = 'Facet ' + str(f_num) + ' on the lower periodic'
-                    e_str += ' face of axis ' + str(axis) + ' has no image'
-                    e_str += ' on the upper face.'
-                    raise ValueError(e_str)
-                f_pairs.append((f_num, high_facets[key]))
-            per_facets[axis] = f_pairs
+        pts, per_points = _misc.pair_periodic_points(self.points, per_axes,
+                                                     dom_lims)
+        per_facets = _misc.pair_periodic_facets(self.facets, per_points)
 
         self.points = pts.tolist()
         self.periodic_axes = [bool(f) for f in per_axes]

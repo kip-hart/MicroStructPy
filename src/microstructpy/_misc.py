@@ -261,3 +261,157 @@ def periodic_domain_limits(domain):
         e_str = 'Periodic microstructures require an axis-aligned domain.'
         raise ValueError(e_str)
     return [(float(lb), float(ub)) for lb, ub in domain.limits]
+
+
+def periodic_bounds(points, per_axes):
+    """(lower, upper) bounds of the domain of a periodic mesh.
+
+    The points of a mesh that fills a rectangular domain span the domain,
+    so its bounds are the extents of the points.
+
+    Args:
+        points (list or numpy.ndarray): The points of the mesh.
+        per_axes (list): Periodicity flag of each axis.
+
+    Returns:
+        list: One (lower, upper) tuple per axis.
+
+    """
+    pts = np.array(points, dtype='float')
+    return [(float(lb), float(ub)) for lb, ub in
+            zip(pts.min(axis=0), pts.max(axis=0))]
+
+
+def pair_periodic_points(points, per_axes, dom_lims, rel_tol=1e-8):
+    """Pair the points on opposite periodic faces of a domain.
+
+    For each periodic axis, every point on the lower face is matched with
+    its image on the upper face, and the coordinates of the pair are
+    snapped so that the image is exactly the point translated by the
+    domain length.
+
+    Args:
+        points (list or numpy.ndarray): The points.
+        per_axes (list): Periodicity flag of each axis.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+        rel_tol (float): Matching tolerance, relative to the largest
+            domain length.
+
+    Returns:
+        tuple: The snapped points (numpy.ndarray) and a dictionary that
+        maps each periodic axis to a list of (lower, upper) point numbers.
+
+    Raises:
+        ValueError: If a point on a periodic face has no image on the
+            opposite face.
+
+    """
+    pts = np.array(points, dtype='float')
+    n_dim = pts.shape[1]
+    lengths = [ub - lb for lb, ub in dom_lims]
+    tol = rel_tol * max(lengths)
+
+    pairs = {}
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        lb, ub = dom_lims[axis]
+        shift = np.zeros(n_dim)
+        shift[axis] = ub - lb
+        others = [i for i in range(n_dim) if i != axis]
+
+        low = np.nonzero(np.abs(pts[:, axis] - lb) <= tol)[0]
+        high = np.nonzero(np.abs(pts[:, axis] - ub) <= tol)[0]
+        if len(low) != len(high):
+            e_str = 'The periodic faces along axis ' + str(axis)
+            e_str += ' have different numbers of points ('
+            e_str += str(len(low)) + ' and ' + str(len(high)) + ').'
+            raise ValueError(e_str)
+
+        axis_pairs = []
+        if len(low) > 0:
+            rel = pts[low][:, None, :][:, :, others]
+            rel = rel - pts[high][None, :, :][:, :, others]
+            dists = np.sqrt(np.sum(rel * rel, axis=-1))
+            for i_low, kp_low in enumerate(low):
+                i_high = int(np.argmin(dists[i_low]))
+                if dists[i_low, i_high] > tol:
+                    e_str = 'Point ' + str(kp_low) + ' on the lower '
+                    e_str += 'periodic face of axis ' + str(axis)
+                    e_str += ' has no image on the upper face.'
+                    raise ValueError(e_str)
+                dists[:, i_high] = np.inf  # one-to-one
+                kp_high = int(high[i_high])
+                pts[kp_low, axis] = lb
+                pts[kp_high] = pts[kp_low] + shift
+                axis_pairs.append((int(kp_low), kp_high))
+        pairs[axis] = axis_pairs
+    return pts, pairs
+
+
+def pair_periodic_facets(facets, point_pairs):
+    """Pair the facets lying on opposite periodic faces.
+
+    Args:
+        facets (list): Facets (lists of point numbers).
+        point_pairs (dict): Output of :func:`pair_periodic_points`.
+
+    Returns:
+        dict: Maps each periodic axis to a list of (lower, upper) facet
+        numbers.
+
+    Raises:
+        ValueError: If a facet on a periodic face has no image.
+
+    """
+    pairs = {}
+    for axis, axis_pairs in point_pairs.items():
+        kp_map = dict(axis_pairs)
+        low_set = set(kp_map)
+        high_set = set(kp_map.values())
+        high_facets = {}
+        for f_num, facet in enumerate(facets):
+            if len(facet) > 0 and all([kp in high_set for kp in facet]):
+                high_facets[frozenset(facet)] = f_num
+        f_pairs = []
+        for f_num, facet in enumerate(facets):
+            if len(facet) == 0 or not all([kp in low_set for kp in facet]):
+                continue
+            key = frozenset([kp_map[kp] for kp in facet])
+            if key not in high_facets:
+                e_str = 'Facet ' + str(f_num) + ' on the lower periodic'
+                e_str += ' face of axis ' + str(axis) + ' has no image'
+                e_str += ' on the upper face.'
+                raise ValueError(e_str)
+            f_pairs.append((f_num, high_facets[key]))
+        pairs[axis] = f_pairs
+    return pairs
+
+
+def unwrap_points(points, center, per_axes, dom_lims):
+    """Translate points by domain lengths to the image nearest a center.
+
+    Used to reassemble a grain that a periodic domain splits into pieces:
+    along each periodic axis, every point is moved by a multiple of the
+    domain length so that it lies within half a length of the center.
+
+    Args:
+        points (list or numpy.ndarray): The points.
+        center (list or numpy.ndarray): The reference point (e.g. the seed
+            position).
+        per_axes (list): Periodicity flag of each axis.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+
+    Returns:
+        numpy.ndarray: The unwrapped points.
+
+    """
+    pts = np.array(points, dtype='float')
+    cen = np.array(center, dtype='float')
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        length = dom_lims[axis][1] - dom_lims[axis][0]
+        n_shift = np.round((cen[axis] - pts[:, axis]) / length)
+        pts[:, axis] += n_shift * length
+    return pts
