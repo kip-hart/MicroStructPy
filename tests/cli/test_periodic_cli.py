@@ -1,0 +1,97 @@
+"""End-to-end test of a periodic microstructure through the CLI."""
+import os
+
+import numpy as np
+
+from microstructpy import cli
+from microstructpy.meshing import PolyMesh
+from microstructpy.meshing import TriMesh
+
+PERIODIC_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<input>
+    <material>
+        <name> Matrix </name>
+        <shape> circle </shape>
+        <size>
+            <dist_type> uniform </dist_type>
+            <loc> 0.25 </loc>
+            <scale> 0.15 </scale>
+        </size>
+        <fraction> 2 </fraction>
+    </material>
+    <material>
+        <name> Inclusions </name>
+        <shape> ellipse </shape>
+        <size> 0.4 </size>
+        <aspect_ratio> 2 </aspect_ratio>
+        <angle_deg>
+            <dist_type> uniform </dist_type>
+            <loc> 0 </loc>
+            <scale> 180 </scale>
+        </angle_deg>
+        <fraction> 1 </fraction>
+    </material>
+
+    <domain>
+        <shape> square </shape>
+        <side_length> 3 </side_length>
+        <corner> 0, 0 </corner>
+        <periodic> {periodic} </periodic>
+    </domain>
+
+    <settings>
+        <directory> {directory} </directory>
+        <verbose> False </verbose>
+        <mesh_min_angle> 20 </mesh_min_angle>
+        <mesh_max_edge_length> 0.1 </mesh_max_edge_length>
+        <verify> True </verify>
+    </settings>
+</input>
+"""
+
+
+def _run(tmp_path, periodic):
+    out_dir = tmp_path / 'out'
+    xml = tmp_path / 'input.xml'
+    xml.write_text(PERIODIC_XML.format(periodic=periodic,
+                                       directory=str(out_dir)))
+    cli.run_file(str(xml))
+    return out_dir
+
+
+def test_periodic_input_read():
+    in_data = cli.dict_convert({'domain': {'shape': 'square',
+                                           'periodic': ' xy '}})
+    assert in_data['domain']['periodic'].strip() == 'xy'
+
+
+def test_periodic_run(tmp_path):
+    out_dir = _run(tmp_path, 'xy')
+    for name in ('seeds.txt', 'polymesh.txt', 'trimesh.txt', 'seeds.png',
+                 'polymesh.png', 'trimesh.png'):
+        assert os.path.exists(str(out_dir / name))
+
+    pmesh = PolyMesh.from_file(str(out_dir / 'polymesh.txt'))
+    tmesh = TriMesh.from_file(str(out_dir / 'trimesh.txt'))
+    assert pmesh.periodic_axes == [True, True]
+    assert tmesh.periodic_axes == [True, True]
+    assert np.isclose(sum(pmesh.volumes), 9.0)
+
+    pts = np.array(tmesh.points)
+    for axis in (0, 1):
+        shift = np.zeros(2)
+        shift[axis] = 3
+        pairs = tmesh.periodic_nodes[axis]
+        assert len(pairs) == np.sum(np.isclose(pts[:, axis], 0))
+        for lo, hi in pairs:
+            assert np.array_equal(pts[hi], pts[lo] + shift)
+
+    # verification ran (grains split by the faces are unwrapped)
+    assert os.path.exists(str(out_dir / 'verification' / 'mles.txt'))
+
+
+def test_periodic_run_single_axis(tmp_path):
+    out_dir = _run(tmp_path, 'y')
+    tmesh = TriMesh.from_file(str(out_dir / 'trimesh.txt'))
+    assert tmesh.periodic_axes == [False, True]
+    assert list(tmesh.periodic_nodes) == [1]

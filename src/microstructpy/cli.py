@@ -168,11 +168,15 @@ def read_input(filename):
     domain_data = in_data['domain']
     domain_shape = domain_data['shape']
     domain_kwargs = {k: v for k, v in domain_data.items() if k != 'shape'}
+    # periodicity is a property of the run, not of the geometry
+    periodic = domain_kwargs.pop('periodic', None)
     domain = geometry.factory(domain_shape, **domain_kwargs)
     in_data['domain'] = domain
 
     # Default settings
     kwargs = in_data.get('settings', {})
+    if periodic is not None:
+        kwargs['periodic'] = periodic
     run_dir = kwargs.get('directory', '.')
     if not os.path.isabs(run_dir):
         rel_path = os.path.join(file_path, run_dir)
@@ -267,7 +271,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         mesh_max_volume=float('inf'), mesh_min_angle=0,
         mesh_max_edge_length=float('inf'), mesh_size=float('inf'),
         verify=False, color_by='material', colormap='viridis',
-        seeds_kwargs=None, poly_kwargs=None, tri_kwargs=None):
+        seeds_kwargs=None, poly_kwargs=None, tri_kwargs=None,
+        periodic=False):
     r"""Run MicroStructPy
 
     This is the primary run function for the package. It performs these steps:
@@ -377,6 +382,14 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             :meth:`.PolyMesh.plot` in 3D.
         tri_kwargs (dict): Additional keyword arguments that will be passed to
             :meth:`.TriMesh.plot`.
+        periodic (bool, list, or str): *(optional)* Periodicity of the
+            microstructure: True for all axes, a list of booleans (one per
+            axis), or the names of the periodic axes such as ``'x'`` or
+            ``'xy'``. Seeds are placed, the domain is tessellated and the
+            mesh is generated so that opposite faces of the (rectangular)
+            domain match; the pairs of periodic nodes are stored in the
+            meshes. In the XML input, ``<periodic>`` is a field of
+            ``<domain>``. Defaults to False.
 
     .. _`Specifying Colors`: https://matplotlib.org/users/colors.html
     .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/tutorials/colors/colormaps.html
@@ -463,7 +476,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         kw = 'position'
         rng_seed = rng_seeds.get(kw, 0)
         pos_dists = {i: p[kw] for i, p in enumerate(phases) if kw in p}
-        seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose)
+        seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose,
+                       periodic=periodic)
 
     # Write seeds
     seeds_types = filetypes.get('seeds', [])
@@ -517,7 +531,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             print('Creating polygon mesh.')
 
         pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt, edge_opt_n_iter,
-                                    verbose)
+                                    verbose, periodic=periodic)
 
     # Write polymesh
     poly_types = filetypes.get('poly', [])

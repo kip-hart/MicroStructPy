@@ -8,6 +8,18 @@ and this project adheres to `Semantic Versioning`_.
 
 Unreleased
 ----------
+Added
+'''''
+- Periodic microstructures (2D): the ``<periodic>`` field of the domain (or
+  the ``periodic`` argument of ``cli.run``, ``SeedList.position`` and
+  ``PolyMesh.from_seeds``) selects the periodic axes. Seeds crossing a
+  periodic face are placed without overlapping the opposite side, the
+  Laguerre tessellation is periodic across those faces, and the triangular
+  and raster meshes have matching nodes on opposite faces. The pairs of
+  periodic points/nodes and facets are stored in the meshes and their text
+  files; the Abaqus output has a node set per periodic face in matching
+  order; the verification unwraps grains that are split by the faces.
+
 Fixed
 '''''
 - Seed generation is reproducible: the RNG seed chain no longer depends on

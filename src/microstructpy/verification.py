@@ -281,6 +281,14 @@ def seeds_of_best_fit(seeds, phases, pmesh, tmesh):
     poly_facet_is_ext = np.min(poly_facet_neigh_seeds, axis=-1) < 0
 
     n_dim = seeds[0].geometry.n_dim
+
+    # In a periodic domain, a grain can be split into pieces on opposite
+    # faces: its points are unwrapped around the seed before fitting
+    per_axes = getattr(pmesh, 'periodic_axes', None)
+    periodic = per_axes is not None and any(per_axes)
+    if periodic:
+        dom_lims = _misc.periodic_bounds(pmesh.points, per_axes)
+
     fit_seeds = []
     for i, seed in enumerate(seeds):
         p = seed.phase
@@ -309,6 +317,10 @@ def seeds_of_best_fit(seeds, phases, pmesh, tmesh):
                 seed_facets = [f for f, m in zip(pmesh.facets, mask) if m]
                 kps = np.unique([kp for f in seed_facets for kp in f])
             seed_pts = poly_pts[kps.astype('int')]
+
+        if periodic:
+            seed_pts = _misc.unwrap_points(seed_pts, seed.position,
+                                           per_axes, dom_lims)
 
         try:
             fit_geom = seed.geometry.best_fit(seed_pts)

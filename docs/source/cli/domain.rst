@@ -298,3 +298,46 @@ Below are some example square domain definitions.
             <center> 5, 0 </center>
         </domain>
     </input>
+
+Periodicity
+^^^^^^^^^^^
+
+Rectangular domains (rectangle, square, box, cube) can be made periodic with
+the ``<periodic>`` field, which lists the periodic axes. Seeds that cross a
+periodic face are placed so that they do not overlap seeds on the opposite
+side, the tessellation is periodic across those faces (a grain that crosses a
+face continues on the opposite side), and the triangular mesh has matching
+nodes on opposite faces. The pairs of periodic nodes are written with the
+meshes, and the Abaqus output contains a node set per periodic face, in
+matching order.
+
+.. code-block:: XML
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!-- Example periodic domains -->
+    <input>
+        <domain>
+            <shape> square </shape>
+            <side_length> 10 </side_length>
+            <!-- periodic in both directions -->
+            <periodic> True </periodic>
+        </domain>
+
+        <domain>
+            <shape> rectangle </shape>
+            <side_lengths> 10, 5 </side_lengths>
+            <!-- periodic in x only -->
+            <periodic> x </periodic>
+        </domain>
+
+        <domain>
+            <shape> cube </shape>
+            <side_length> 10 </side_length>
+            <!-- periodic in x and z, free in y -->
+            <periodic> xz </periodic>
+        </domain>
+    </input>
+
+The mesher must be Triangle/TetGen for periodic microstructures (with gmsh the
+nodes on opposite faces are not guaranteed to match), and the mesh size of a
+raster mesh must divide the domain length along the periodic axes.
