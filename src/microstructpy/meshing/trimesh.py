@@ -1992,7 +1992,7 @@ def _facet_in_normal(pts, cen_pt):
 
 _FACE_MIN_ANGLE = 20.0  # quality of the triangles on the periodic faces (3D)
 _MAX_EDGE_SUBDIVISIONS = 400
-_MAX_PERIODIC_PASSES = 8
+_MAX_PERIODIC_PASSES = 4
 
 
 def _facet_sizes(polymesh, phases, facet_nums, max_volume, max_edge_length):
@@ -2029,10 +2029,11 @@ def _edge_key(kp_a, kp_b):
     return (min(kp_a, kp_b), max(kp_a, kp_b))
 
 
-def _points_on_segment(new_pts, pt_a, pt_b):
-    """Parameters (0 < t < 1) of the points that lie on a segment."""
+def _points_on_segment(new_pts, pt_a, pt_b, with_ids=False):
+    """Parameters (0 < t < 1) of the points that lie on a segment, sorted;
+    with ``with_ids``, the indices of the points in the same order too."""
     if len(new_pts) == 0:
-        return []
+        return ([], []) if with_ids else []
     rel = np.array(new_pts) - pt_a
     seg = pt_b - pt_a
     len2 = np.dot(seg, seg)
@@ -2040,7 +2041,12 @@ def _points_on_segment(new_pts, pt_a, pt_b):
     dists = np.linalg.norm(rel - np.outer(t_vals, seg), axis=1)
     on_seg = (t_vals > 1e-9) & (t_vals < 1 - 1e-9)
     on_seg &= dists <= 1e-9 * np.sqrt(len2)
-    return sorted(t_vals[on_seg].tolist())
+    ids = np.nonzero(on_seg)[0]
+    order = np.argsort(t_vals[ids])
+    ids = ids[order]
+    if with_ids:
+        return t_vals[ids].tolist(), ids.tolist()
+    return t_vals[ids].tolist()
 
 
 def _merge_params(t_vals, sides=None, n_max=_MAX_EDGE_SUBDIVISIONS,
@@ -2564,17 +2570,22 @@ def _build_2d(pts, facets, facet_nums, holes, regions, min_angle,
                                  allow_boundary_steiner=allow_boundary_steiner)
 
 
-def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh):
-    """Add the points that Triangle put on the periodic faces to the facets.
+def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh,
+                                n_input=None):
+    """Add the points that Triangle put on the facets to the facets.
 
-    Triangle refines the boundary segments of a mesh where its quality and
-    size settings require it, but not the same way on opposite periodic
-    faces. The points it added on a facet of a periodic face and on the
-    image of the facet on the opposite face are inserted in both facets,
-    as images of each other, so that the next mesh has matching nodes on
-    opposite faces. The points of the two facets are merged so that the
-    facets are as refined as the finest of the two (see
-    :func:`_merge_params`).
+    Triangle refines the segments of a mesh where its quality and size
+    settings require it, but not the same way on opposite periodic faces.
+    The points it added on a facet of a periodic face and on the image of
+    the facet on the opposite face are inserted in both facets, as images
+    of each other, so that the next mesh has matching nodes on opposite
+    faces. The points of the two facets are merged so that the facets are
+    as refined as the finest of the two (see :func:`_merge_params`). The
+    points added on the other facets (the other walls, the facets between
+    cells, and the facets of the copies of the cells outside the domain)
+    are inserted as they are, and the points added inside the cells are
+    appended as points of the input, so that the next mesh contains the
+    previous one.
 
     Args:
         tri_pts (numpy.ndarray): Points of the mesh built by Triangle.
@@ -2582,6 +2593,9 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh):
         facets (list): Facets (segments) of the mesher input.
         facet_nums (list): Polymesh facet number + 1 of each facet.
         polymesh (PolyMesh): The periodic polymesh.
+        n_input (int): *(optional)* Number of points of the input of the
+            mesh that Triangle built; the points after them are the ones
+            it added. Defaults to the number of ``pts``.
 
     Returns:
         tuple: The new points, facets and facet numbers, and the number of
@@ -2589,7 +2603,9 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh):
 
     """
     pts = [list(p) for p in pts]
-    new_pts = np.array(tri_pts)[len(pts):]
+    if n_input is None:
+        n_input = len(pts)
+    new_pts = np.array(tri_pts)[n_input:]
     p_arr = np.array(polymesh.points)
     mins = p_arr.min(axis=0)
     lengths = p_arr.max(axis=0) - mins
@@ -2597,27 +2613,33 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh):
     tol = 1e-9 * scale
     per_axes = polymesh.periodic_axes
 
-    # facets on the periodic faces, with the parameters of the new points
+    # the facets (those of the copied cells too), with the parameters of
+    # the new points on them
     seg_t = {}
     ends = {}
+    periodic_segs = set()
+    on_facets = set()
     for i, f_num in enumerate(facet_nums):
+        pt_a, pt_b = np.array(pts[facets[i][0]]), np.array(pts[facets[i][1]])
+        seg_t[i], ids = _points_on_segment(new_pts, pt_a, pt_b, True)
+        on_facets.update(ids)
+        ends[i] = (pt_a, pt_b)
         if f_num <= 0:
             continue  # a facet of a copied cell, outside the domain
         wall = min(polymesh.facet_neighbors[f_num - 1])
-        if wall >= 0 or not per_axes[(-wall - 1) // 2]:
-            continue
-        pt_a, pt_b = np.array(pts[facets[i][0]]), np.array(pts[facets[i][1]])
-        seg_t[i] = _points_on_segment(new_pts, pt_a, pt_b)
-        ends[i] = (pt_a, pt_b)
-    n_new = sum([len(t_vals) for t_vals in seg_t.values()])
-    if n_new == 0:
-        return pts, [list(f) for f in facets], list(facet_nums), 0
+        if wall < 0 and per_axes[(-wall - 1) // 2]:
+            periodic_segs.add(i)
+    n_new = sum([len(seg_t[i]) for i in periodic_segs])
+
+    # the points that are not on a facet
+    free = [k for k in range(len(new_pts)) if k not in on_facets]
+    free_pts = new_pts[free].tolist()
 
     # a facet on a lower periodic face and its image on the upper face,
     # matched by their midpoints
-    seg_ids = sorted(ends)
+    seg_ids = sorted(periodic_segs)
     mids = np.array([0.5 * (ends[i][0] + ends[i][1]) for i in seg_ids])
-    tree = cKDTree(mids)
+    tree = cKDTree(mids) if seg_ids else None
     pair_of = {}
     for i in seg_ids:
         pt_a, pt_b = ends[i]
@@ -2670,7 +2692,7 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh):
                 im_ids = im_ids[::-1]
             new_facets.extend(chain(facets[j][0], im_ids, facets[j][1]))
             new_nums.extend([facet_nums[j]] * (len(im_ids) + 1))
-    return pts, new_facets, new_nums, n_new
+    return pts + free_pts, new_facets, new_nums, n_new
 
 
 def _unmatched_periodic_nodes(pts, polymesh):
@@ -2871,13 +2893,19 @@ def _ghost_layer(polymesh, phases, labels, kps, pts, facets, facet_nums,
                 other = neighs[0] if neighs[1] == reg else neighs[1]
                 # a facet removed between merged cells is removed between
                 # their copies too, and the copy of a facet on a periodic
-                # face is the facet on the opposite face (possibly
-                # subdivided), which the input already has
+                # face, moved along the axis of that face only, is the
+                # facet on the opposite face (possibly subdivided), which
+                # the input already has; moved along other axes too, it
+                # lies outside the domain and closes the copy
                 if (other >= 0 and trans in copies.get(other, []) and
                         not facet_check(neighs, polymesh, phases)):
                     continue
-                if other < 0 and per_axes[(-other - 1) // 2]:
-                    continue
+                if other < 0:
+                    axis = (-other - 1) // 2
+                    if (per_axes[axis] and trans[axis] != 0 and
+                            not any([t for a, t in enumerate(trans)
+                                     if a != axis])):
+                        continue
                 ids = [image_id(kp, trans) for kp in polymesh.facets[f]]
                 key = tuple(sorted(ids))
                 if key in existing:
@@ -2890,17 +2918,24 @@ def _ghost_layer(polymesh, phases, labels, kps, pts, facets, facet_nums,
 
 def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
                        facet_nums, holes, regions, min_angle, max_volume):
-    """Build a periodic triangular mesh with Triangle.
+    """Build a periodic triangular mesh with Triangle, in two passes.
 
     The cells next to the periodic faces are copied outside the faces
     (see :func:`_ghost_layer`) and the mesh is built like a non-periodic
-    one; Triangle then refines both faces of a pair the same way, up to
-    the order of its operations. If some nodes on the periodic faces have
-    no image on the opposite face, the points Triangle added on the faces
-    and their images are put on both faces and the mesh is built again.
-    The elements outside the domain are removed, and the few nodes that
-    may remain without an image are mirrored by splitting the elements
-    behind them.
+    one, so that Triangle refines both faces of a pair the same way, up
+    to the order of its operations. If some nodes on the periodic faces
+    have no image on the opposite face, all the points of the mesh become
+    the input of the next pass: the points on the facets are put in the
+    facets (those on a periodic face and on its image merged and put on
+    both, as images of each other) and the others are points of the
+    input, so that Triangle only refines the mesh around the points
+    brought from the opposite faces, in the same surroundings (the copies)
+    that produced them. Passing only the points on the faces back, and
+    meshing the cells again from scratch, made Triangle split the narrow
+    corners of the cells again at every pass, down to very small
+    elements. The elements outside the domain are removed, and the few
+    nodes that may remain without an image are mirrored by splitting the
+    elements behind them.
 
     Returns:
         tuple: The points, elements and element attributes.
@@ -2909,34 +2944,40 @@ def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
     pts, facets, facet_nums, regions, holes = _ghost_layer(
         polymesh, phases, labels, kps, pts, facets, facet_nums, regions,
         holes, max_volume)
+    tri_mesh = _build_2d(pts, facets, facet_nums, holes, regions, min_angle,
+                         True)
     p_arr = np.array(polymesh.points)
     mins = p_arr.min(axis=0)
     maxs = p_arr.max(axis=0)
     tol = 1e-9 * (maxs - mins).max()
     for _ in range(_MAX_PERIODIC_PASSES):
-        tri_mesh = _build_2d(pts, facets, facet_nums, holes, regions,
-                             min_angle, True)
-
         # the elements inside the domain
-        tri_pts = np.array(tri_mesh.points)
+        all_pts = np.array(tri_mesh.points)
         tri_elems = np.array(tri_mesh.elements)
         tri_e_atts = np.array(tri_mesh.element_attributes, dtype='int')
-        cens = tri_pts[tri_elems].mean(axis=1)
+        cens = all_pts[tri_elems].mean(axis=1)
         inside = np.all((cens >= mins - tol) & (cens <= maxs + tol), axis=1)
         tri_elems = tri_elems[inside]
         tri_e_atts = tri_e_atts[inside]
         used = np.unique(tri_elems)
-        renum = np.full(len(tri_pts), -1)
+        renum = np.full(len(all_pts), -1)
         renum[used] = np.arange(len(used))
-        tri_pts = tri_pts[used]
+        tri_pts = all_pts[used]
         tri_elems = renum[tri_elems]
-
         if not _unmatched_periodic_nodes(tri_pts, polymesh):
             break
+
+        # all the points of the mesh become the input of the next pass
+        n_input = len(pts)
+        if (len(all_pts) < n_input or
+                not np.allclose(all_pts[:n_input], pts, atol=tol)):
+            raise RuntimeError('Triangle did not keep the input points.')
         pts, facets, facet_nums, n_new = _split_periodic_boundary_2d(
-            np.array(tri_mesh.points), pts, facets, facet_nums, polymesh)
+            all_pts, pts, facets, facet_nums, polymesh, n_input)
         if n_new == 0:
             break
+        tri_mesh = _build_2d(pts, facets, facet_nums, holes, regions,
+                             min_angle, True)
 
     tri_pts, tri_elems, tri_e_atts, _ = _mirror_boundary_points_2d(
         tri_pts, tri_elems, tri_e_atts, polymesh)

@@ -7,6 +7,8 @@ import microstructpy as msp
 from microstructpy.meshing import PolyMesh
 from microstructpy.meshing import RasterMesh
 from microstructpy.meshing import TriMesh
+from microstructpy.meshing import trimesh as trimesh_module
+from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
 
 
@@ -167,6 +169,81 @@ def test_periodic_trimesh_abaqus_node_sets(periodic_case, tmp_path):
         shift[axis] = 2
         for lo, hi in zip(low, high):
             assert np.array_equal(pts[hi - 1], pts[lo - 1] + shift)
+
+
+def _wedge_polymesh(angle_deg):
+    """A square of side 3, periodic in x, with a facet meeting the face
+    x = 3 at ``angle_deg`` (see the tests of the edge optimization)."""
+    rng = np.random.RandomState(0)
+    ang = np.radians(angle_deg)
+    positions = [[2.5, 1.0],
+                 [2.5 + 0.5 * np.cos(ang), 1.0 + 0.5 * np.sin(ang)]]
+    for x in (0.75, 1.75):
+        for y in (0.75, 1.75, 2.75):
+            if (x, y) != (0.75, 0.75):
+                positions.append([x + 0.03 * (2 * rng.rand() - 1),
+                                  y + 0.03 * (2 * rng.rand() - 1)])
+    positions.append([2.75, 2.75])
+    seeds = SeedList([Seed.factory('circle', r=0.2, position=p)
+                      for p in positions])
+    domain = msp.geometry.Square(side_length=3, corner=(0, 0))
+    return PolyMesh.from_seeds(seeds, domain, periodic='x')
+
+
+def _min_edge(mesh):
+    pts = np.array(mesh.points)
+    elems = np.array(mesh.elements)
+    lengths = [np.linalg.norm(pts[elems[:, i]] - pts[elems[:, (i + 1) % 3]],
+                              axis=1) for i in range(3)]
+    return np.min(lengths)
+
+
+def test_periodic_trimesh_no_cascade_at_wedges():
+    # a corner narrower than the minimum angle makes Triangle refine it in
+    # shells of small elements; the passes that match the periodic faces
+    # must not deepen the shells (they did, one level per pass)
+    phases = [{'shape': 'circle', 'size': 0.4}]
+    for angle_deg, min_angle in ((15.0, 20), (15.0, 25)):
+        pmesh = _wedge_polymesh(angle_deg)
+        mesh = TriMesh.from_polymesh(pmesh, phases, min_angle=min_angle,
+                                     max_volume=0.05)
+        pmesh.periodic_axes = [False, False]
+        pmesh.periodic_points = {}
+        pmesh.periodic_facets = {}
+        plain = TriMesh.from_polymesh(pmesh, phases, min_angle=min_angle,
+                                      max_volume=0.05)
+        # at most one level of shells beyond the non-periodic mesh (the
+        # shells of both faces are put together), with some slack
+        assert _min_edge(mesh) >= 0.3 * _min_edge(plain)
+
+
+def test_ghost_layer_copies_are_closed(periodic_case):
+    # the copies of the cells outside the periodic faces are closed
+    # polygons, including those of the cells at the corners of the domain,
+    # which are moved along both axes: every point of a copy is shared by
+    # at least two facets, so that Triangle does not eat into the copies
+    domain, phases, seeds, pmesh = periodic_case
+    pts = [list(p) for p in pmesh.points]
+    kps = {i: i for i in range(len(pts))}
+    facets = [list(f) for f in pmesh.facets]
+    facet_nums = [f + 1 for f in range(len(facets))]
+    labels = np.arange(len(pmesh.regions))
+    out = trimesh_module._ghost_layer(pmesh, phases, labels, kps, pts,
+                                      facets, facet_nums, [], [], np.inf)
+    g_pts, g_facets, g_nums = out[0], out[1], out[2]
+    assert len(g_pts) > len(pts)
+    assert any([n == 0 for n in g_nums])
+    degree = np.zeros(len(g_pts), dtype=int)
+    for facet in g_facets:
+        for kp in facet:
+            degree[kp] += 1
+    assert np.all(degree[len(pts):] >= 2)
+    # the copies cover the corners of the domain: points outside along
+    # both axes exist
+    arr = np.array(g_pts)
+    lims = np.array(domain.limits)
+    outside = (arr < lims[:, 0] - 1e-9) | (arr > lims[:, 1] + 1e-9)
+    assert np.any(np.all(outside, axis=1))
 
 
 def test_periodic_gmsh_not_supported(periodic_case):

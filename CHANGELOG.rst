@@ -68,6 +68,14 @@ Added
   mesher cannot reach the minimum angle there and fills them with shells of
   very small elements: the seeds on both sides of the facet are moved along
   it to open the corner.
+- When the nodes on the periodic faces of a 2D mesh do not match after the
+  first pass, the next pass starts from all the points of the mesh (those on
+  a periodic face and on its image merged and put on both faces), so that
+  Triangle only refines it around the merged points, instead of meshing the
+  cells again with the points on the faces only, which split the narrow
+  corners of the cells again at every pass, down to very small elements.
+  The copies of the cells at the corners of the domain, used while meshing,
+  were open on one side and partly discarded by Triangle.
 
 Fixed
 '''''
