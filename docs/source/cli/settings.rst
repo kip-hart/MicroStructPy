@@ -344,12 +344,13 @@ turns off the angle quality control.
 mesh_max_edge_length
 --------------------
 
-This field defines the maximum edge length along a grain boundary in a 2D
-triangular mesh.
+This field defines the maximum edge length along a grain boundary: of the
+segments of a 2D triangular mesh, and of the triangles on the facets of a 3D
+tetrahedral mesh.
 A small maximum edge length will increase resolution of the mesh at grain
-boundaries.
-In 3D, it applies only to the triangles on the boundary of a periodic domain
-(the interior of a 3D mesh is controlled by the maximum volume).
+boundaries, while the size of the elements inside the grains is controlled
+by the maximum volume (see the :ref:`ex_pbx_interface_2d` and
+:ref:`ex_pbx_interface_3d` examples).
 The default value is ``<mesh_max_edge_length> inf </mesh_max_edge_length>``,
 which effectively turns off the edge length quality control.
 

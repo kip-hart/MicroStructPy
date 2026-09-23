@@ -228,10 +228,10 @@ class TriMesh(object):
                 is not set for each phase. This option is used with Triangle or
                 TetGen. Defaults to infinity, which turns off this control.
             max_edge_length (float): The maximum edge length of elements
-                along grain boundaries. This option is used  with Triangle
-                and gmsh, and in 3D for the triangles on the boundary of a
-                periodic domain. Defaults to infinity, which turns off this
-                control.
+                along grain boundaries: of the segments in 2D and of the
+                triangles on the facets in 3D. This option is used with
+                Triangle/TetGen and gmsh. Defaults to infinity, which turns
+                off this control.
             mesh_size (float): The target size of the mesh elements. This
                 option is used with gmsh. Default is infinity, whihch turns off
                 this control.
@@ -1539,6 +1539,13 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
                                           facet_nums, holes, regions, opts,
                                           max_volume, max_edge_length)
         else:
+            if np.isfinite(max_edge_length):
+                # the facets are triangulated to the maximum edge length
+                # (TetGen has no such control) and TetGen refines the
+                # interior of the cells to the maximum volume
+                pts, facets, facet_nums = _triangulate_facets_3d(
+                    polymesh, phases, kps, pts, facet_nums, max_volume,
+                    max_edge_length, {}, {})
             info = _tet_info(pts, facets, facet_nums, holes, regions)
             tri_mesh = meshpy.tet.build(info, options=opts)
 
@@ -2132,7 +2139,7 @@ def _triangle_polygon(loop_pts, h_val, allow_boundary_steiner, extra_pts=(),
                            'facet.')
     out_pts = origin + np.outer(out_2d[:, 0], u_vec)
     out_pts += np.outer(out_2d[:, 1], v_vec)
-    out_pts[:n_in] = in_pts
+    out_pts[:n_pts] = loop_pts  # the extra points are projected on the plane
     for axis in range(3):
         if np.ptp(loop_pts[:, axis]) <= 1e-12:
             out_pts[:, axis] = loop_pts[0, axis]
@@ -2225,14 +2232,13 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
             return list(t_vals)
         return [1 - t for t in t_vals]
 
-    # 2. Parameters of the points on the edges: the edges of the periodic
-    # facets are subdivided to the maximum edge length, and all the edges
-    # at the extra parameters
+    # 2. Parameters of the points on the edges: the edges are subdivided
+    # to the maximum edge length, and at the extra parameters
     periodic_facets = set(upper) | is_upper
     splits = {}
     for f_num in facet_nums:
         f = f_num - 1
-        if f not in periodic_facets or not np.isfinite(max_edge_length):
+        if not np.isfinite(max_edge_length):
             continue
         loop = polymesh.facets[f]
         for i in range(len(loop)):
@@ -2317,7 +2323,8 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
     # 5. Triangulate the facets with their edges fixed; the facets on the
     # upper periodic faces are the images of those on the lower faces. The
     # facets on the periodic faces are refined to the mesh size when one is
-    # given (TetGen cannot refine them afterwards), the others are the
+    # given (TetGen cannot refine them afterwards), and all the facets to
+    # the maximum edge length when it is given; the others are the
     # constrained Delaunay triangulations of their points.
     new_facets = []
     new_nums = []
@@ -2327,7 +2334,7 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
             continue
         loop_ids = loops[f]
         extra = face_pts.get(f, [])
-        quality = f in periodic_facets
+        quality = f in periodic_facets or np.isfinite(max_edge_length)
         h_val = h_facets[f]
         if quality and np.isfinite(h_val):
             # the area bound is met by equilateral triangles of that edge
@@ -2423,7 +2430,8 @@ def _collect_facet_points_3d(new_pts, polymesh, edge_t, face_pts):
     lengths = p_arr.max(axis=0) - mins
     maxs = mins + lengths
     scale = lengths.max()
-    tol = 1e-9 * scale
+    tol = max(1e-9, 4 * _facet_nonplanarity(polymesh)) * scale
+    tol_face = 1e-9 * scale
     tol_dup = 1e-6 * scale
     per_axes = polymesh.periodic_axes
     to_lower = {}
@@ -2459,7 +2467,8 @@ def _collect_facet_points_3d(new_pts, polymesh, edge_t, face_pts):
     raw_face = {}
     for i, f_set in point_facets.items():
         pt = np.array(new_pts[i])
-        side = tuple([int(bool(per_axes[k]) and abs(pt[k] - maxs[k]) <= tol)
+        side = tuple([int(bool(per_axes[k]) and
+                          abs(pt[k] - maxs[k]) <= tol_face)
                       for k in range(3)])
         f_list = sorted(f_set)
         if len(f_list) > 1:
@@ -2934,6 +2943,35 @@ def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
     return tri_pts, tri_elems, tri_e_atts
 
 
+def _facet_nonplanarity(polymesh):
+    """Largest distance of a vertex to the plane of its facet.
+
+    The facets of a periodic polymesh are planar only within the tolerance
+    of the snapping of the points to the periodic faces. The geometric
+    tests of the meshes against the polymesh use this distance as their
+    tolerance.
+
+    Returns:
+        float: The distance, relative to the size of the domain.
+
+    """
+    pts = np.array(polymesh.points)
+    scale = np.max(pts.max(axis=0) - pts.min(axis=0))
+    max_dev = 0.0
+    for facet in polymesh.facets:
+        if len(facet) < 4:
+            continue
+        loop = pts[facet]
+        normal = np.zeros(3)
+        for i in range(len(loop)):
+            normal += np.cross(loop[i - 1], loop[i])
+        norm = np.linalg.norm(normal)
+        if norm > 0:
+            dev = np.abs((loop - loop[0]).dot(normal / norm)).max()
+            max_dev = max(max_dev, dev)
+    return max_dev / scale
+
+
 def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
     """Element attributes and facets of a mesh, from the polymesh geometry.
 
@@ -2966,31 +3004,32 @@ def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
     n_dim = tri_pts.shape[1]
     p_pts = np.array(polymesh.points)
     scale = np.max(p_pts.max(axis=0) - p_pts.min(axis=0))
-    tol = 1e-9 * scale
+    tol = max(1e-9, 4 * _facet_nonplanarity(polymesh)) * scale
     cell_geom = _CellGeometry(polymesh, p_pts)
     labels = np.array(labels)
 
-    # 1. Cell containing the centroid of each element
+    # 1. Cell containing the centroid of each element: the cell in which
+    # the centroid is deepest
     cens = tri_pts[tri_elems].mean(axis=1)
     elem_regs = np.full(len(tri_elems), -1)
-    i_remain = np.arange(len(tri_elems))
+    depths = np.full(len(tri_elems), -np.inf)
     for r_num in range(len(polymesh.regions)):
         r_mins, r_maxs = cell_geom.limits(r_num)
-        r_cens = cens[i_remain]
-        in_box = np.all((r_cens >= r_mins - tol) & (r_cens <= r_maxs + tol),
+        in_box = np.all((cens >= r_mins - tol) & (cens <= r_maxs + tol),
                         axis=1)
-        r_i = i_remain[in_box]
+        r_i = np.nonzero(in_box)[0]
         if len(r_i) == 0:
             continue
         _, normals, centers = cell_geom.facets(r_num)
         rel_pos = cens[r_i][:, np.newaxis, :] - centers
-        dp = np.einsum('efd,fd->ef', rel_pos, normals)
-        r_i = r_i[np.all(dp >= -tol, axis=1)]
-        elem_regs[r_i] = r_num
-        i_remain = np.setdiff1d(i_remain, r_i)
-    if len(i_remain) > 0:
+        depth = np.einsum('efd,fd->ef', rel_pos, normals).min(axis=1)
+        deeper = depth > depths[r_i]
+        elem_regs[r_i[deeper]] = r_num
+        depths[r_i[deeper]] = depth[deeper]
+    n_outside = int(np.sum(depths < -tol))
+    if n_outside > 0:
         e_str = 'The mesh does not conform to the polymesh: the centroids '
-        e_str += 'of ' + str(len(i_remain)) + ' elements are outside every '
+        e_str += 'of ' + str(n_outside) + ' elements are outside every '
         e_str += 'cell.'
         raise RuntimeError(e_str)
     elem_atts = labels[elem_regs]
@@ -3071,7 +3110,7 @@ def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
                 if dists[k] < best_dist:
                     best_dist = dists[k]
                     best_f = int(f_num)
-        if best_f is None or best_dist > 1e-8 * scale:
+        if best_f is None or best_dist > max(1e-8 * scale, tol):
             raise RuntimeError(e_str)
         facets.append(face)
         facet_atts.append(best_f)

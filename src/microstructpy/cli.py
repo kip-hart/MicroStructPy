@@ -359,8 +359,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             Defaults to 0, which turns off the angle quality constraint.
             Value should be in the range 0-60.
         mesh_max_edge_length (float): *(optional)* The maximum edge length of
-            elements along grain boundaries. Supported in 2D and, for the
-            triangles on the boundary of a periodic domain, in 3D.
+            elements along grain boundaries: of the segments in 2D and of
+            the triangles on the facets in 3D.
         mesh_size (float): The target size of the mesh elements. This
             option is used with gmsh. Default is infinity, whihch turns off
             this control.
