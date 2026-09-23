@@ -13,6 +13,7 @@ This module contains the class definition for the PolyMesh class.
 from __future__ import division
 from __future__ import print_function
 
+import copy
 import os
 import subprocess
 import sys
@@ -199,12 +200,12 @@ class PolyMesh(object):
 
     def __str__(self):
         nv = len(self.points)
-        nd = len(self.points[0])
-        pt_fmt = '\t'
-        pt_fmt += ', '.join(['{pt[' + str(i) + ']: e}' for i in range(nd)])
 
+        # points are written with full precision (repr of a float is the
+        # shortest string that round-trips exactly)
         str_str = 'Mesh Points: ' + str(nv) + '\n'
-        str_str += ''.join([pt_fmt.format(pt=p) + '\n' for p in self.points])
+        str_str += ''.join(['\t' + ', '.join([repr(float(x)) for x in p])
+                            + '\n' for p in self.points])
 
         str_str += 'Mesh Facets: ' + str(len(self.facets)) + '\n'
         str_str += ''.join(['\t' + str(tuple(f))[1:-1] + '\n'
@@ -269,14 +270,17 @@ class PolyMesh(object):
             poly += ''.join([' '.join([str(n) for n in (nv + i, k1, k2)])
                              + '\n' for i, (k1, k2) in enumerate(self.facets)])
 
+            with open(filename, 'w') as f:
+                f.write(poly)
+
         elif format == 'ply':
             nv = len(self.points)
             nd = len(self.points[0])
             nf = len(self.facets)
             nr = len(self.regions)
             assert nd <= 3
-            
-            # Force 3D points 
+
+            # Force 3D points
             pts = np.zeros((nv, 3))
             pts[:, :nd] = self.points
             axes = ['x', 'y', 'z']
@@ -646,9 +650,19 @@ class PolyMesh(object):
         cell_mask = np.full(len(bkdwn2seed), True, dtype='bool')
         rect_doms = ['square', 'cube', 'rectangle', 'box', 'nbox']
         if type(domain).__name__.lower() not in rect_doms:
-            for cell_num, cell in enumerate(voro):
-                cell_pts = np.array(cell['vertices'])
-                cell_mask[cell_num] = np.any(domain.within(cell_pts))
+            if n_dim == 2:
+                # Clip the cells to the domain. Cells that do not intersect
+                # the domain are removed.
+                for cell_num, cell in enumerate(voro):
+                    clipped_cell = _clip_cell(cell, domain)
+                    if clipped_cell is None:
+                        cell_mask[cell_num] = False
+                    else:
+                        voro[cell_num] = clipped_cell
+            else:
+                for cell_num, cell in enumerate(voro):
+                    cell_pts = np.array(cell['vertices'])
+                    cell_mask[cell_num] = np.any(domain.within(cell_pts))
         bkdwn2seed = bkdwn2seed[cell_mask]
 
         new_cell_nums = np.full(len(cell_mask), -1, dtype='int')
@@ -669,8 +683,11 @@ class PolyMesh(object):
             if cell_mask[old_cell_num]:
                 reduced_voro.append(cell)
 
-        # Clip cells to domain
-        voro = [_clip_cell(c, domain) for c in reduced_voro]
+        # Clip cells to domain (2D cells have already been clipped)
+        if n_dim == 2:
+            voro = reduced_voro
+        else:
+            voro = [_clip_cell(c, domain) for c in reduced_voro]
 
         # create global key point and facet lists
         pts_global = []
@@ -747,11 +764,7 @@ class PolyMesh(object):
 
         # short edge optimization
         if edge_opt:
-            seed2bkdwn = {i: [] for i in range(len(seedlist))}
-            for i, n in enumerate(pmesh.seed_numbers):
-                seed2bkdwn[n].append(i)
-
-            # Find the shorted edge
+            # Find the shortest edge
             edge_lens = _edge_lengths(pmesh)
             min_edge = _shortest_edge(edge_lens)
             min_len = edge_lens[min_edge]['length']
@@ -768,33 +781,39 @@ class PolyMesh(object):
 
             i_n_attempts = 0
             while i_n_attempts < n_iter:
-                print(v_fmt.format(min_len, min_edge, i_n_attempts))
-                # Create Displacement
-                max_step_size = float('inf')
-                step_fracs = 2 * np.random.rand(3) - 1  # [-1, 1]
-                new_cens = np.copy(cens)
+                if verbose:
+                    print(v_fmt.format(min_len, min_edge, i_n_attempts))
 
-                e_neighs = edge_lens[min_edge]['regions']
+                # Seeds adjacent to the shortest edge
+                e_regions = [r for r in edge_lens[min_edge]['regions']
+                             if r >= 0]
+                e_seeds = sorted({int(pmesh.seed_numbers[r])
+                                  for r in e_regions})
                 edge_pts = np.array(pmesh.points)[list(min_edge)]
-                for region_num in e_neighs:
-                    if region_num >= 0:
-                        step_size = 0.1 * rads[region_num]
-                        max_step_size = min(max_step_size, step_size)
-                for f, region_num in zip(step_fracs, e_neighs):
-                    if region_num >= 0:
-                        e_norm_vec = _point_line_vec(cens[region_num],
-                                                     edge_pts)
-                        step = f * max_step_size * e_norm_vec
-                        new_cens[region_num] += step
 
-                # Update Seeds
-                new_bkdwns = [list(c) + [r] for c, r in zip(new_cens, rads)]
-                for i, seed in enumerate(seedlist):
-                    seed.breakdown = [new_bkdwns[j] for j in seed2bkdwn[i]]
+                # Displace the seeds rigidly, on a copy of the seed list.
+                # The step is a random fraction of 0.1 x the equivalent
+                # radius of the seed, normal to the edge.
+                trial_seeds = copy.deepcopy(seedlist)
+                steps = {}
+                for seed_num in e_seeds:
+                    seed = seedlist[seed_num]
+                    pos = np.array(seed.position, dtype='float')
+                    with np.errstate(divide='ignore', invalid='ignore'):
+                        e_norm_vec = _point_line_vec(pos, edge_pts)
+                    if not np.all(np.isfinite(e_norm_vec)):
+                        continue
+                    if n_dim == 2:
+                        r_eq = np.sqrt(seed.volume / np.pi)
+                    else:
+                        r_eq = np.cbrt(3 * seed.volume / (4 * np.pi))
+                    step_frac = 2 * np.random.rand() - 1  # [-1, 1]
+                    steps[seed_num] = 0.1 * step_frac * r_eq * e_norm_vec
+                    _displace_seed(trial_seeds[seed_num], steps[seed_num])
 
                 # Create New Polygonal Mesh
                 try:
-                    new_pmesh = cls.from_seeds(seedlist, domain,
+                    new_pmesh = cls.from_seeds(trial_seeds, domain,
                                                edge_opt=False)
                 except AssertionError:
                     i_n_attempts += 1
@@ -805,6 +824,11 @@ class PolyMesh(object):
                 new_min_len = new_edge_lens[new_min_edge]['length']
 
                 if new_min_len > min_len:
+                    # Accept the trial: apply the same displacements to the
+                    # caller's seeds, so that they reproduce the new mesh
+                    for seed_num, step in steps.items():
+                        _displace_seed(seedlist[seed_num], step)
+
                     if new_min_edge != min_edge:
                         i_n_attempts = 0
                     else:
@@ -813,7 +837,6 @@ class PolyMesh(object):
                     pmesh = new_pmesh
                     min_len = new_min_len
                     min_edge = new_min_edge
-                    cens = new_cens
                 else:
                     i_n_attempts += 1
         return pmesh
@@ -852,7 +875,7 @@ class PolyMesh(object):
 
         """
         n_dim = len(self.points[0])
-        if n_dim == 2 or plt.gca().axes:
+        if n_dim == 2 or plt.gcf().axes:
             ax = plt.gca()
         else:
             ax = plt.gcf().add_subplot(projection=Axes3D.name)
@@ -872,7 +895,7 @@ class PolyMesh(object):
 
             plt_kwargs = {}
             for key, value in kwargs.items():
-                if type(value) in (list, np.array):
+                if isinstance(value, (list, np.ndarray)):
                     plt_value = []
                     for s, p in zip(self.seed_numbers, self.phase_numbers):
                         if index_by == 'material':
@@ -904,7 +927,7 @@ class PolyMesh(object):
             p_kwargs = [{'label': m} for m in material]
             s2p = {s: p for s, p in zip(self.seed_numbers, self.phase_numbers)}
             for key, value in kwargs.items():
-                if type(value) in (list, np.array):
+                if isinstance(value, (list, np.ndarray)):
                     if index_by == 'material':
                         for p, v in enumerate(value):
                             p_kwargs[p][key] = v
@@ -970,7 +993,7 @@ class PolyMesh(object):
         """
         f_kwargs = {}
         for key, value in kwargs.items():
-            if type(value) in (list, np.array):
+            if isinstance(value, (list, np.ndarray)):
                 f_values = []
                 for fn in range(len(self.facets)):
                     neighs = self.facet_neighbors[fn]
@@ -1059,7 +1082,6 @@ class PolyMesh(object):
     def __eq__(self, other_mesh):
         # check type
         if type(other_mesh) is not PolyMesh:
-            print('not same type')
             return False
 
         # check that the lengths are all the same
@@ -1070,7 +1092,6 @@ class PolyMesh(object):
         same &= len(self.seed_numbers) == len(other_mesh.seed_numbers)
         same &= len(self.phase_numbers) == len(other_mesh.phase_numbers)
         if not same:
-            print('not same length')
             return False
 
         # check that the vertices have the same coordinates
@@ -1080,59 +1101,53 @@ class PolyMesh(object):
         same &= np.all(same_ints.sum(axis=0) == 1)
         same &= np.all(same_ints.sum(axis=1) == 1)
         if not same:
-            print('not same verts')
             return False
 
-        kp_conv = np.argwhere(same_pt)
-        kp_other = kp_conv[:, 1]
-        print('transform')
-        print(np.array(kp_other))
+        # kp_other[i] is the point in other_mesh that matches point i
+        kp_other = np.argmax(same_pt, axis=1)
 
         # check that the facets are the same
-        facets_in_other_kps = [[kp_other[kp] for kp in f] for f in self.facets]
-        o_fnum = []
-        for i, s_facet in enumerate(facets_in_other_kps):
-            for j, o_facet in enumerate(other_mesh.facets):
-                if j in o_fnum:
-                    continue
-                else:
-                    if set(s_facet) == set(o_facet):
-                        o_fnum.append(j)
-                        break
-
-            if len(o_fnum) != i + 1:
-                print('not same facets')
-                return False
+        o_fnum = _match_index_sets(
+            [[kp_other[kp] for kp in f] for f in self.facets],
+            other_mesh.facets)
+        if o_fnum is None:
+            return False
 
         # check that the regions are the same
-        regions_in_other_fnums = [[o_fnum[f] for f in r] for r in self.regions]
-        o_rnum = []
-        for i, s_region in enumerate(regions_in_other_fnums):
-            for j, o_region in enumerate(other_mesh.regions):
-                if j in o_rnum:
-                    continue
-                else:
-                    if set(s_region) == set(o_region):
-                        o_rnum.append(j)
-                        break
-
-            if len(o_rnum) != i + 1:
-                print('not same regions')
-                return False
+        o_rnum = _match_index_sets(
+            [[o_fnum[f] for f in r] for r in self.regions],
+            other_mesh.regions)
+        if o_rnum is None:
+            return False
 
         # check that the seed numbers are the same
         s_seed_nums = np.array(self.seed_numbers)
         o_seed_nums = np.array(other_mesh.seed_numbers)
         same &= np.all(s_seed_nums == o_seed_nums[o_rnum])
-        print('checking seed numbers', same)
 
         # check that the phase numbers are the same
         s_phase_nums = np.array(self.phase_numbers)
         o_phase_nums = np.array(other_mesh.phase_numbers)
         same &= np.all(s_phase_nums == o_phase_nums[o_rnum])
-        print('checking phase numbers', same)
 
-        return same
+        return bool(same)
+
+
+def _match_index_sets(items, other_items):
+    """Match each item to an unused item of ``other_items`` with the same
+    set of indices. Returns the list of matched positions, or None if any
+    item has no match."""
+    unused = {}
+    for j, other_item in enumerate(other_items):
+        unused.setdefault(frozenset(other_item), []).append(j)
+
+    matches = []
+    for item in items:
+        candidates = unused.get(frozenset(item), [])
+        if not candidates:
+            return None
+        matches.append(candidates.pop(0))
+    return matches
 
 
 def kp_loop(kp_pairs):
@@ -1150,112 +1165,266 @@ def kp_loop(kp_pairs):
 
 
 def _clip_cell(cell_data, domain):
+    """Clip a Voronoi cell to the domain.
+
+    Rectangular domains do not require clipping and the cell is returned
+    unchanged. In 2D, the (convex) cell is clipped to the (convex) domain
+    and ``None`` is returned if the cell does not intersect the domain.
+    Non-rectangular 3D domains are not supported: a warning is raised and
+    the cell is returned unchanged.
+
+    Args:
+        cell_data (dict): A cell from pyvoro, with the 'vertices', 'faces',
+            'adjacency', 'original', and 'volume' keys.
+        domain (from :mod:`microstructpy.geometry`): The domain.
+
+    Returns:
+        dict or None: The clipped cell, or None if it is outside the domain.
+
+    """
     domain_name = type(domain).__name__.lower()
     if domain_name in ['rectangle', 'square', 'box', 'cube']:
         return cell_data
 
     if domain.n_dim == 2:
-        pts = np.array(cell_data['vertices'])
-        if np.all(domain.within(pts)):
-            return cell_data
-
-        # split the edges that contain the boundary
-        new_adj = np.copy(cell_data['adjacency'])
-        new_faces = []
-        new_pts = np.copy(cell_data['vertices'])
-        new_kps = []
-
-        for face in cell_data['faces']:
-            adj_cell = face['adjacent_cell']
-            verts = face['vertices']
-            face_pts = pts[verts]
-            pts_within = domain.within(face_pts)
-            if np.all(pts_within) or np.all(~pts_within):
-                new_faces.append(face)
-                continue
-            crossing_pt = _segment_cross(face_pts, domain)
-
-            # Add point to list of vertices and face to list of faces
-            crossing_kp = len(new_pts)
-            new_pts = np.vstack((new_pts, crossing_pt.reshape(1, -1)))
-            new_kps.append(crossing_kp)
-
-            for kp_i, kp in enumerate(verts):
-                kp_other = verts[1 - kp_i]
-                new_adj[kp] = [kp_other, crossing_kp]
-
-                new_verts = [kp, crossing_kp]
-                new_faces.append({'adjacent_cell': adj_cell,
-                                  'vertices': new_verts})
-
-        # add divider face
-        new_faces.append({'adjacent_cell': -1, 'vertices': new_kps})
-
-        # Create cell within the domain
-        new_within = domain.within(new_pts)
-        new_within[new_kps] = True
-
-        within_pts = new_pts[new_within]
-        kp_conv = np.full(len(new_pts), -1, dtype='int')
-        kp_conv[new_within] = np.arange(np.sum(new_within))
-
-        within_adj = [[] for pt in within_pts]
-        within_faces = []
-        for face in new_faces:
-            adj_cell = face['adjacent_cell']
-            old_verts = face['vertices']
-            new_verts = [kp_conv[v] for v in old_verts]
-            within_face = {'adjacent_cell': adj_cell, 'vertices': new_verts}
-            if all([v >= 0 for v in new_verts]):
-                within_faces.append(within_face)
-                within_adj[new_verts[0]].append(new_verts[1])
-                within_adj[new_verts[1]].append(new_verts[0])
-
-        # Compute cell area
-        within_loop = kp_loop([f['vertices'] for f in within_faces])
-        within_area = _loop_area(within_pts, within_loop)
-
-        new_cell_data = {'adjacency': within_adj,
-                         'faces': within_faces,
-                         'original': cell_data['original'],
-                         'vertices': within_pts,
-                         'volume': within_area}
-
-        return new_cell_data
+        return _clip_cell_2d(cell_data, domain)
 
     w_str = 'Cannot clip cells to fit to a ' + domain_name + '.'
-    w_str = ' Currently 3D geometries are not supported, other than boxes.'
+    w_str += ' Currently 3D geometries are not supported, other than boxes.'
     warnings.warn(w_str, RuntimeWarning)
     return cell_data
 
 
-def _segment_cross(pts, domain):
-    end_pts = np.copy(pts)
-    ds = np.inf
-    while ds > 1e-12:
-        within = domain.within(end_pts)
+def _clip_cell_2d(cell_data, domain, n_samples=64, n_bnd_pts=64):
+    """Clip a convex 2D cell to a convex domain.
+
+    The vertex loop of the cell is walked and the points inside the domain
+    are kept: the vertices within the domain and the points where the edges
+    cross the domain boundary (an edge with both ends outside the domain can
+    cross it twice). Consecutive kept points that lie on the same edge of the
+    cell are joined by that edge, every other gap is an arc of the domain
+    boundary and is closed by a boundary face (``'adjacent_cell': -1``).
+    If the domain lies entirely within the cell, the cell becomes a polygon
+    that approximates the domain boundary.
+
+    Args:
+        cell_data (dict): A cell from pyvoro.
+        domain (from :mod:`microstructpy.geometry`): The 2D domain.
+        n_samples (int): Number of points sampled along an edge with both
+            ends outside the domain, to detect a double crossing.
+        n_bnd_pts (int): Number of points on the domain boundary, when the
+            domain is entirely within the cell.
+
+    Returns:
+        dict or None: The clipped cell, or None if it is outside the domain.
+
+    """
+    pts = np.array(cell_data['vertices'], dtype='float')
+    faces = cell_data['faces']
+    within = domain.within(pts)
+    if np.all(within):
+        return cell_data
+
+    # order the vertices of the cell in a loop
+    loop = kp_loop([f['vertices'] for f in faces])
+    n_kp = len(loop)
+    edge_faces = {frozenset(f['vertices']): f for f in faces}
+
+    # points closer than this are considered coincident
+    tol = 1e-12 * max(np.max(np.abs(pts)), np.finfo(float).tiny)
+
+    # walk the loop and collect the points inside the domain, and for each
+    # point the face that joins it to the next point (None: domain boundary)
+    kept_pts = []
+    kept_faces = []
+
+    def add_point(pt, face):
+        if kept_pts and np.linalg.norm(pt - kept_pts[-1]) <= tol:
+            kept_faces[-1] = face
+        else:
+            kept_pts.append(pt)
+            kept_faces.append(face)
+
+    for i in range(n_kp):
+        kp_a = loop[i]
+        kp_b = loop[(i + 1) % n_kp]
+        face = edge_faces[frozenset((kp_a, kp_b))]
+        pt_a = pts[kp_a]
+        pt_b = pts[kp_b]
+        if within[kp_a] and within[kp_b]:
+            add_point(pt_a, face)
+        elif within[kp_a]:
+            add_point(pt_a, face)
+            add_point(_segment_cross([pt_a, pt_b], domain), None)
+        elif within[kp_b]:
+            add_point(_segment_cross([pt_a, pt_b], domain), face)
+        else:
+            crossings = _segment_double_cross(pt_a, pt_b, domain, n_samples,
+                                              tol)
+            if crossings is not None:
+                add_point(crossings[0], face)
+                add_point(crossings[1], None)
+
+    if len(kept_pts) > 1:
+        if np.linalg.norm(kept_pts[-1] - kept_pts[0]) <= tol:
+            kept_pts.pop()
+            kept_faces.pop()
+
+    if len(kept_pts) == 0:
+        # the cell is either outside the domain, or contains the domain
+        if not _point_in_convex_loop(domain.center, pts[loop]):
+            return None
+        kept_pts = list(_domain_boundary(domain, n_bnd_pts))
+        kept_faces = [None for _ in kept_pts]
+
+    elif len(kept_pts) == 2:
+        # the domain crosses a single edge of the cell, so the clipped cell
+        # is bounded by that edge and an arc; the midpoint of the arc is added
+        # so that the cell has a non-zero area
+        n_faces = sum([f is not None for f in kept_faces])
+        if n_faces != 1:
+            return None
+        if kept_faces[0] is None:
+            kept_pts.reverse()
+            kept_faces.reverse()
+        pt_a, pt_b = kept_pts
+        mid_pt = 0.5 * (pt_a + pt_b)
+        d_pt = pt_b - pt_a
+        n_vec = np.array([-d_pt[1], d_pt[0]])
+        if np.dot(n_vec, pts.mean(axis=0) - mid_pt) < 0:
+            n_vec *= -1
+        n_vec /= np.linalg.norm(n_vec)
+        far_pt = mid_pt + _domain_extent(domain) * n_vec
+        kept_pts.append(_segment_cross([mid_pt, far_pt], domain))
+        kept_faces.append(None)
+
+    n_new = len(kept_pts)
+    if n_new < 3:
+        return None
+
+    new_pts = np.array(kept_pts)
+    new_faces = []
+    for k, face in enumerate(kept_faces):
+        verts = [k, (k + 1) % n_new]
+        if face is None:
+            new_faces.append({'adjacent_cell': -1, 'vertices': verts})
+        else:
+            new_faces.append({'adjacent_cell': face['adjacent_cell'],
+                              'vertices': verts})
+    new_adj = [[(k - 1) % n_new, (k + 1) % n_new] for k in range(n_new)]
+
+    new_cell_data = {'adjacency': new_adj,
+                     'faces': new_faces,
+                     'original': cell_data['original'],
+                     'vertices': new_pts.tolist(),
+                     'volume': _loop_area(new_pts, list(range(n_new)))}
+    return new_cell_data
+
+
+def _segment_cross(pts, domain, n_iter=60):
+    """Find the point where a segment crosses the domain boundary.
+
+    One end of the segment must be inside the domain and the other outside.
+    The crossing is found by bisection with a fixed number of iterations,
+    so the result is accurate to machine precision for any magnitude of the
+    coordinates. The result does not depend on the order of the end points.
+
+    Args:
+        pts (list or numpy.ndarray): The two end points of the segment.
+        domain (from :mod:`microstructpy.geometry`): The domain.
+        n_iter (int): Number of bisection iterations.
+
+    Returns:
+        numpy.ndarray: The crossing point.
+
+    """
+    end_pts = np.array(pts, dtype='float')
+    within = domain.within(end_pts)
+    for _ in range(n_iter):
         pt = end_pts.mean(axis=0)
-        pt_within = domain.within(pt)
-        if within[0] == pt_within:
+        if domain.within(pt) == within[0]:
             end_pts[0] = pt
         else:
             end_pts[1] = pt
-        dx = end_pts[1] - end_pts[0]
-        ds = np.linalg.norm(dx)
-    return pt
+    return end_pts.mean(axis=0)
+
+
+def _segment_double_cross(pt_a, pt_b, domain, n_samples=64, tol=0):
+    """Find where a segment with both ends outside the domain crosses it.
+
+    The segment is sampled to detect whether it passes through the (convex)
+    domain. The end points are put in a canonical order before sampling, so
+    that the two cells sharing an edge compute identical crossing points.
+
+    Returns:
+        tuple or None: The crossing points nearest to ``pt_a`` and ``pt_b``,
+        or None if the segment does not cross the domain.
+
+    """
+    end_pts = np.array([pt_a, pt_b], dtype='float')
+    order = np.lexsort((end_pts[:, 1], end_pts[:, 0]))
+    pt_0 = end_pts[order[0]]
+    pt_1 = end_pts[order[1]]
+
+    t = np.arange(1, n_samples + 1) / (n_samples + 1)
+    samples = pt_0 + t.reshape(-1, 1) * (pt_1 - pt_0)
+    inside = domain.within(samples)
+    if not np.any(inside):
+        return None
+
+    pt_in = samples[np.argmax(inside)]
+    cross_0 = _segment_cross([pt_in, pt_0], domain)
+    cross_1 = _segment_cross([pt_in, pt_1], domain)
+    if np.linalg.norm(cross_1 - cross_0) <= tol:
+        return None  # the segment only touches the domain
+
+    crossings = [None, None]
+    crossings[order[0]] = cross_0
+    crossings[order[1]] = cross_1
+    return tuple(crossings)
+
+
+def _domain_extent(domain):
+    """A distance that leaves the domain from any point within it."""
+    return 2 * max([ub - lb for lb, ub in domain.limits])
+
+
+def _domain_boundary(domain, n_pts=64):
+    """Points on the boundary of a convex 2D domain, in loop order.
+
+    The points are found along rays from the center of the domain.
+    """
+    cen = np.array(domain.center, dtype='float')
+    ext = _domain_extent(domain)
+    t = np.linspace(0, 2 * np.pi, n_pts, endpoint=False)
+    dirs = np.column_stack((np.cos(t), np.sin(t)))
+    return np.array([_segment_cross([cen, cen + ext * u], domain)
+                     for u in dirs])
+
+
+def _point_in_convex_loop(pt, loop_pts):
+    """Test whether a point is within a convex polygon."""
+    pt = np.array(pt, dtype='float')
+    loop_pts = np.array(loop_pts, dtype='float')
+    d_edge = np.roll(loop_pts, -1, axis=0) - loop_pts
+    d_pt = pt - loop_pts
+    cross = d_edge[:, 0] * d_pt[:, 1] - d_edge[:, 1] * d_pt[:, 0]
+    return bool(np.all(cross >= 0) or np.all(cross <= 0))
 
 
 def _loop_area(pts, loop):
+    """Area of the polygon with vertices ``pts[loop[0]]``, ``pts[loop[1]]``,
+    ... (shoelace formula)."""
     double_area = 0
 
     n = len(loop)
     for i in range(n):
         ip1 = (i + 1) % n
 
-        xi = pts[i][0]
-        yi = pts[i][1]
-        xip1 = pts[ip1][0]
-        yip1 = pts[ip1][1]
+        xi = pts[loop[i]][0]
+        yi = pts[loop[i]][1]
+        xip1 = pts[loop[ip1]][0]
+        yip1 = pts[loop[ip1]][1]
 
         det = xi * yip1 - xip1 * yi
         double_area += det
@@ -1330,3 +1499,15 @@ def _point_line_vec(pt, line_pts):
 
     u_vec = dist_vec / np.linalg.norm(dist_vec)
     return u_vec
+
+
+def _displace_seed(seed, step):
+    """Translate a seed rigidly by ``step``.
+
+    The position setter of the seed translates the geometry and the
+    breakdown along with the position.
+    """
+    if isinstance(seed.breakdown, tuple):
+        seed.breakdown = [list(b) for b in seed.breakdown]
+    pos = np.array(seed.position, dtype='float')
+    seed.position = (pos + np.array(step, dtype='float')).tolist()
