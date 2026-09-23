@@ -779,7 +779,7 @@ class SeedList(object):
     # ----------------------------------------------------------------------- #
     def position(self, domain, pos_dists={}, rng_seed=0, hold=[],
                  max_attempts=10000, rtol='fit', verbose=False,
-                 periodic=False):
+                 periodic=False, periodic_margin=0.0):
         """Position seeds in a domain
 
         This method positions the seeds within a domain. The "domain" should be
@@ -846,6 +846,14 @@ class SeedList(object):
                 the domain is checked for overlap on both sides, through its
                 periodic images. Requires a rectangular domain.
                 Defaults to False.
+            periodic_margin (float): *(optional)* Minimum distance between
+                the surface of a seed and a periodic face: a position where
+                a seed ends within this distance inside a face, or crosses
+                a face by less than this distance, is rejected and another
+                one is tried. Such seeds give thin pieces of cells on the
+                faces, and elements much smaller than the target size of the
+                mesh; a margin of about half the target edge length avoids
+                most of them. Defaults to 0 (no margin).
 
         """  # NOQA: E501
         if len(hold) == 0:
@@ -922,6 +930,12 @@ class SeedList(object):
                 rads = bkdwn[:, -1].reshape(-1, 1)
                 limits = seed.geometry.limits
 
+                # A seed that ends within the margin of a periodic face, or
+                # crosses it by less than the margin, is placed elsewhere
+                if periodic_margin > 0 and not _clears_faces(
+                        limits, dom_lims, per_axes, periodic_margin):
+                    continue
+
                 # The seed and its periodic images are tested against the
                 # placed seeds and their images (the tree holds both)
                 clears = True
@@ -969,6 +983,38 @@ class SeedList(object):
             warnings.warn(w_str, RuntimeWarning)
 
         self.seeds = self[keep_mask].seeds
+
+
+def _clears_faces(limits, dom_lims, per_axes, margin):
+    """Whether a seed keeps its surface away from the periodic faces.
+
+    The surface of the seed must either stay at least ``margin`` inside
+    the domain or cross the periodic face by at least ``margin``. A seed
+    that ends just inside a face, or barely crosses it, gives a thin piece
+    of a cell on one of the two faces of the pair and elements much
+    smaller than the target size of the mesh there.
+
+    Args:
+        limits (list): Bounding box of the seed, as (min, max) per axis.
+        dom_lims (list): Limits of the domain, as (min, max) per axis.
+        per_axes (list): Periodicity flags, one per axis.
+        margin (float): The margin.
+
+    Returns:
+        bool: True if the seed clears the periodic faces.
+
+    """
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        lb, ub = dom_lims[axis]
+        lo, hi = limits[axis]
+        # signed distances of the ends of the seed to the faces: positive
+        # inside the domain, negative when the seed crosses the face
+        for gap in (lo - lb, ub - hi):
+            if abs(gap) < margin:
+                return False
+    return True
 
 
 def _periodic_images(limits, dom_lims, per_axes, include_zero=False):

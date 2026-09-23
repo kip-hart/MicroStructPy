@@ -44,6 +44,11 @@
             <position> 1 </position>
         </rng_seeds>
 
+        <!-- a seed may not end within half the target edge length of a
+             periodic face, nor cross it by less: such seeds give thin
+             pieces of grains, and very small elements, on the faces -->
+        <periodic_margin> auto </periodic_margin>
+
         <!-- the edge optimization removes the shortest edges of the
              polygonal mesh, which would force very small triangles -->
         <edge_opt> True </edge_opt>

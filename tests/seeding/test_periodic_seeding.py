@@ -180,3 +180,41 @@ def test_periodic_requires_rectangular_domain():
                        periodic=True)
     # a non-periodic call on a circular domain still works
     seeds.position(msp.geometry.Circle(r=1), periodic=False)
+
+
+def test_periodic_margin():
+    domain = msp.geometry.Square(side_length=2, corner=(0, 0))
+    phases = [{'shape': 'circle', 'size': scipy.stats.uniform(0.2, 0.2)}]
+    margin = 0.1
+    seeds = SeedList.from_info(phases, 0.6 * domain.area)
+    seeds.position(domain, rtol=0.0, rng_seed=5, periodic=True,
+                   periodic_margin=margin)
+    # every seed either stays a margin away from a periodic face, on the
+    # inside, or crosses it by at least the margin
+    for seed in seeds:
+        for axis, (lb, ub) in enumerate(domain.limits):
+            lo, hi = seed.geometry.limits[axis]
+            for gap in (lo - lb, ub - hi):
+                assert abs(gap) >= margin - 1e-12
+    # without the margin, some seeds do not
+    seeds = SeedList.from_info(phases, 0.6 * domain.area)
+    seeds.position(domain, rtol=0.0, rng_seed=5, periodic=True)
+    gaps = []
+    for seed in seeds:
+        for axis, (lb, ub) in enumerate(domain.limits):
+            lo, hi = seed.geometry.limits[axis]
+            gaps.extend([abs(lo - lb), abs(ub - hi)])
+    assert min(gaps) < margin
+    # the margin only applies to the periodic axes
+    seeds = SeedList.from_info(phases, 0.6 * domain.area)
+    seeds.position(domain, rtol=0.0, rng_seed=5, periodic='x',
+                   periodic_margin=margin)
+    gaps_y = []
+    for seed in seeds:
+        lo, hi = seed.geometry.limits[1]
+        lb, ub = domain.limits[1]
+        gaps_y.extend([abs(lo - lb), abs(ub - hi)])
+        lo, hi = seed.geometry.limits[0]
+        lb, ub = domain.limits[0]
+        assert min(abs(lo - lb), abs(ub - hi)) >= margin - 1e-12
+    assert min(gaps_y) < margin

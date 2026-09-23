@@ -54,6 +54,14 @@ The mesh has a minimum angle of 25 degrees and a maximum element area of
 0.004. The quality and size settings act on a periodic mesh as on a
 non-periodic one.
 
+A grain that barely crosses a periodic face, or ends just inside it, leaves
+a thin piece of itself on the opposite face and very small elements there.
+``periodic_margin`` rejects the positions where a seed ends within the
+margin of a periodic face or crosses it by less than the margin; ``auto``
+sets the margin to half the target edge length of the mesh.
+The edge optimization removes the shortest edges of the polygonal mesh, for
+the same reason.
+
 The plots are colored by seed number, so that the pieces of a grain on
 opposite faces of the domain have the same color.
 

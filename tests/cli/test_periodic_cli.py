@@ -2,6 +2,7 @@
 import os
 
 import numpy as np
+import pytest
 
 from microstructpy import cli
 from microstructpy.meshing import PolyMesh
@@ -95,3 +96,17 @@ def test_periodic_run_single_axis(tmp_path):
     tmesh = TriMesh.from_file(str(out_dir / 'trimesh.txt'))
     assert tmesh.periodic_axes == [False, True]
     assert list(tmesh.periodic_nodes) == [1]
+
+
+def test_periodic_margin_setting():
+    inf = float('inf')
+    h_2d = np.sqrt(4 * 0.004 / np.sqrt(3))
+    assert np.isclose(cli._periodic_margin('auto', 2, 0.004, inf), 0.5 * h_2d)
+    assert np.isclose(cli._periodic_margin('auto', 2, 0.004, 0.05), 0.025)
+    h_3d = (6 * np.sqrt(2) * 0.02) ** (1.0 / 3)
+    assert np.isclose(cli._periodic_margin('auto', 3, 0.02, inf), 0.5 * h_3d)
+    assert cli._periodic_margin('auto', 3, inf, inf) == 0
+    assert cli._periodic_margin(0.03, 2, 0.004, inf) == 0.03
+    assert cli._periodic_margin('none', 2, 0.004, inf) == 0
+    with pytest.raises(ValueError):
+        cli._periodic_margin('big', 2, 1, 1)

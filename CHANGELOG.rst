@@ -29,7 +29,10 @@ Added
   node set per periodic face in matching order; the verification unwraps
   grains that are split by the faces. The examples ``periodic_2D.xml``,
   ``periodic_3D.xml`` and ``periodic_tiling.py`` demonstrate periodic
-  microstructures. Cells of the same amorphous phase
+  microstructures, ``pbx_2D.xml`` and ``pbx_3D.xml`` a periodic
+  particulate composite (crystalline inclusions in a binder), and
+  ``pbx_interface_2D.xml`` and ``pbx_interface_3D.xml`` meshes refined at
+  the grain boundaries. Cells of the same amorphous phase
   that touch across a periodic face are merged into one region, like cells
   that share a facet, and the merged region is labelled with the smallest
   seed number among its cells by every mesher and writer. The element
@@ -37,6 +40,12 @@ Added
   geometry of the polymesh, since TetGen can leave sub-faces of a facet
   unmarked when it may not modify the boundary and its region attributes
   then leak between cells. gmsh is not supported for periodic meshes.
+- ``periodic_margin`` (a setting, and an argument of ``SeedList.position``
+  and ``cli.run``): the minimum distance between the surface of a seed and
+  a periodic face. A seed that ends within the margin of a face, or crosses
+  it by less, is placed elsewhere, since it would leave a thin piece of its
+  grain on the opposite face and elements much smaller than the target size
+  of the mesh there. ``auto`` uses half the target edge length of the mesh.
 
 Fixed
 '''''
@@ -95,6 +104,16 @@ Fixed
 
 Changed
 '''''''
+- ``max_edge_length`` (``mesh_max_edge_length``) acts in 3D on the triangles
+  of the grain boundaries: when it is set, the facets of the polyhedral mesh
+  are triangulated to that edge length (with Triangle, minimum angle 20
+  degrees) before TetGen meshes the cells, for periodic and non-periodic
+  meshes alike, so that the elements can be smaller at the interfaces than
+  inside the grains (see the ``pbx_interface_3D.xml`` example). The
+  geometric tests of a mesh against its polymesh use the non-planarity of
+  the facets (from the snapping of the points to the periodic faces) as
+  their tolerance, and each element is assigned to the cell in which its
+  centroid is deepest.
 - The overlap tolerance fit ``rtol='fit'`` uses the coefficients published
   in Hart and Rimoli, CMAME 370 (2020) 113242, Eqs. (14) and (15). For very
   wide size distributions this allows less overlap than before (2D

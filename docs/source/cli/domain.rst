@@ -338,6 +338,11 @@ matching order.
         </domain>
     </input>
 
+A seed that barely crosses a periodic face, or ends just inside it, leaves a
+thin piece of its grain on the opposite face and very small elements there;
+the ``periodic_margin`` setting rejects such positions (see
+:ref:`cli_settings`).
+
 The mesher must be Triangle/TetGen for periodic microstructures (with gmsh the
 nodes on opposite faces are not guaranteed to match), and the mesh size of a
 raster mesh must divide the domain length along the periodic axes.

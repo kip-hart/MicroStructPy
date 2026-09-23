@@ -341,6 +341,21 @@ This setting controls the aspect ratio of the elements, with angles between
 The default is ``<mesh_min_angle> 0 </mesh_min_angle>``, which effectively
 turns off the angle quality control.
 
+periodic_margin
+---------------
+
+This field sets the minimum distance between the surface of a seed and a
+periodic face of the domain (see :ref:`cli_domain` for periodic domains).
+A position where a seed ends within this distance inside a face, or crosses
+a face by less than this distance, is rejected and another one is tried:
+such seeds leave thin pieces of grains on the faces of the domain, and
+elements much smaller than the target size of the mesh there.
+The value ``auto`` uses half the target edge length of the mesh, taken from
+``mesh_max_edge_length`` or, if it is not set, from ``mesh_max_volume``.
+A large margin makes the seeds harder to place near the faces.
+The default is ``<periodic_margin> 0 </periodic_margin>``, which turns off
+the margin. It has no effect on non-periodic domains.
+
 mesh_max_edge_length
 --------------------
 
