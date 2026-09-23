@@ -1276,32 +1276,15 @@ def _collapse_close_points(pts, facets, facet_neighbors, regions, eps):
     """
     pts = np.array(pts, dtype='float')
     n_pts, n_dim = pts.shape
-    pairs = cKDTree(pts).query_pairs(eps)
-    if not pairs:
+    roots, means = _cluster_points(pts, eps)
+    if len(means) == n_pts:
         return pts.tolist(), facets, facet_neighbors, regions
 
-    parent = list(range(n_pts))
-
-    def find(i):
-        while parent[i] != i:
-            parent[i] = parent[parent[i]]
-            i = parent[i]
-        return i
-
-    for i, j in pairs:
-        ri, rj = find(i), find(j)
-        if ri != rj:
-            parent[max(ri, rj)] = min(ri, rj)
-    roots = [find(i) for i in range(n_pts)]
-
-    clusters = {}
-    for i, root in enumerate(roots):
-        clusters.setdefault(root, []).append(i)
     new_pts = []
     root_ids = {}
-    for root in sorted(clusters):
+    for root in sorted(means):
         root_ids[root] = len(new_pts)
-        new_pts.append(pts[clusters[root]].mean(axis=0))
+        new_pts.append(means[root])
     kp_new = [root_ids[roots[i]] for i in range(n_pts)]
 
     new_facets = []
@@ -1322,6 +1305,26 @@ def _collapse_close_points(pts, facets, facet_neighbors, regions, eps):
     new_regions = [[f_new[f] for f in region if f in f_new]
                    for region in regions]
     return np.array(new_pts).tolist(), new_facets, new_neighs, new_regions
+
+
+def _cluster_points(pts, tol):
+    """Clusters of points closer than ``tol`` to each other (transitively).
+
+    Returns:
+        tuple: The root of the cluster of each point (its smallest point
+        number), as an array, and a dictionary that maps each root to the
+        mean of the points of its cluster.
+
+    """
+    n_pts = len(pts)
+    sets = _misc.UnionFind(range(n_pts))
+    for i, j in cKDTree(pts).query_pairs(tol):
+        sets.union(i, j)
+    roots = np.array([sets.find(i) for i in range(n_pts)])
+    means = {}
+    for root in np.unique(roots):
+        means[root] = pts[np.nonzero(roots == root)[0]].mean(axis=0)
+    return roots, means
 
 
 def _cell_loop(cell):
@@ -1440,23 +1443,8 @@ def _unify_cell_vertices(voro, lims, per_axes, merge_tol, snap_tol):
     wrapped = all_pts - shifts
 
     # coincident copies are one vertex
-    parent = np.arange(len(wrapped))
-
-    def find(i):
-        while parent[i] != i:
-            parent[i] = parent[parent[i]]
-            i = parent[i]
-        return i
-
-    for i, j in cKDTree(wrapped).query_pairs(merge_tol):
-        r_i, r_j = find(i), find(j)
-        if r_i != r_j:
-            parent[max(r_i, r_j)] = min(r_i, r_j)
-    roots = np.array([find(i) for i in range(len(wrapped))])
-    unified = wrapped.copy()
-    for root in np.unique(roots):
-        members = roots == root
-        unified[members] = wrapped[members].mean(axis=0)
+    roots, means = _cluster_points(wrapped, merge_tol)
+    unified = np.array([means[root] for root in roots])
 
     # vertices next to a periodic face are on it
     for axis, flag in enumerate(per_axes):

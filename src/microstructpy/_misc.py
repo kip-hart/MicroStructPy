@@ -236,6 +236,37 @@ def periodic_axes(periodic, n_dim):
     return flags
 
 
+class UnionFind(object):
+    """Disjoint sets of hashable items, with path halving.
+
+    Args:
+        items (iterable): The items, each initially in its own set.
+
+    """
+    def __init__(self, items):
+        self.parent = {item: item for item in items}
+
+    def find(self, item):
+        """Root of the set of an item."""
+        parent = self.parent
+        while parent[item] != item:
+            parent[item] = parent[parent[item]]
+            item = parent[item]
+        return item
+
+    def union(self, item_a, item_b):
+        """Join the sets of two items under the smaller of their roots, so
+        that the root of a set of integers is its smallest member."""
+        r_a, r_b = self.find(item_a), self.find(item_b)
+        if r_a != r_b:
+            self.parent[max(r_a, r_b)] = min(r_a, r_b)
+
+    def attach(self, item_a, item_b):
+        """Put the root of the set of the first item under the root of the
+        set of the second one."""
+        self.parent[self.find(item_a)] = self.find(item_b)
+
+
 def wall_axis_side(wall):
     """Axis and side of a wall id of a rectangular domain.
 

@@ -1894,18 +1894,7 @@ def _merged_seed_numbers(pmesh, phases):
                           for p in phases])
     amorph_mask = is_amorph[phase_nums]
 
-    parent = np.arange(len(seed_nums))
-
-    def find(i):
-        while parent[i] != i:
-            parent[i] = parent[parent[i]]
-            i = parent[i]
-        return i
-
-    def union(i, j):
-        r_i, r_j = find(i), find(j)
-        if r_i != r_j:
-            parent[max(r_i, r_j)] = min(r_i, r_j)
+    sets = _misc.UnionFind(range(len(seed_nums)))
 
     pairs = [tuple(neighs) for neighs in pmesh.facet_neighbors]
     per_facets = getattr(pmesh, 'periodic_facets', None) or {}
@@ -1917,16 +1906,16 @@ def _merged_seed_numbers(pmesh, phases):
         if r_a < 0 or r_b < 0:
             continue
         if amorph_mask[r_a] and phase_nums[r_a] == phase_nums[r_b]:
-            union(r_a, r_b)
+            sets.union(r_a, r_b)
 
     first_region = {}
     for r, s in enumerate(seed_nums):
         if s in first_region:
-            union(first_region[s], r)
+            sets.union(first_region[s], r)
         else:
             first_region[s] = r
 
-    roots = np.array([find(r) for r in range(len(seed_nums))])
+    roots = np.array([sets.find(r) for r in range(len(seed_nums))])
     labels = seed_nums.copy()
     for root in np.unique(roots):
         members = roots == root
@@ -2214,20 +2203,14 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
         for i in range(len(loop)):
             edge_keys.add(_edge_key(loop[i - 1], loop[i]))
 
-    parent = {key: key for key in edge_keys}
-
-    def find(key):
-        while parent[key] != key:
-            parent[key] = parent[parent[key]]
-            key = parent[key]
-        return key
-
+    classes = _misc.UnionFind(edge_keys)
+    find = classes.find
     for kp_map in lo_hi.values():
         for key in edge_keys:
             if key[0] in kp_map and key[1] in kp_map:
                 image = _edge_key(kp_map[key[0]], kp_map[key[1]])
                 if image in edge_keys:
-                    parent[find(key)] = find(image)
+                    classes.attach(key, image)
 
     def to_root(key, t_vals):
         # the parameters along key, in the orientation of its class root
