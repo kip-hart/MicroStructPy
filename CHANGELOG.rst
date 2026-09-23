@@ -6,6 +6,74 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+Unreleased
+----------
+Fixed
+'''''
+- Seed generation is reproducible: the RNG seed chain no longer depends on
+  the (hash-randomized) iteration order of the phase keywords, and
+  ``SeedList.from_info`` and ``cli.run`` no longer modify the ``rng_seeds``
+  and ``filetypes`` arguments (or their mutable defaults).
+- ``<dist_type> cdf </dist_type>`` inputs are no longer distorted when the
+  x-values in the CSV file are not evenly spaced (``density=False`` is now
+  passed to ``scipy.stats.rv_histogram``); ``pdf`` is accepted as an alias
+  of ``histogram``.
+- 3D ``mesh_max_volume`` and per-phase ``max_volume`` are now honored by
+  TetGen; in 2D a per-phase ``max_volume`` larger than the global value is
+  no longer capped, and an infinite ``mesh_max_volume`` is no longer passed
+  to Triangle as the (mis-parsed) switch ``ainf``.
+- ``Ellipsoid.approximate`` mapped the axes incorrectly for the ordering
+  c >= a >= b, so those grains were tessellated with the wrong orientation;
+  the b >= c >= a ordering is now sorted explicitly as well.
+- Seeds read back from ``seeds.txt`` can be repositioned; ellipsoid seeds
+  with a rotation sequence are written in a form that can be read back.
+- Cells that intersect a circular or elliptical domain without having a
+  vertex inside it are no longer dropped, cells cut twice by the boundary
+  are clipped correctly, and the stored areas of clipped cells are correct
+  (``PolyMesh.volumes``, ``verification.volume_fractions``).
+- ``_segment_cross`` no longer hangs for large coordinate values;
+  ``sample_pos_within`` raises instead of looping forever when the position
+  distribution does not cover the domain.
+- ``cli.plot_tri`` no longer hangs in 3D when a void grain touches the
+  boundary of the domain.
+- Relative ``<filename>`` and ``<directory>`` paths inside repeated tags
+  (e.g. several ``<material>`` blocks) are resolved relative to the input
+  file; a top-level ``<include>`` no longer discards materials; values such
+  as ``true_cdf.csv`` no longer cause infinite recursion; ``inf`` is parsed
+  as a float.
+- Verification: ``angle_rad`` inputs are no longer replaced by a uniform
+  distribution, ``<orientation> random </orientation>`` and vector-valued
+  parameters (``side_lengths``, ``axes``) no longer crash, unknown phase
+  fields are ignored, the caller's phases are not modified.
+- ``RasterMesh``: elements are counter-clockwise / right-handed (valid for
+  Abaqus CPS4/C3D8), facets and their attributes are correct, ``vtk`` and
+  ``abaqus`` output work (including with voids), 3D plotting works.
+- ``TriMesh.write``: valid ``.ele``/``.edge``/``.face`` files, Abaqus
+  exterior surface unions reference only defined surfaces, full-precision
+  points in text files, no dangling headers for meshes without attributes.
+- ``PolyMesh.from_seeds(edge_opt=True)`` leaves the seed list in the
+  accepted state (positions and breakdowns consistent) and is quiet unless
+  ``verbose``; ``PolyMesh.write(format='poly')`` writes the file;
+  ``PolyMesh.__eq__`` is silent and no longer cubic.
+- ``Ellipse(axes=...)``, ``Ellipse(matrix=...)``, ``Ellipsoid(c=..,
+  ratio_bc=..)``, ``Square.area_expectation(side_lengths=...)``, the
+  ``*_expectation`` methods with numpy scalars, ``Sphere.plot`` and 3D
+  ``PolyMesh.plot``/``SeedList.plot_breakdown`` on a fresh figure,
+  ``Rectangle.within`` for rotated rectangles, ``reflect`` for ellipses
+  and ellipsoids, single-material ``color_by`` settings, numpy arrays as
+  per-item plot keywords.
+
+Changed
+'''''''
+- ``Ellipsoid.limits`` is exact for rotated ellipsoids (it was sampled).
+- A ``Seed`` created with a ``position`` (or a geometry with a center) has
+  its breakdown at that position; the geometry center is no longer reset
+  to the origin.
+- ``Ellipse``, ``Ellipsoid`` and ``NBox`` geometries compare equal when
+  their parameters are equal.
+- Unused sampling helpers were removed from ``seeding.seedlist``.
+
+
 `1.5.9`_ - 2023-10-05
 --------------------------
 Added
