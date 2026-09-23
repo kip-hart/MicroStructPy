@@ -2431,16 +2431,8 @@ def _collect_facet_points_3d(new_pts, polymesh, edge_t, face_pts):
     # cells that contain it
     cell_geom = _CellGeometry(polymesh, p_arr)
     point_facets = {}
-    for r_num in range(len(polymesh.regions)):
-        r_mins, r_maxs = cell_geom.limits(r_num)
-        in_box = np.all((new_pts >= r_mins - tol) & (new_pts <= r_maxs + tol),
-                        axis=1)
-        cand = np.nonzero(in_box)[0]
-        if len(cand) == 0:
-            continue
-        f_nums, normals, centers = cell_geom.facets(r_num)
-        rel_pos = new_pts[cand][:, np.newaxis, :] - centers
-        dp = np.einsum('efd,fd->ef', rel_pos, normals)
+    for r_num, cand, dp in cell_geom.containing(new_pts, tol):
+        f_nums = cell_geom.facets(r_num)[0]
         inside = np.all(dp >= -tol, axis=1)
         for i, row in zip(cand[inside], dp[inside]):
             for k in np.nonzero(np.abs(row) <= tol)[0]:
@@ -3032,16 +3024,8 @@ def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
     cens = tri_pts[tri_elems].mean(axis=1)
     elem_regs = np.full(len(tri_elems), -1)
     depths = np.full(len(tri_elems), -np.inf)
-    for r_num in range(len(polymesh.regions)):
-        r_mins, r_maxs = cell_geom.limits(r_num)
-        in_box = np.all((cens >= r_mins - tol) & (cens <= r_maxs + tol),
-                        axis=1)
-        r_i = np.nonzero(in_box)[0]
-        if len(r_i) == 0:
-            continue
-        _, normals, centers = cell_geom.facets(r_num)
-        rel_pos = cens[r_i][:, np.newaxis, :] - centers
-        depth = np.einsum('efd,fd->ef', rel_pos, normals).min(axis=1)
+    for r_num, r_i, dp in cell_geom.containing(cens, tol):
+        depth = dp.min(axis=1)
         deeper = depth > depths[r_i]
         elem_regs[r_i[deeper]] = r_num
         depths[r_i[deeper]] = depth[deeper]
@@ -3082,16 +3066,7 @@ def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
     f_ids = np.nonzero(is_facet)[0]
     f_cens = tri_pts[u_faces[f_ids]].mean(axis=1)
     claims = [[] for _ in f_ids]
-    for r_num in range(len(polymesh.regions)):
-        r_mins, r_maxs = cell_geom.limits(r_num)
-        in_box = np.all((f_cens >= r_mins - tol) & (f_cens <= r_maxs + tol),
-                        axis=1)
-        c_i = np.nonzero(in_box)[0]
-        if len(c_i) == 0:
-            continue
-        _, normals, centers = cell_geom.facets(r_num)
-        rel_pos = f_cens[c_i][:, np.newaxis, :] - centers
-        dp = np.einsum('efd,fd->ef', rel_pos, normals)
+    for r_num, c_i, dp in cell_geom.containing(f_cens, tol):
         for j in c_i[np.all(dp >= -tol, axis=1)]:
             claims[j].append(r_num)
 
@@ -3301,6 +3276,31 @@ class _CellGeometry(object):
         if cell not in self._cache:
             self._compute(cell)
         return self._cache[cell][3]
+
+    def containing(self, points, tol):
+        """Cells whose bounding box contains some of the points.
+
+        Args:
+            points (numpy.ndarray): The points.
+            tol (float): Tolerance of the bounding box test.
+
+        Yields:
+            tuple: The cell number, the indices of the points in its
+            bounding box, and the signed distances of those points to the
+            planes of the facets of the cell (one row per point, one
+            column per facet, positive inside the cell).
+
+        """
+        for cell in range(len(self.polymesh.regions)):
+            r_mins, r_maxs = self.limits(cell)
+            in_box = np.all((points >= r_mins - tol) &
+                            (points <= r_maxs + tol), axis=1)
+            cand = np.nonzero(in_box)[0]
+            if len(cand) == 0:
+                continue
+            _, normals, centers = self.facets(cell)
+            rel_pos = points[cand][:, np.newaxis, :] - centers
+            yield cell, cand, np.einsum('efd,fd->ef', rel_pos, normals)
 
     def exit_facet(self, cell, origin, direction):
         """Facet through which the ray origin + t * direction leaves a cell.
