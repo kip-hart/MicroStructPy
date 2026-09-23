@@ -236,6 +236,13 @@ class TriMesh(object):
                 option is used with gmsh. Default is infinity, whihch turns off
                 this control.
 
+        Note:
+            The facets of the mesh are listed with their nodes in ascending
+            order and in lexicographic order, whatever the mesher: the order
+            in which Triangle and TetGen list the edges/faces of a mesh
+            varies from one run to the next, and the sorted facets make the
+            mesh, and its files, reproducible.
+
         """
         # A periodic polygon mesh gives a periodic triangular mesh: the
         # nodes on opposite periodic faces are images of each other
@@ -257,7 +264,9 @@ class TriMesh(object):
             e_str += "'Triangle/TetGen', 'Triangle', 'TetGen', and 'gmsh'."
             raise ValueError(e_str)
 
-        mesh = cls(*tri_args)
+        tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa = tri_args
+        tri_f, tri_fa = _sorted_facets(tri_f, tri_fa)
+        mesh = cls(tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa)
         if periodic:
             dom_lims = _misc.periodic_bounds(polymesh.points, per_axes)
             mesh._set_periodic_pairs(per_axes, dom_lims)
@@ -1567,6 +1576,31 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
 
     tri_args = (tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa)
     return tri_args
+
+
+def _sorted_facets(facets, facet_atts):
+    """Facets with their nodes in ascending order, in lexicographic order.
+
+    Triangle and TetGen list the edges/faces of a mesh in an order, and
+    with an orientation, that vary from one run to the next; the sorted
+    facets make a mesh, and its files, reproducible. MicroStructPy does not
+    use the orientation of the facets.
+
+    Args:
+        facets (list or numpy.ndarray): The facets (node numbers).
+        facet_atts (list or numpy.ndarray): The attribute of each facet.
+
+    Returns:
+        tuple: The sorted facets and their attributes, as arrays.
+
+    """
+    facets = np.array(facets, dtype='int')
+    facet_atts = np.array(facet_atts)
+    if facets.size == 0:
+        return facets, facet_atts
+    facets = np.sort(facets, axis=1)
+    order = np.lexsort(facets.T[::-1])
+    return facets[order], facet_atts[order]
 
 
 def _call_gmsh(pmesh, phases, res, edge_res):

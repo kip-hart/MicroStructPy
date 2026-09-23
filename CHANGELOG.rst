@@ -134,6 +134,12 @@ Fixed
 
 Changed
 '''''''
+- The facets of the triangular and tetrahedral meshes created from a
+  polygonal mesh are sorted (nodes in ascending order within a facet,
+  facets in lexicographic order), whatever the mesher. Triangle and TetGen
+  list the edges/faces of a mesh in an order, and with an orientation, that
+  vary from one run to the next, so the mesh files of otherwise identical
+  runs differed in the order of their facets.
 - ``max_edge_length`` (``mesh_max_edge_length``) acts in 3D on the triangles
   of the grain boundaries: when it is set, the facets of the polyhedral mesh
   are triangulated to that edge length (with Triangle, minimum angle 20

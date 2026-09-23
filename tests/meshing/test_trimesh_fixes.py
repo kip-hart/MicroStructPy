@@ -677,3 +677,58 @@ def test_write_rejects_non_simplex_elements(fmt, raster_2d, tmp_path):
     mesh.write(str(tmp_path / 'quads.txt'), 'txt')
     read_mesh = TriMesh.from_file(str(tmp_path / 'quads.txt'))
     assert len(read_mesh.elements) == len(mesh.elements)
+
+
+# --------------------------------------------------------------------------- #
+# Sorted facets                                                               #
+# --------------------------------------------------------------------------- #
+def test_sorted_facets_helper():
+    facets = [[5, 2], [1, 9], [2, 5], [3, 1], [9, 1]]
+    atts = [10, 11, 12, 13, 14]
+    out_f, out_a = trimesh_module._sorted_facets(facets, atts)
+    assert out_f.tolist() == [[1, 3], [1, 9], [1, 9], [2, 5], [2, 5]]
+    # the attributes travel with their facets
+    assert out_a.tolist() == [13, 11, 14, 10, 12]
+    # triangles, and an empty list
+    out_f, out_a = trimesh_module._sorted_facets([[7, 3, 5], [2, 9, 1]],
+                                                 [1, 2])
+    assert out_f.tolist() == [[1, 2, 9], [3, 5, 7]]
+    assert out_a.tolist() == [2, 1]
+    out_f, out_a = trimesh_module._sorted_facets([], [])
+    assert len(out_f) == 0 and len(out_a) == 0
+
+
+def _assert_facets_sorted(mesh):
+    facets = np.array(mesh.facets)
+    assert np.all(np.diff(facets, axis=1) > 0)
+    keys = [tuple(f) for f in facets]
+    assert keys == sorted(keys)
+
+
+def test_facets_sorted_2d_and_3d():
+    # 2D, Triangle, and a periodic mesh (whose facets come from the
+    # polymesh geometry)
+    domain = msp.geometry.Square(side_length=2, corner=(0, 0))
+    seeds = msp.seeding.SeedList.from_info(
+        [{'shape': 'circle', 'size': 0.4}], 0.9 * domain.area)
+    seeds.position(domain, rng_seed=0, rtol=0.0)
+    pmesh = msp.meshing.PolyMesh.from_seeds(seeds, domain)
+    mesh = TriMesh.from_polymesh(pmesh, min_angle=20, max_volume=0.05)
+    assert len(mesh.facets) > 0
+    _assert_facets_sorted(mesh)
+    assert set(np.unique(mesh.facet_attributes)) <= set(
+        range(len(pmesh.facets)))
+    seeds.position(domain, rng_seed=0, rtol=0.0, periodic=True)
+    pmesh_per = msp.meshing.PolyMesh.from_seeds(seeds, domain, periodic=True)
+    mesh_per = TriMesh.from_polymesh(pmesh_per, min_angle=20)
+    _assert_facets_sorted(mesh_per)
+
+    # 3D, TetGen
+    domain = msp.geometry.Cube(side_length=2, corner=(0, 0, 0))
+    seeds = msp.seeding.SeedList.from_info(
+        [{'shape': 'sphere', 'size': 0.8}], 0.9 * domain.volume)
+    seeds.position(domain, rng_seed=0, rtol=0.0)
+    pmesh = msp.meshing.PolyMesh.from_seeds(seeds, domain)
+    mesh = TriMesh.from_polymesh(pmesh, min_angle=10)
+    assert len(mesh.facets) > 0
+    _assert_facets_sorted(mesh)
