@@ -10,15 +10,19 @@ Unreleased
 ----------
 Added
 '''''
-- Periodic microstructures (2D): the ``<periodic>`` field of the domain (or
-  the ``periodic`` argument of ``cli.run``, ``SeedList.position`` and
-  ``PolyMesh.from_seeds``) selects the periodic axes. Seeds crossing a
+- Periodic microstructures, in 2D and 3D: the ``<periodic>`` field of the
+  domain (or the ``periodic`` argument of ``cli.run``, ``SeedList.position``
+  and ``PolyMesh.from_seeds``) selects the periodic axes. Seeds crossing a
   periodic face are placed without overlapping the opposite side, the
-  Laguerre tessellation is periodic across those faces, and the triangular
-  and raster meshes have matching nodes on opposite faces. The pairs of
-  periodic points/nodes and facets are stored in the meshes and their text
-  files; the Abaqus output has a node set per periodic face in matching
-  order; the verification unwraps grains that are split by the faces.
+  Laguerre tessellation is periodic across those faces (cells crossing a
+  face are cut and their pieces tile the domain), and the triangular,
+  tetrahedral and raster meshes have matching nodes on opposite faces
+  (Triangle/TetGen run with ``-Y``; the polygons on opposite faces are
+  triangulated identically). The pairs of periodic points/nodes and facets
+  are stored in the meshes and their text files; the Abaqus output has a
+  node set per periodic face in matching order; the verification unwraps
+  grains that are split by the faces. gmsh is not supported for periodic
+  meshes.
 
 Fixed
 '''''

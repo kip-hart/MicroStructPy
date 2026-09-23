@@ -1,4 +1,4 @@
-"""Tests for periodic triangular and raster meshes (2D)."""
+"""Tests for periodic triangular, tetrahedral and raster meshes."""
 import numpy as np
 import pytest
 import scipy.stats
@@ -192,3 +192,109 @@ def test_periodic_raster_mesh(periodic_case):
             assert np.array_equal(pts[hi], pts[lo] + shift)
     with pytest.raises(ValueError):
         RasterMesh.from_polymesh(pmesh, 0.07, phases)
+
+
+# --------------------------------------------------------------------------- #
+# 3D                                                                          #
+# --------------------------------------------------------------------------- #
+@pytest.fixture(scope='module')
+def periodic_case_3d():
+    domain = msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0))
+    phases = [{'shape': 'sphere', 'size': scipy.stats.uniform(0.35, 0.2),
+               'material_type': 'crystalline'},
+              {'shape': 'sphere', 'size': 0.4, 'material_type': 'amorphous'}]
+    seeds = SeedList.from_info(phases, 0.5 * domain.volume)
+    seeds.position(domain, rtol=0.0, rng_seed=1, periodic=True)
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic=True)
+    return domain, phases, seeds, pmesh
+
+
+def _element_volumes(mesh):
+    pts = np.array(mesh.points)
+    elems = np.array(mesh.elements)
+    rel = pts[elems[:, 1:]] - pts[elems[:, :1]]
+    return np.linalg.det(rel) / 6.0
+
+
+def _check_periodic_mesh_3d(mesh, domain, per_axes):
+    pts = np.array(mesh.points)
+    lims = np.array(domain.limits)
+    assert mesh.periodic_axes == list(per_axes)
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            assert axis not in mesh.periodic_nodes
+            continue
+        lb, ub = lims[axis]
+        shift = np.zeros(3)
+        shift[axis] = ub - lb
+        pairs = mesh.periodic_nodes[axis]
+        low = set(np.nonzero(np.isclose(pts[:, axis], lb))[0])
+        high = set(np.nonzero(np.isclose(pts[:, axis], ub))[0])
+        assert len(pairs) == len(low) == len(high) > 0
+        assert set([lo for lo, _ in pairs]) == low
+        assert set([hi for _, hi in pairs]) == high
+        for lo, hi in pairs:
+            assert np.array_equal(pts[hi], pts[lo] + shift)
+        # the triangles on the faces are paired
+        kp_map = dict(pairs)
+        f_pairs = dict(mesh.periodic_facets[axis])
+        n_low = 0
+        for f_num, facet in enumerate(mesh.facets):
+            if all([kp in low for kp in facet]):
+                n_low += 1
+                assert f_num in f_pairs
+                image = mesh.facets[f_pairs[f_num]]
+                assert set(image) == set([kp_map[kp] for kp in facet])
+        assert n_low > 0
+
+
+def test_periodic_tetmesh_nodes_match(periodic_case_3d):
+    domain, phases, seeds, pmesh = periodic_case_3d
+    mesh = TriMesh.from_polymesh(pmesh, phases, min_angle=10)
+    _check_periodic_mesh_3d(mesh, domain, [True, True, True])
+    vols = _element_volumes(mesh)
+    assert np.all(np.abs(vols) > 0)
+    assert np.isclose(np.abs(vols).sum(), domain.volume)
+    assert set(mesh.element_attributes) <= set(pmesh.seed_numbers)
+
+
+def test_periodic_tetmesh_single_axis():
+    domain = msp.geometry.Box(limits=[(0, 1.5), (0, 1), (0, 1)])
+    phases = [{'shape': 'sphere', 'size': scipy.stats.uniform(0.3, 0.2)}]
+    seeds = SeedList.from_info(phases, 0.5 * domain.volume)
+    seeds.position(domain, rtol=0.0, rng_seed=3, periodic='z')
+    pmesh = PolyMesh.from_seeds(seeds, domain, periodic='z')
+    mesh = TriMesh.from_polymesh(pmesh, phases, min_angle=10)
+    _check_periodic_mesh_3d(mesh, domain, [False, False, True])
+    assert np.isclose(np.abs(_element_volumes(mesh)).sum(), domain.volume)
+
+
+def test_periodic_tetmesh_file_and_abaqus(periodic_case_3d, tmp_path):
+    domain, phases, seeds, pmesh = periodic_case_3d
+    mesh = TriMesh.from_polymesh(pmesh, phases, min_angle=10)
+    fname = str(tmp_path / 'trimesh.txt')
+    mesh.write(fname)
+    loaded = TriMesh.from_file(fname)
+    assert np.array_equal(np.array(loaded.points), np.array(mesh.points))
+    assert {k: [tuple(p) for p in v] for k, v in
+            loaded.periodic_nodes.items()} == mesh.periodic_nodes
+    mesh.write(str(tmp_path / 'mesh.inp'), 'abaqus', seeds, pmesh)
+    with open(str(tmp_path / 'mesh.inp'), 'r') as file:
+        text = file.read()
+    for name in 'XYZ':
+        assert '*Nset, nset=Set-N-Periodic-' + name + '-Low' in text
+        assert '*Nset, nset=Set-N-Periodic-' + name + '-High' in text
+
+
+def test_periodic_raster_mesh_3d(periodic_case_3d):
+    domain, phases, seeds, pmesh = periodic_case_3d
+    mesh = RasterMesh.from_polymesh(pmesh, 0.15, phases)
+    assert mesh.periodic_axes == [True, True, True]
+    pts = np.array(mesh.points)
+    for axis in range(3):
+        pairs = mesh.periodic_nodes[axis]
+        assert len(pairs) == 11 * 11
+        shift = np.zeros(3)
+        shift[axis] = 1.5
+        for lo, hi in pairs:
+            assert np.array_equal(pts[hi], pts[lo] + shift)

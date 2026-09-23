@@ -1448,6 +1448,12 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
         sub_out = meshpy.triangle.subdivide_facets(n_subs, pts, facets,
                                                    facet_nums)
         pts, facets, facet_nums = sub_out
+    elif periodic:
+        # TetGen triangulates polygonal facets itself, so the facets on
+        # opposite periodic faces are triangulated here, identically, and
+        # passed as triangles
+        facets, facet_nums = _triangulate_periodic_facets(polymesh, kps,
+                                                          facets, facet_nums)
 
     # create groups/regions
     pts_arr = np.array(polymesh.points)
@@ -1538,6 +1544,8 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
         opts.fixedvolume = 0
         opts.regionattrib = 1
         opts.facesout = 1
+        if periodic:
+            opts.nobisect = 1  # -Y: keep the boundary facets as given
         tri_mesh = meshpy.tet.build(info, options=opts)
 
     # return mesh
@@ -1926,6 +1934,55 @@ def _facet_in_normal(pts, cen_pt):
         vn = -vn  # flip so center is inward
     un = vn / np.linalg.norm(vn)
     return un, f_cen
+
+
+def _triangulate_periodic_facets(polymesh, kps, facets, facet_nums):
+    """Triangulate the facets on the periodic faces of a 3D polymesh.
+
+    Each facet on a lower periodic face is split into a fan of triangles
+    and its image on the upper face into the corresponding triangles (the
+    images of the same points), so that TetGen, which keeps the boundary
+    facets as given with the -Y switch, produces matching triangles on
+    opposite faces.
+
+    Args:
+        polymesh (PolyMesh): The periodic polymesh.
+        kps (dict): Maps polymesh point numbers to the point numbers of the
+            mesher input.
+        facets (list): Facets of the mesher input (lists of point numbers).
+        facet_nums (list): Polymesh facet number + 1 of each facet.
+
+    Returns:
+        tuple: The new facets and facet numbers.
+
+    """
+    f_index = {f_num - 1: i for i, f_num in enumerate(facet_nums)}
+    replaced = {}
+    for axis, f_pairs in (polymesh.periodic_facets or {}).items():
+        kp_map = dict(polymesh.periodic_points[axis])
+        for f_lo, f_hi in f_pairs:
+            if f_lo not in f_index or f_hi not in f_index:
+                continue
+            loop_lo = polymesh.facets[f_lo]
+            loop_hi = [kp_map[kp] for kp in loop_lo]
+            tris_lo = [[kps[loop_lo[0]], kps[loop_lo[k]], kps[loop_lo[k + 1]]]
+                       for k in range(1, len(loop_lo) - 1)]
+            tris_hi = [[kps[loop_hi[0]], kps[loop_hi[k]], kps[loop_hi[k + 1]]]
+                       for k in range(1, len(loop_hi) - 1)]
+            replaced[f_index[f_lo]] = tris_lo
+            replaced[f_index[f_hi]] = tris_hi
+
+    new_facets = []
+    new_nums = []
+    for i, (facet, f_num) in enumerate(zip(facets, facet_nums)):
+        if i in replaced:
+            for tri in replaced[i]:
+                new_facets.append(tri)
+                new_nums.append(f_num)
+        else:
+            new_facets.append(facet)
+            new_nums.append(f_num)
+    return new_facets, new_nums
 
 
 def _abaqus_periodic_nsets(mesh):
