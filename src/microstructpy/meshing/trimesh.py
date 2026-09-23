@@ -1564,6 +1564,12 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     tri_f = tri_faces[f_mask]
     tri_fa = tri_f_atts[f_mask] - 1
 
+    if periodic:
+        # With -Y, TetGen can leave sub-faces unmarked and its region
+        # attributes then leak between cells: use the geometry instead
+        tri_e_atts, tri_f, tri_fa = _attributes_from_polymesh(
+            tri_pts, tri_elems, polymesh, labels)
+
     tri_args = (tri_pts, tri_elems, tri_e_atts, tri_f, tri_fa)
     return tri_args
 
@@ -2031,6 +2037,151 @@ def _triangulate_periodic_facets(polymesh, kps, facets, facet_nums):
             new_facets.append(facet)
             new_nums.append(f_num)
     return new_facets, new_nums
+
+
+def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
+    """Element attributes and facets of a mesh, from the polymesh geometry.
+
+    Each element belongs to the (convex) cell of the polymesh that contains
+    its centroid and its attribute is the label of that cell. The facets of
+    the mesh are the faces between elements of cells with different labels
+    and the faces on the boundary of the mesh; their attributes are the
+    numbers of the polymesh facets they lie on.
+
+    TetGen can leave some sub-faces of a facet unmarked when it may not
+    modify the boundary (option -Y, used for periodic meshes). The region
+    attributes it assigns then leak between the cells on either side of
+    the facet and the facet is incomplete in its output. The geometry of
+    the polymesh does not have this problem.
+
+    Args:
+        tri_pts (numpy.ndarray): The points of the mesh.
+        tri_elems (numpy.ndarray): The elements of the mesh.
+        polymesh (PolyMesh): The polygon/polyhedron mesh.
+        labels (numpy.ndarray): The label of each region of the polymesh.
+
+    Returns:
+        tuple: The element attributes, the facets and the facet attributes.
+
+    Raises:
+        RuntimeError: If the mesh does not conform to the polymesh, i.e. an
+            element centroid lies outside every cell or a face between two
+            cells does not lie on a facet of the polymesh.
+    """
+    n_dim = tri_pts.shape[1]
+    p_pts = np.array(polymesh.points)
+    scale = np.max(p_pts.max(axis=0) - p_pts.min(axis=0))
+    tol = 1e-9 * scale
+    cell_geom = _CellGeometry(polymesh, p_pts)
+    labels = np.array(labels)
+
+    # 1. Cell containing the centroid of each element
+    cens = tri_pts[tri_elems].mean(axis=1)
+    elem_regs = np.full(len(tri_elems), -1)
+    i_remain = np.arange(len(tri_elems))
+    for r_num in range(len(polymesh.regions)):
+        r_mins, r_maxs = cell_geom.limits(r_num)
+        r_cens = cens[i_remain]
+        in_box = np.all((r_cens >= r_mins - tol) & (r_cens <= r_maxs + tol),
+                        axis=1)
+        r_i = i_remain[in_box]
+        if len(r_i) == 0:
+            continue
+        _, normals, centers = cell_geom.facets(r_num)
+        rel_pos = cens[r_i][:, np.newaxis, :] - centers
+        dp = np.einsum('efd,fd->ef', rel_pos, normals)
+        r_i = r_i[np.all(dp >= -tol, axis=1)]
+        elem_regs[r_i] = r_num
+        i_remain = np.setdiff1d(i_remain, r_i)
+    if len(i_remain) > 0:
+        e_str = 'The mesh does not conform to the polymesh: the centroids '
+        e_str += 'of ' + str(len(i_remain)) + ' elements are outside every '
+        e_str += 'cell.'
+        raise RuntimeError(e_str)
+    elem_atts = labels[elem_regs]
+
+    # 2. Faces of the elements, with the cells on either side
+    n_elems = len(tri_elems)
+    faces = np.concatenate([np.delete(tri_elems, k, axis=1)
+                            for k in range(n_dim + 1)])
+    faces.sort(axis=1)
+    owners = np.tile(np.arange(n_elems), n_dim + 1)
+    u_faces, inv, counts = np.unique(faces, axis=0, return_inverse=True,
+                                     return_counts=True)
+    if np.any(counts > 2):
+        e_str = 'The mesh is not a manifold: a face is shared by more '
+        e_str += 'than two elements.'
+        raise RuntimeError(e_str)
+    order = np.argsort(inv.reshape(-1), kind='stable')
+    starts = np.cumsum(counts) - counts
+    two = counts == 2
+    r1 = elem_regs[owners[order[starts]]]
+    r2 = np.full(len(u_faces), -1)
+    r2[two] = elem_regs[owners[order[starts[two] + 1]]]
+
+    # 3. Facets: faces between cells with different labels and faces on the
+    # boundary, numbered by the polymesh facet they lie on. Cells with the
+    # same label are not separated by facets of the mesh, so an element can
+    # span several of them: the facet is found from the cells that contain
+    # the center of the face, which lies on that facet.
+    is_facet = np.full(len(u_faces), True)
+    is_facet[two] = labels[r1[two]] != labels[r2[two]]
+    f_ids = np.nonzero(is_facet)[0]
+    f_cens = tri_pts[u_faces[f_ids]].mean(axis=1)
+    claims = [[] for _ in f_ids]
+    for r_num in range(len(polymesh.regions)):
+        r_mins, r_maxs = cell_geom.limits(r_num)
+        in_box = np.all((f_cens >= r_mins - tol) & (f_cens <= r_maxs + tol),
+                        axis=1)
+        c_i = np.nonzero(in_box)[0]
+        if len(c_i) == 0:
+            continue
+        _, normals, centers = cell_geom.facets(r_num)
+        rel_pos = f_cens[c_i][:, np.newaxis, :] - centers
+        dp = np.einsum('efd,fd->ef', rel_pos, normals)
+        for j in c_i[np.all(dp >= -tol, axis=1)]:
+            claims[j].append(r_num)
+
+    pair_facets = {}
+    for f_num, neighs in enumerate(polymesh.facet_neighbors):
+        if min(neighs) >= 0:
+            pair_facets[(min(neighs), max(neighs))] = f_num
+    e_str = 'The mesh does not conform to the polymesh: a face of the mesh '
+    e_str += 'is not on a facet of the polymesh.'
+    facets = []
+    facet_atts = []
+    for j, i in enumerate(f_ids):
+        face = u_faces[i]
+        f_pts = tri_pts[face]
+        best_dist = float('inf')
+        best_f = None
+        for c_1 in [c for c in claims[j] if labels[c] == labels[r1[i]]]:
+            f_nums, normals, centers = cell_geom.facets(c_1)
+            rel_pos = f_pts[:, np.newaxis, :] - centers
+            dists = np.abs(np.einsum('pfd,fd->pf', rel_pos,
+                                     normals)).max(axis=0)
+            if two[i]:
+                cands = [pair_facets.get((min(c_1, c_2), max(c_1, c_2)))
+                         for c_2 in claims[j] if labels[c_2] == labels[r2[i]]]
+            else:
+                # on the boundary of the domain, or of a void cell
+                cands = [f for f in f_nums if
+                         min(polymesh.facet_neighbors[f]) < 0 or
+                         labels[polymesh.facet_neighbors[f][0]] !=
+                         labels[polymesh.facet_neighbors[f][1]]]
+            for f_num in cands:
+                if f_num is None:
+                    continue
+                k = np.nonzero(f_nums == f_num)[0][0]
+                if dists[k] < best_dist:
+                    best_dist = dists[k]
+                    best_f = int(f_num)
+        if best_f is None or best_dist > 1e-8 * scale:
+            raise RuntimeError(e_str)
+        facets.append(face)
+        facet_atts.append(best_f)
+    facets = np.array(facets, dtype='int').reshape(-1, n_dim)
+    return elem_atts, facets, np.array(facet_atts, dtype='int')
 
 
 def _abaqus_periodic_nsets(mesh):

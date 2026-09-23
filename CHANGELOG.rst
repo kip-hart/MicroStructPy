@@ -24,8 +24,11 @@ Added
   grains that are split by the faces. Cells of the same amorphous phase
   that touch across a periodic face are merged into one region, like cells
   that share a facet, and the merged region is labelled with the smallest
-  seed number among its cells by every mesher and writer. gmsh is not
-  supported for periodic meshes.
+  seed number among its cells by every mesher and writer. The element
+  attributes and the facets of periodic meshes are computed from the
+  geometry of the polymesh, since TetGen can leave sub-faces of a facet
+  unmarked when it may not modify the boundary and its region attributes
+  then leak between cells. gmsh is not supported for periodic meshes.
 
 Fixed
 '''''

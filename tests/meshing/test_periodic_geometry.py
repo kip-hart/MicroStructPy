@@ -38,6 +38,8 @@ CASES = [
      True),
     ('cube-xyz-2', msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0)), 2,
      True),
+    ('cube-xyz-4', msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0)), 4,
+     True),
     ('cube-xz', msp.geometry.Cube(side_length=1.5, corner=(0, 0, 0)), 3,
      'xz'),
     ('box-y', msp.geometry.Box(limits=[(0, 2), (0, 1), (0, 1.3)]), 7, 'y'),
@@ -192,13 +194,14 @@ def test_elements_partition_the_cells(case):
     assert np.isclose(svol.sum(), domain.n_vol, rtol=1e-9)
 
     # every element face is shared by two elements or lies on the boundary
-    faces = Counter()
-    for e in elems:
+    face_elems = {}
+    for e_num, e in enumerate(elems):
         for i in range(n_dim + 1):
-            faces[tuple(sorted(np.delete(e, i)))] += 1
-    assert max(faces.values()) == 2
-    for face, c in faces.items():
-        if c == 1:
+            face_elems.setdefault(tuple(sorted(np.delete(e, i))),
+                                  []).append(e_num)
+    assert max([len(e) for e in face_elems.values()]) == 2
+    for face, e_nums in face_elems.items():
+        if len(e_nums) == 1:
             fp = pts[list(face)]
             assert any([np.allclose(fp[:, ax], lims[ax][k], atol=1e-9)
                         for ax in range(n_dim) for k in range(2)])
@@ -210,7 +213,32 @@ def test_elements_partition_the_cells(case):
     conv = _amorphous_seed_numbers(pmesh, phases)
     att_of_reg = np.array([conv.get(s, s) for s in pmesh.seed_numbers])
     assert set(attrs.tolist()) == set(att_of_reg.tolist())
+
+    # the facets of the mesh: every face between elements with different
+    # attributes is a facet, and the facets cover each facet of the polymesh
+    # that separates different attributes (or is on the boundary) exactly
+    mesh_facets = {tuple(sorted(f)): a for f, a in
+                   zip(mesh.facets, mesh.facet_attributes)}
+    for face, e_nums in face_elems.items():
+        if len(e_nums) == 2 and attrs[e_nums[0]] != attrs[e_nums[1]]:
+            assert face in mesh_facets
+        if len(e_nums) == 1:
+            assert face in mesh_facets
     ppts = np.array(pmesh.points)
+    covered = np.zeros(len(pmesh.facets))
+    for face, f_num in mesh_facets.items():
+        fp = pts[list(face)]
+        covered[f_num] += np.linalg.norm(_facet_normal(fp))
+        loop = ppts[pmesh.facets[f_num]]
+        n = _facet_normal(loop)
+        n /= np.linalg.norm(n)
+        assert np.abs((fp - loop[0]) @ n).max() < 1e-8
+    for f_num, (r_a, r_b) in enumerate(pmesh.facet_neighbors):
+        measure = np.linalg.norm(_facet_normal(ppts[pmesh.facets[f_num]]))
+        if min(r_a, r_b) < 0 or att_of_reg[r_a] != att_of_reg[r_b]:
+            assert np.isclose(covered[f_num], measure, atol=1e-9)
+        else:
+            assert covered[f_num] == 0
     cell_vols = np.array(pmesh.volumes)
     cents = pts[elems].mean(axis=1)
     for att in np.unique(att_of_reg):
