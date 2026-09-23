@@ -4,9 +4,11 @@ import os
 import numpy as np
 import pytest
 
+import microstructpy as msp
 from microstructpy import cli
 from microstructpy.meshing import PolyMesh
 from microstructpy.meshing import TriMesh
+from microstructpy.seeding import SeedList
 
 PERIODIC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <input>
@@ -46,16 +48,17 @@ PERIODIC_XML = """<?xml version="1.0" encoding="UTF-8"?>
         <mesh_min_angle> 20 </mesh_min_angle>
         <mesh_max_edge_length> 0.1 </mesh_max_edge_length>
         <verify> True </verify>
+        {extra}
     </settings>
 </input>
 """
 
 
-def _run(tmp_path, periodic):
+def _run(tmp_path, periodic, extra=''):
     out_dir = tmp_path / 'out'
     xml = tmp_path / 'input.xml'
     xml.write_text(PERIODIC_XML.format(periodic=periodic,
-                                       directory=str(out_dir)))
+                                       directory=str(out_dir), extra=extra))
     cli.run_file(str(xml))
     return out_dir
 
@@ -96,6 +99,31 @@ def test_periodic_run_single_axis(tmp_path):
     tmesh = TriMesh.from_file(str(out_dir / 'trimesh.txt'))
     assert tmesh.periodic_axes == [False, True]
     assert list(tmesh.periodic_nodes) == [1]
+
+
+def test_periodic_margin_edge_opt(tmp_path):
+    # the margin is passed to the edge optimization: no piece thinner than
+    # the margin (half of mesh_max_edge_length) is left at the faces,
+    # unless the optimizer could not fix it, and the mesh is periodic
+    extra = '<edge_opt> True </edge_opt>\n<edge_opt_n_iter> 3 '
+    extra += '</edge_opt_n_iter>\n<periodic_margin> auto </periodic_margin>'
+    out_dir = _run(tmp_path, 'xy', extra)
+    pmesh = PolyMesh.from_file(str(out_dir / 'polymesh.txt'))
+    tmesh = TriMesh.from_file(str(out_dir / 'trimesh.txt'))
+    assert pmesh.periodic_axes == [True, True]
+    assert np.isclose(sum(pmesh.volumes), 9.0)
+    pts = np.array(tmesh.points)
+    for axis in (0, 1):
+        for lo, hi in tmesh.periodic_nodes[axis]:
+            shift = np.zeros(2)
+            shift[axis] = 3
+            assert np.array_equal(pts[hi], pts[lo] + shift)
+    # the seeds written are the optimized ones: they reproduce the mesh
+    seeds = SeedList.from_file(str(out_dir / 'seeds.txt'))
+    domain = msp.geometry.Square(side_length=3, corner=(0, 0))
+    pmesh_re = PolyMesh.from_seeds(seeds, domain, periodic=True)
+    assert np.allclose(np.sort(pmesh_re.volumes), np.sort(pmesh.volumes),
+                       rtol=0, atol=1e-9)
 
 
 def test_periodic_margin_setting():

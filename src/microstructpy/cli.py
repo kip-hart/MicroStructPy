@@ -369,10 +369,12 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             edge length in the PolyMesh. The seeds associated with the
             shortest edge are displaced randomly to find improvement and
             this process iterates until `n_iter` attempts have been made
-            for a given edge. Defaults to False.
+            for a given edge. In periodic domains with a `periodic_margin`,
+            the pieces of the cells at the periodic faces that are thinner
+            than the margin are optimized too. Defaults to False.
         edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
-            edge during optimization. Ignored if `edge_opt` set to False.
-            Defaults to 100.
+            edge (or thin piece) during optimization. Ignored if `edge_opt`
+            set to False. Defaults to 100.
         mesher (str): {'raster' | 'Triangle/TetGen' | 'Triangle'  | 'TetGen' |
             'gmsh'}
             specify the mesh generator. Default is 'Triangle/TetGen'.
@@ -426,7 +428,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             ``'auto'`` uses half the target edge length of the mesh
             (``mesh_max_edge_length`` or, from ``mesh_max_volume``, the
             edge of the equilateral triangle or regular tetrahedron of that
-            volume). Defaults to 0 (no margin).
+            volume). With `edge_opt`, the pieces of the cells at the
+            periodic faces thinner than the margin are thickened or
+            removed by moving their seeds. Defaults to 0 (no margin).
 
     .. _`Specifying Colors`: https://matplotlib.org/users/colors.html
     .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/tutorials/colors/colormaps.html
@@ -491,6 +495,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     # ----------------------------------------------------------------------- #
     seed_basename = 'seeds.txt'
     seed_filename = os.path.join(directory, seed_basename)
+    margin = _periodic_margin(periodic_margin, domain.n_dim,
+                              mesh_max_volume, mesh_max_edge_length)
     if restart and os.path.exists(seed_filename):
         # Read seeds from file
         if verbose:
@@ -513,8 +519,6 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         kw = 'position'
         rng_seed = rng_seeds.get(kw, 0)
         pos_dists = {i: p[kw] for i, p in enumerate(phases) if kw in p}
-        margin = _periodic_margin(periodic_margin, domain.n_dim,
-                                  mesh_max_volume, mesh_max_edge_length)
         seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose,
                        periodic=periodic, periodic_margin=margin)
 
@@ -522,10 +526,14 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     seeds_types = filetypes.get('seeds', [])
     if not isinstance(seeds_types, list):
         seeds_types = [seeds_types]
-    for seeds_type in seeds_types:
-        fname = os.path.splitext(seed_filename)[0] + '.' + seeds_type
-        if seeds_created or not os.path.exists(fname):
-            seeds.write(fname, format=seeds_type)
+
+    def write_seeds(force=False):
+        for seeds_type in seeds_types:
+            fname = os.path.splitext(seed_filename)[0] + '.' + seeds_type
+            if force or seeds_created or not os.path.exists(fname):
+                seeds.write(fname, format=seeds_type)
+
+    write_seeds()
 
     # ----------------------------------------------------------------------- #
     # Plot Seeds                                                              #
@@ -536,18 +544,21 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     elif type(plot_types) is not list:
         plot_types = [plot_types]
 
-    plot_files = []
-    for ext in plot_types:
-        fname = os.path.join(directory, 'seeds.' + str(ext))
-        if seeds_created or not os.path.exists(fname):
-            plot_files.append(fname)
+    def plot_seed_files(force=False):
+        plot_files = []
+        for ext in plot_types:
+            fname = os.path.join(directory, 'seeds.' + str(ext))
+            if force or seeds_created or not os.path.exists(fname):
+                plot_files.append(fname)
 
-    if plot_files and verbose:
-        print('Plotting seeds.')
+        if plot_files and verbose:
+            print('Plotting seeds.')
 
-    if plot_files:
-        plot_seeds(seeds, phases, domain, plot_files, plot_axes, color_by,
-                   colormap, **seeds_kwargs)
+        if plot_files:
+            plot_seeds(seeds, phases, domain, plot_files, plot_axes, color_by,
+                       colormap, **seeds_kwargs)
+
+    plot_seed_files()
 
     # ----------------------------------------------------------------------- #
     # Create Polygon Mesh                                                     #
@@ -570,7 +581,15 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             print('Creating polygon mesh.')
 
         pmesh = PolyMesh.from_seeds(seeds, domain, edge_opt, edge_opt_n_iter,
-                                    verbose, periodic=periodic)
+                                    verbose, periodic=periodic,
+                                    periodic_margin=margin)
+        if edge_opt:
+            # the optimization moved seeds: their files and plots are
+            # updated to the seeds that produce the polygon mesh
+            if verbose:
+                print('Updating the seeds moved by the edge optimization.')
+            write_seeds(force=True)
+            plot_seed_files(force=True)
 
     # Write polymesh
     poly_types = filetypes.get('poly', [])

@@ -60,7 +60,10 @@ a thin piece of itself on the opposite face and very small elements there.
 margin of a periodic face or crosses it by less than the margin; ``auto``
 sets the margin to half the target edge length of the mesh.
 The edge optimization removes the shortest edges of the polygonal mesh, for
-the same reason.
+the same reason, and with the margin it also thickens or removes the pieces
+of the grains at the periodic faces that are thinner than the margin, which
+the placement of the seeds alone cannot prevent: a grain extends beyond its
+seed, and its corners can cross a face by a small amount.
 
 The plots are colored by seed number, so that the pieces of a grain on
 opposite faces of the domain have the same color.

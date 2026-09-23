@@ -558,7 +558,7 @@ class PolyMesh(object):
     # ----------------------------------------------------------------------- #
     @classmethod
     def from_seeds(cls, seedlist, domain, edge_opt=False, n_iter=100,
-                   verbose=False, periodic=False):
+                   verbose=False, periodic=False, periodic_margin=0.0):
         """Create from :class:`.SeedList` and a domain.
 
         This function creates a polygon/polyhedron mesh from a seed list and
@@ -574,6 +574,11 @@ class PolyMesh(object):
         in the polygonal/polyhedral mesh. Short edges cause numerical
         issues in finite element analysis - setting `edge_opt` to True can
         improve mesh quality with minimal changes to the microstructure.
+        In periodic meshes, the cells that cross a periodic face are split
+        into pieces, and a piece that is thin (the cell barely crosses the
+        face) forces very small elements: with a positive `periodic_margin`,
+        the optimization also thickens or removes the pieces thinner than
+        the margin.
 
         Args:
             seedlist (SeedList): A list of seeds in the microstructure.
@@ -583,10 +588,15 @@ class PolyMesh(object):
                 edge length in the PolyMesh. The seeds associated with the
                 shortest edge are displaced randomly to find improvement and
                 this process iterates until `n_iter` attempts have been made
-                for a given edge. Defaults to False.
+                for a given edge. A trial is kept when the shortest feature
+                that it changes (an edge, or the thickness of a piece at a
+                periodic face) gets longer: the features that it creates
+                are all longer than the shortest one that it removes. The
+                accepted displacements are applied to `seedlist`. Defaults
+                to False.
             n_iter (int): *(optional)* Maximum number of iterations per edge
-                during optimization. Ignored if `edge_opt` set to False.
-                Defaults to 100.
+                (or per thin piece) during optimization. Ignored if
+                `edge_opt` set to False. Defaults to 100.
             verbose (bool): *(optional)* Print status of edge optimization to
                 screen. Defaults to False.
             periodic (bool, list, or str): *(optional)* Periodicity of the
@@ -598,6 +608,14 @@ class PolyMesh(object):
                 and the points and facets on opposite faces are paired
                 (see ``periodic_points`` and ``periodic_facets``).
                 Defaults to False.
+            periodic_margin (float): *(optional)* With `edge_opt`, the
+                minimum thickness of the pieces of the cells at the
+                periodic faces (their extent normal to the face). The seeds
+                of a thinner piece and of its neighbors are moved, normal
+                to the face, until the piece is at least this thick or the
+                cell no longer crosses the face. Ignored if `edge_opt` is
+                False or the mesh is not periodic. Defaults to 0 (only the
+                shortest edge is optimized).
 
         Returns:
             PolyMesh: A polygon/polyhedron mesh.
@@ -852,84 +870,10 @@ class PolyMesh(object):
         if is_periodic:
             pmesh._set_periodic_pairs(per_axes, dom_lims)
 
-        # short edge optimization
+        # short edge (and thin periodic piece) optimization
         if edge_opt:
-            # Find the shortest edge
-            edge_lens = _edge_lengths(pmesh)
-            min_edge = _shortest_edge(edge_lens)
-            min_len = edge_lens[min_edge]['length']
-
-            # Format verbose print string
-            n_kps = len(pmesh.points)
-            n_kp_space = int(np.log10(n_kps)) + 1
-            n_iter_space = int(np.log10(n_iter))
-            v_fmt = 'min length: {0:.3e} | '
-            v_fmt += 'edge: {1[0]:' + str(n_kp_space) + 'd}, '
-            v_fmt += '{1[1]:' + str(n_kp_space) + 'd} | '
-            v_fmt += 'n iter: {2:' + str(n_iter_space) + 'd} / '
-            v_fmt += str(n_iter)
-
-            i_n_attempts = 0
-            while i_n_attempts < n_iter:
-                if verbose:
-                    print(v_fmt.format(min_len, min_edge, i_n_attempts))
-
-                # Seeds adjacent to the shortest edge
-                e_regions = [r for r in edge_lens[min_edge]['regions']
-                             if r >= 0]
-                e_seeds = sorted({int(pmesh.seed_numbers[r])
-                                  for r in e_regions})
-                edge_pts = np.array(pmesh.points)[list(min_edge)]
-
-                # Displace the seeds rigidly, on a copy of the seed list.
-                # The step is a random fraction of 0.1 x the equivalent
-                # radius of the seed, normal to the edge.
-                trial_seeds = copy.deepcopy(seedlist)
-                steps = {}
-                for seed_num in e_seeds:
-                    seed = seedlist[seed_num]
-                    pos = np.array(seed.position, dtype='float')
-                    with np.errstate(divide='ignore', invalid='ignore'):
-                        e_norm_vec = _point_line_vec(pos, edge_pts)
-                    if not np.all(np.isfinite(e_norm_vec)):
-                        continue
-                    if n_dim == 2:
-                        r_eq = np.sqrt(seed.volume / np.pi)
-                    else:
-                        r_eq = np.cbrt(3 * seed.volume / (4 * np.pi))
-                    step_frac = 2 * np.random.rand() - 1  # [-1, 1]
-                    steps[seed_num] = 0.1 * step_frac * r_eq * e_norm_vec
-                    _displace_seed(trial_seeds[seed_num], steps[seed_num])
-
-                # Create New Polygonal Mesh
-                try:
-                    new_pmesh = cls.from_seeds(trial_seeds, domain,
-                                               edge_opt=False,
-                                               periodic=periodic)
-                except AssertionError:
-                    i_n_attempts += 1
-                    continue
-
-                new_edge_lens = _edge_lengths(new_pmesh)
-                new_min_edge = _shortest_edge(new_edge_lens)
-                new_min_len = new_edge_lens[new_min_edge]['length']
-
-                if new_min_len > min_len:
-                    # Accept the trial: apply the same displacements to the
-                    # caller's seeds, so that they reproduce the new mesh
-                    for seed_num, step in steps.items():
-                        _displace_seed(seedlist[seed_num], step)
-
-                    if new_min_edge != min_edge:
-                        i_n_attempts = 0
-                    else:
-                        i_n_attempts += 1
-                    edge_lens = new_edge_lens
-                    pmesh = new_pmesh
-                    min_len = new_min_len
-                    min_edge = new_min_edge
-                else:
-                    i_n_attempts += 1
+            pmesh = _optimize_features(cls, pmesh, seedlist, domain, n_iter,
+                                       verbose, periodic, periodic_margin)
         return pmesh
 
     # ----------------------------------------------------------------------- #
@@ -2312,13 +2256,301 @@ def _point_line_vec(pt, line_pts):
     return u_vec
 
 
-def _displace_seed(seed, step):
+def _displace_seed(seed, step, dom_lims=None, per_axes=None):
     """Translate a seed rigidly by ``step``.
 
     The position setter of the seed translates the geometry and the
-    breakdown along with the position.
+    breakdown along with the position. Along the periodic axes (when
+    ``dom_lims`` and ``per_axes`` are given), the position is wrapped back
+    into the domain: a seed translated by the period is the same seed.
     """
     if isinstance(seed.breakdown, tuple):
         seed.breakdown = [list(b) for b in seed.breakdown]
     pos = np.array(seed.position, dtype='float')
-    seed.position = (pos + np.array(step, dtype='float')).tolist()
+    pos += np.array(step, dtype='float')
+    if dom_lims is not None:
+        for axis, flag in enumerate(per_axes):
+            if flag:
+                lb, ub = dom_lims[axis]
+                pos[axis] = lb + (pos[axis] - lb) % (ub - lb)
+    seed.position = pos.tolist()
+
+
+# --------------------------------------------------------------------------- #
+# Edge / thin piece optimization                                              #
+# --------------------------------------------------------------------------- #
+_MAX_OPT_TRIALS_PER_ITER = 50  # safety cap: total trials <= this * n_iter
+
+
+def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
+                       periodic, periodic_margin):
+    """Lengthen the shortest features of a mesh by moving its seeds.
+
+    The features are the edges of the mesh and, in periodic meshes, the
+    thicknesses of the pieces of the cells at the periodic faces. The
+    target is the shortest feature or, with a positive margin, the
+    thinnest piece under the margin. The seeds around the target are
+    displaced on a copy of the seed list and the trial is kept when the
+    shortest feature that it changes gets longer: every feature that it
+    creates is longer than the shortest one that it removes (for the
+    shortest edge of the mesh, this is the usual criterion that the
+    shortest edge gets longer). A target that does not improve in
+    ``n_iter`` consecutive trials is left alone and the next one is taken;
+    the optimization ends when no target is left. The accepted
+    displacements are applied to ``seedlist``.
+
+    Returns:
+        PolyMesh: The optimized mesh.
+
+    """
+    n_dim = domain.n_dim
+    per_axes = _misc.periodic_axes(periodic, n_dim)
+    dom_lims = None
+    if any(per_axes):
+        dom_lims = _misc.periodic_domain_limits(domain)
+    scale = max([ub - lb for lb, ub in domain.limits])
+    tol = 1e-9 * scale
+
+    features = _mesh_features(pmesh, per_axes, dom_lims, scale)
+    n_kp_space = int(np.log10(max(len(pmesh.points), 1))) + 1
+    n_iter_space = int(np.log10(max(n_iter, 1))) + 1
+
+    stuck = set()
+    last_key = None
+    n_attempts = 0
+    n_trials = 0
+    max_trials = _MAX_OPT_TRIALS_PER_ITER * n_iter
+    while n_trials < max_trials:
+        target = _select_target(features, periodic_margin, stuck)
+        if target is None:
+            break
+        if target['key'] != last_key:
+            last_key = target['key']
+            n_attempts = 0
+        if verbose:
+            print(_target_string(target, n_attempts, n_iter, n_kp_space,
+                                 n_iter_space))
+
+        steps = _trial_steps(target, seedlist, n_attempts, periodic_margin,
+                             dom_lims, per_axes, n_dim)
+        n_trials += 1
+        accepted = False
+        if steps:
+            trial_seeds = copy.deepcopy(seedlist)
+            for seed_num, step in steps.items():
+                _displace_seed(trial_seeds[seed_num], step, dom_lims,
+                               per_axes)
+            try:
+                new_pmesh = cls.from_seeds(trial_seeds, domain,
+                                           edge_opt=False, periodic=periodic)
+            except (AssertionError, ValueError):
+                new_pmesh = None
+            if new_pmesh is not None:
+                new_features = _mesh_features(new_pmesh, per_axes, dom_lims,
+                                              scale)
+                accepted = _accept_trial(new_features, features, tol)
+
+        if accepted:
+            # apply the same displacements to the caller's seeds, so that
+            # they reproduce the new mesh
+            for seed_num, step in steps.items():
+                _displace_seed(seedlist[seed_num], step, dom_lims, per_axes)
+            pmesh = new_pmesh
+            features = new_features
+            n_attempts = 0
+        else:
+            n_attempts += 1
+            if n_attempts >= n_iter or not steps:
+                stuck.add(target['key'])
+    return pmesh
+
+
+def _mesh_features(pmesh, per_axes, dom_lims, scale):
+    """Edges of the mesh and pieces of the cells at the periodic faces.
+
+    Each feature is a dict with its ``kind`` ('edge' or 'piece'), ``size``
+    (length or thickness normal to the face), a ``key`` that identifies it
+    geometrically across re-tessellations and the ``seeds`` around it.
+    """
+    pts = np.array(pmesh.points, dtype='float')
+    seed_nums = [int(s) for s in pmesh.seed_numbers]
+    features = []
+    edge_lens = _edge_lengths(pmesh)
+    for (kp1, kp2), info in edge_lens.items():
+        regions = [r for r in info['regions'] if r >= 0]
+        mid = 0.5 * (pts[kp1] + pts[kp2])
+        features.append({
+            'kind': 'edge',
+            'size': info['length'],
+            'key': ('edge',) + tuple(np.round(mid / scale, 6)),
+            'seeds': sorted({seed_nums[r] for r in regions}),
+            'kps': (kp1, kp2),
+            'pts': pts[[kp1, kp2]],
+            })
+    if dom_lims is None:
+        return features
+
+    for r, region in enumerate(pmesh.regions):
+        walls = set()
+        neighs = set()
+        for f in region:
+            for n in pmesh.facet_neighbors[f]:
+                if n < 0:
+                    walls.add(n)
+                elif n != r:
+                    neighs.add(seed_nums[n])
+        if not walls:
+            continue
+        kps = sorted({kp for f in region for kp in pmesh.facets[f]})
+        cen = pts[kps].mean(axis=0)
+        for wall in sorted(walls):
+            axis, side = divmod(-wall - 1, 2)
+            if not per_axes[axis]:
+                continue
+            # the region touches the wall: its extent normal to the wall
+            # is its thickness
+            features.append({
+                'kind': 'piece',
+                'size': np.ptp(pts[kps, axis]),
+                'key': ('piece', seed_nums[r], axis, side) +
+                tuple(np.round(cen / scale, 6)),
+                'seeds': sorted(neighs | {seed_nums[r]}),
+                'seed': seed_nums[r],
+                'axis': axis,
+                'side': side,
+                })
+    return features
+
+
+def _select_target(features, margin, stuck):
+    """The shortest feature, or the thinnest piece under the margin, that
+    is not stuck; None when there is no such target."""
+    sizes = np.array([f['size'] for f in features])
+    order = np.argsort(sizes, kind='stable')
+    cands = [order[0]]
+    cands += [i for i in order
+              if features[i]['kind'] == 'piece' and sizes[i] < margin]
+    for i in cands:
+        if features[i]['key'] not in stuck:
+            return features[i]
+    return None
+
+
+def _trial_steps(target, seedlist, n_attempts, margin, dom_lims, per_axes,
+                 n_dim):
+    """Displacements of the seeds around the target for one trial.
+
+    Edge: each seed is moved normal to the edge by a random fraction of
+    0.1 times its equivalent radius. Piece: the first trial pushes the
+    cell of the piece so that the piece reaches the margin, the second
+    retracts it so that the cell ends a margin inside the face (the cell
+    boundary moves by about half the displacement of the seed), and the
+    others move the seed of the piece normal to the face, and the seeds
+    of its neighbors along their lines to the seed of the piece (normal to
+    their facets with it), by random fractions of the margin or of 0.1
+    times their equivalent radii, whichever is larger.
+    """
+    steps = {}
+    if target['kind'] == 'piece':
+        axis = target['axis']
+        grow = np.zeros(n_dim)
+        grow[axis] = 1.0 if target['side'] == 0 else -1.0
+        thickness = target['size']
+        if n_attempts == 0 and margin > thickness:
+            steps[target['seed']] = 2.2 * (margin - thickness) * grow
+            return steps
+        if n_attempts == 1:
+            steps[target['seed']] = -2 * (thickness + margin) * grow
+            return steps
+        pos_piece = np.array(seedlist[target['seed']].position,
+                             dtype='float')
+
+    for seed_num in target['seeds']:
+        seed = seedlist[seed_num]
+        pos = np.array(seed.position, dtype='float')
+        if n_dim == 2:
+            r_eq = np.sqrt(seed.volume / np.pi)
+        else:
+            r_eq = np.cbrt(3 * seed.volume / (4 * np.pi))
+        step_max = 0.1 * r_eq
+        if target['kind'] == 'piece':
+            step_max = max(step_max, margin)
+            if seed_num == target['seed']:
+                u_vec = grow
+            else:
+                ref = _nearest_image(pos_piece.reshape(1, -1), pos,
+                                     dom_lims, per_axes)[0]
+                u_vec = ref - pos
+                if np.linalg.norm(u_vec) == 0:
+                    continue
+                u_vec /= np.linalg.norm(u_vec)
+        else:
+            edge_pts = target['pts']
+            if dom_lims is not None:
+                edge_pts = _nearest_image(edge_pts, pos, dom_lims, per_axes)
+            with np.errstate(divide='ignore', invalid='ignore'):
+                u_vec = _point_line_vec(pos, edge_pts)
+            if not np.all(np.isfinite(u_vec)):
+                continue
+        step_frac = 2 * np.random.rand() - 1  # [-1, 1]
+        steps[seed_num] = step_frac * step_max * u_vec
+    return steps
+
+
+def _nearest_image(pts, ref, dom_lims, per_axes):
+    """Translate ``pts`` (as a whole) by periods so that their center is
+    closest to ``ref``."""
+    pts = np.array(pts, dtype='float')
+    cen = pts.mean(axis=0)
+    shift = np.zeros(len(ref))
+    for axis, flag in enumerate(per_axes):
+        if flag:
+            length = dom_lims[axis][1] - dom_lims[axis][0]
+            shift[axis] = length * np.round((ref[axis] - cen[axis]) / length)
+    return pts + shift
+
+
+def _accept_trial(new_features, old_features, tol):
+    """Whether a trial improves the features that it changes: the shortest
+    feature that it creates is longer than the shortest one that it
+    removes (the features are matched by their keys, and a removed and a
+    created feature of the same size cancel out)."""
+    old_keys = set([f['key'] for f in old_features])
+    new_keys = set([f['key'] for f in new_features])
+    removed = sorted([f['size'] for f in old_features
+                      if f['key'] not in new_keys])
+    added = sorted([f['size'] for f in new_features
+                    if f['key'] not in old_keys])
+    i = j = 0
+    kept_removed = []
+    kept_added = []
+    while i < len(removed) and j < len(added):
+        if abs(removed[i] - added[j]) <= tol:
+            i += 1
+            j += 1
+        elif removed[i] < added[j]:
+            kept_removed.append(removed[i])
+            i += 1
+        else:
+            kept_added.append(added[j])
+            j += 1
+    kept_removed += removed[i:]
+    kept_added += added[j:]
+    if not kept_removed:
+        return False
+    if not kept_added:
+        return True
+    return kept_added[0] > kept_removed[0] + tol
+
+
+def _target_string(target, n_attempts, n_iter, n_kp_space, n_iter_space):
+    if target['kind'] == 'edge':
+        kp_fmt = '{0:' + str(n_kp_space) + 'd}'
+        s = 'min length: {0:.3e} | edge: '.format(target['size'])
+        s += ', '.join([kp_fmt.format(kp) for kp in target['kps']])
+    else:
+        face = 'xyz'[target['axis']] + '-+'[target['side']]
+        s = 'thickness: {0:.3e} | piece: seed {1:d}, face {2}'
+        s = s.format(target['size'], target['seed'], face)
+    s += ' | n iter: {0:' + str(n_iter_space) + 'd} / {1:d}'
+    return s.format(n_attempts, n_iter)

@@ -46,6 +46,18 @@ Added
   it by less, is placed elsewhere, since it would leave a thin piece of its
   grain on the opposite face and elements much smaller than the target size
   of the mesh there. ``auto`` uses half the target edge length of the mesh.
+- ``PolyMesh.from_seeds(edge_opt=True, periodic_margin=...)``: the edge
+  optimization of periodic meshes treats the thickness of each piece of a
+  cell at a periodic face as a feature like an edge, and moves the seeds of
+  the pieces thinner than the margin (and of their neighbors) normal to the
+  face until the piece reaches the margin or the cell no longer crosses the
+  face. The CLI passes its ``periodic_margin`` setting on. A trial of the
+  optimization is now kept when the shortest feature that it changes gets
+  longer (for the shortest edge of the mesh, the criterion is unchanged),
+  a target that does not improve in ``n_iter`` trials is left alone and the
+  next one is taken, and the seeds moved across a periodic face are wrapped
+  back into the domain. The CLI writes and plots the seeds again after the
+  optimization, so that the seed files match the polygonal mesh.
 
 Fixed
 '''''

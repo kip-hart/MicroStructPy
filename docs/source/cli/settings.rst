@@ -277,11 +277,23 @@ This optimization process, however, will increase the time to generate a
 polygonal mesh.
 To track the progress of the optimizer, set ``verbose`` to ``True``.
 
+In a periodic domain (see :ref:`cli_domain`), the cells that cross a periodic
+face are split into pieces, and a cell that barely crosses a face leaves a
+thin piece on the opposite face, which forces very small elements there.
+With ``edge_opt`` and a positive ``periodic_margin``, the optimizer also
+treats the thickness of each piece at a periodic face as a feature of the
+mesh, like an edge, and moves the seeds of every piece thinner than the
+margin (and of its neighbors) normal to the face, until the piece is at least
+as thick as the margin or the cell no longer crosses the face.
+A change is kept when the shortest feature it modifies gets longer, so the
+shorter features of the mesh never get worse.
+
 edge_opt_n_iter
 ---------------
 
 This field specifies how many times the optimizer should attempt to increase
-the length of the shortest edge in the polygonal mesh.
+the length of the shortest edge in the polygonal mesh (or the thickness of a
+piece at a periodic face).
 The default is ``<edge_opt_n_iter> 100 </edge_opt_n_iter>``, which limits the
 optimizer to 100 attempts per edge.
 This field is ignored if ``edge_opt`` is set to ``False``.
@@ -353,6 +365,11 @@ elements much smaller than the target size of the mesh there.
 The value ``auto`` uses half the target edge length of the mesh, taken from
 ``mesh_max_edge_length`` or, if it is not set, from ``mesh_max_volume``.
 A large margin makes the seeds harder to place near the faces.
+The margin also applies to the cells: with ``edge_opt``, the optimizer
+thickens or removes the pieces of the cells at the periodic faces that are
+thinner than the margin, which the placement of the seeds alone cannot
+prevent (a cell extends beyond its seed, and its corners can cross a face
+by a small amount).
 The default is ``<periodic_margin> 0 </periodic_margin>``, which turns off
 the margin. It has no effect on non-periodic domains.
 

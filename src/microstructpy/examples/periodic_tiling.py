@@ -29,19 +29,29 @@ phases_2d = [
 ]
 
 # Create seeds and position them, periodic in x and y (the seeds fill 90%
-# of the area, so that all of them can be placed)
+# of the area, so that all of them can be placed). The margin keeps the
+# seeds from ending within half a target edge length of a periodic face,
+# or crossing one by less, which would leave thin pieces of grains on the
+# opposite face and very small triangles there.
+max_volume = 0.004
+h_target = np.sqrt(4 * max_volume / np.sqrt(3))
+margin = 0.5 * h_target
 seeds_2d = msp.seeding.SeedList.from_info(phases_2d, 0.9 * domain_2d.area,
                                           rng_seeds={'size': 1})
-seeds_2d.position(domain_2d, rng_seed=1, periodic=True)
+seeds_2d.position(domain_2d, rng_seed=1, periodic=True,
+                  periodic_margin=margin)
 
 # Create the polygonal and triangular meshes. The edge optimization moves
 # the seeds slightly to remove the shortest edges of the polygonal mesh,
-# which would otherwise force very small triangles in the mesh.
+# which would otherwise force very small triangles in the mesh; with the
+# margin, it also thickens or removes the pieces of the grains at the
+# periodic faces that are thinner than the margin.
 pmesh_2d = msp.meshing.PolyMesh.from_seeds(seeds_2d, domain_2d,
                                            periodic=True, edge_opt=True,
-                                           n_iter=25)
+                                           n_iter=25, periodic_margin=margin)
 tmesh_2d = msp.meshing.TriMesh.from_polymesh(pmesh_2d, phases_2d,
-                                             min_angle=25, max_volume=0.004)
+                                             min_angle=25,
+                                             max_volume=max_volume)
 
 # Plot the tiled polygonal mesh, with each grain in one color, and the
 # tiled triangular mesh, with the matching nodes on the periodic faces

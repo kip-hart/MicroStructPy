@@ -340,7 +340,8 @@ matching order.
 
 A seed that barely crosses a periodic face, or ends just inside it, leaves a
 thin piece of its grain on the opposite face and very small elements there;
-the ``periodic_margin`` setting rejects such positions (see
+the ``periodic_margin`` setting rejects such positions and, with
+``edge_opt``, moves the seeds of the cells that still leave such pieces (see
 :ref:`cli_settings`).
 
 The mesher must be Triangle/TetGen for periodic microstructures (with gmsh the

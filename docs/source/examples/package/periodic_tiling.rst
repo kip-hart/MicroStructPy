@@ -26,11 +26,17 @@ The seeds are created with :func:`~microstructpy.seeding.SeedList.from_info`
 and positioned with :func:`~microstructpy.seeding.SeedList.position`, with
 ``periodic=True``: a seed that crosses a face of the domain is also checked
 for overlaps on the opposite face.
+The ``periodic_margin`` keeps the seeds from ending within half a target
+edge length of a face, or crossing one by less, since such seeds leave thin
+pieces of grains on the opposite face and very small triangles there.
 The polygonal mesh is created with
 :func:`~microstructpy.meshing.PolyMesh.from_seeds`, again with
 ``periodic=True``, and the triangular mesh with
 :func:`~microstructpy.meshing.TriMesh.from_polymesh`, which reads the
 periodicity from the polygonal mesh.
+The edge optimization of the polygonal mesh (``edge_opt``) lengthens its
+shortest edges and, with the same margin, thickens or removes the pieces of
+the grains at the faces that are thinner than the margin.
 The periodicity can be restricted to some axes, for example
 ``periodic='x'``.
 
