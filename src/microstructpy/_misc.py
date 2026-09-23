@@ -4,6 +4,7 @@ This private module contains miscellaneous functions.
 """
 
 import ast
+import re
 
 import numpy as np
 
@@ -40,6 +41,12 @@ def from_str(string):
 
     This function takes a string and converts it into a number or a list.
 
+    Booleans are recognized regardless of case (``true``, ``FALSE``, ...),
+    on their own or inside a tuple/list such as ``(true, false)``.
+    Strings that merely contain these words (``true_cdf.csv``) are returned
+    unchanged. Values that Python does not accept as literals but ``float``
+    does, such as ``inf``, ``-inf`` and ``nan``, are converted to floats.
+
     Args:
         string (str): The string.
 
@@ -49,25 +56,32 @@ def from_str(string):
     """
     s = string.strip()
     try:
-        val = ast.literal_eval(s)
+        return ast.literal_eval(s)
     except (ValueError, SyntaxError):
-        if 'true' in s.lower():
-            tmp_s = s.lower().replace('true', 'True')
-            tmp_val = from_str(tmp_s)
-            if tmp_val != tmp_s:
-                val = tmp_val
-            else:
-                val = s
-        elif 'false' in s.lower():
-            tmp_s = s.lower().replace('false', 'False')
-            tmp_val = from_str(tmp_s)
-            if tmp_val != tmp_s:
-                val = tmp_val
-            else:
-                val = s
-        else:
-            val = s
-    return val
+        pass
+
+    # Booleans, case-insensitive
+    if s.lower() in ('true', 'false'):
+        return s.lower() == 'true'
+
+    # Booleans inside a literal, e.g. '(true, False)'
+    norm_s = _bool_re.sub(lambda m: m.group(0).capitalize(), s)
+    if norm_s != s:
+        try:
+            return ast.literal_eval(norm_s)
+        except (ValueError, SyntaxError):
+            pass
+
+    # Floats that are not Python literals: inf, -inf, nan
+    try:
+        return float(s)
+    except ValueError:
+        pass
+
+    return s
+
+
+_bool_re = re.compile(r'\b(true|false)\b', flags=re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------- #

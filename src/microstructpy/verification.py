@@ -410,10 +410,7 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
         plt.gca().add_artist(color_legend)
 
         plt.grid(True)
-        xlbl = ' '.join([s.capitalize() for s in kw.split('_')])
-        xlbl = xlbl.replace('Rad', '(radians)').replace('Deg', '(degrees)')
-        xlbl = xlbl.replace('Orientation', 'Orientation (degrees)')
-        plt.xlabel(xlbl)
+        plt.xlabel(_axis_label(kw))
         plt.ylabel('Probability Density Function')
 
         plt.ylim([0, 1.1 * ymax])
@@ -456,10 +453,7 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
         plt.gca().add_artist(color_legend)
 
         plt.grid(True)
-        xlbl = ' '.join([s.capitalize() for s in kw.split('_')])
-        xlbl = xlbl.replace('Rad', '(radians)').replace('Deg', '(degrees)')
-        xlbl = xlbl.replace('Orientation', 'Orientation (degrees)')
-        plt.xlabel(xlbl)
+        plt.xlabel(_axis_label(kw))
         plt.ylabel('Cumulative Distribution Function')
 
         plt.ylim([0, 1])
@@ -478,23 +472,34 @@ def plot_distributions(seeds, phases, dirname='.', ext='png', poly_mesh=None,
         plt.close()
 
 
+def _axis_label(kw):
+    """Axis label for a phase keyword, e.g. 'angle_rad' -> 'Angle (radians)'
+    """
+    units = {'rad': '(radians)', 'deg': '(degrees)'}
+    words = [units.get(s, s.capitalize()) for s in kw.split('_')]
+    label = ' '.join(words)
+    if kw == 'orientation':
+        label += ' (degrees)'
+    return label
+
+
 def _plot_inp_pdf(kw, i, phase):
     ymax = 0
     inp_dist = phase[kw]
     color = phase.get('color', 'C' + str(i % 10))
-    if kw in ori_deg_kws and phase[kw] == 'random':
+    if kw in ori_deg_kws and _is_random(inp_dist):
         x_plt = [0, 360]
         y_plt = [1 / 360, 1 / 360]
         plt.plot(x_plt, y_plt, color=color, ls=':')
         ymax = 1 / 360
 
-    elif kw in ori_rad_kws and phase[kw] == 'random':
+    elif kw in ori_rad_kws and _is_random(inp_dist):
         x_plt = [0, 2 * np.pi]
         y_plt = [0.5 / np.pi, 0.5 / np.pi]
         plt.plot(x_plt, y_plt, color=color, ls=':')
         ymax = y_plt[0]
 
-    elif phase[kw] == 'random':
+    elif _is_random(inp_dist):
         e_str = 'Cannot create PDF for random setting'
         e_str += ' of keyword <' + str(kw) + '>'
         raise NotImplementedError(e_str)
@@ -505,7 +510,7 @@ def _plot_inp_pdf(kw, i, phase):
         inp_deg = np.rad2deg(np.arctan2(st, ct))
         plt.plot([inp_deg, inp_deg], [0, 1e12], color=color, ls=':')
 
-    elif isinstance(inp_dist, list):
+    elif _is_vector(inp_dist):
         for j, dist in enumerate(inp_dist):
             try:
                 lb = dist.ppf(1e-3)
@@ -540,16 +545,16 @@ def _plot_inp_cdf(kw, i, phase):
 
     inp_dist = phase[kw]
     color = phase.get('color', 'C' + str(i % 10))
-    if kw in ori_deg_kws and phase[kw] == 'random':
+    if kw in ori_deg_kws and _is_random(inp_dist):
         x_plt = [0, 360]
         y_plt = [0, 1]
         plt.plot(x_plt, y_plt, color=color, ls=':')
-    elif kw in ori_rad_kws and phase[kw] == 'random':
+    elif kw in ori_rad_kws and _is_random(inp_dist):
         x_plt = [0, 2 * np.pi]
         y_plt = [0, 1]
         plt.plot(x_plt, y_plt, color=color, ls=':')
 
-    elif phase[kw] == 'random':
+    elif _is_random(inp_dist):
         e_str = 'Cannot create CDF for random setting'
         e_str += ' of keyword <' + str(kw) + '>'
         raise NotImplementedError(e_str)
@@ -560,7 +565,7 @@ def _plot_inp_cdf(kw, i, phase):
         inp_deg = np.rad2deg(np.arctan2(st, ct))
         plt.plot([inp_deg, inp_deg], [0, 1], color=color, ls=':')
 
-    elif isinstance(inp_dist, list):
+    elif _is_vector(inp_dist):
         for j, dist in enumerate(inp_dist):
             try:
                 x_plt = dist.ppf(quants)
@@ -610,8 +615,9 @@ def _plot_out_pdf(kw, i, phase, comp_phase):
         line_colors.append(Line2D([0], [0], color=color))
         line_labels.append(name)
 
-    elif isinstance(inp_dist, list):
-        for j, vals in enumerate(comp_vals):
+    elif _is_vector(inp_dist):
+        # vector-valued parameter: one histogram per component
+        for j, vals in enumerate(comp_vals.T):
             ys, xbs, _ = plt.hist(vals, density=True, histtype='step',
                                   color=color)
             ymax = max(ymax, np.max(ys))
@@ -656,8 +662,9 @@ def _plot_out_cdf(kw, i, phase, comp_phase):
         line_colors.append(Line2D([0], [0], color=color))
         line_labels.append(name)
 
-    elif isinstance(inp_dist, list):
-        for j, vals in enumerate(comp_vals):
+    elif _is_vector(inp_dist):
+        # vector-valued parameter: one curve per component
+        for j, vals in enumerate(comp_vals.T):
 
             x_plt = np.quantile(vals, quants)
             y_plt = quants
@@ -779,9 +786,10 @@ def write_mle_phases(inp_phases, out_phases, filename='mles.txt'):
                 row_dict = {'i': i, 'name': name, 'kw': kw}
                 rows_dict.append(row_dict)
                 continue
-            if isinstance(inp_dist, list):
+            if _is_vector(inp_dist):
                 for j in range(len(inp_dist)):
-                    row_dict = {'i': i, 'name': name, 'kw': kw + '[' + j + ']'}
+                    kw_j = kw + '[' + str(j) + ']'
+                    row_dict = {'i': i, 'name': name, 'kw': kw_j}
                     inp_dict = _dist_dict(inp_dist[j])
                     out_dict = _dist_dict(out_dist[j])
                     for key in inp_dict:
@@ -845,10 +853,10 @@ def _mle_hdr(all_kws):
             h2 = 'Parameter'
         elif kw.endswith('_inp'):
             h1 = 'Input'
-            h2 = kw.rstrip('_inp')
+            h2 = kw[:-len('_inp')]
         elif kw.endswith('_out'):
             h1 = 'Output'
-            h2 = kw.rstrip('_out')
+            h2 = kw[:-len('_out')]
         else:
             raise ValueError('Cannot creating heading for keyword ' + str(kw))
         hdr1.append(h1)
@@ -878,55 +886,117 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
     Returns:
         list: List with the same size and dictionary keywords as phases,
         but with error statistics dictionaries in each entry.
+        Vector-valued parameters (e.g. ``side_lengths``) get a list with
+        one dictionary per component.
+
+    .. note::
+
+        In 2D, a ``random`` orientation (``angle``, ``angle_deg``,
+        ``angle_rad`` or ``orientation``) is compared against a uniform
+        distribution over the full circle. Orientation matrices are compared
+        through their rotation angle, in degrees. In 3D, the statistics of
+        the ``orientation`` are not computed.
 
     """
 
     if verif_mask is None:
         verif_mask = np.full(len(seeds), True)
 
+    n_dim = len(seeds[0].position)
+
+    # Work on a copy of the phases: random orientations are replaced by
+    # their distributions without altering the caller's input.
+    phases = copy.deepcopy(phases)
+    for phase in phases:
+        for kw in phase:
+            if not _is_random(phase[kw]):
+                continue
+            if kw in ('angle', 'angle_deg'):
+                phase[kw] = scipy.stats.uniform(loc=0, scale=360)
+            elif kw == 'angle_rad':
+                phase[kw] = scipy.stats.uniform(loc=0, scale=2 * np.pi)
+
     # Organize the geometry values
     init_phases = _phase_values(seeds, phases, verif_mask=verif_mask)
     outp_phases = _phase_values(fit_seeds, phases, poly_mesh, verif_mask)
 
     err_phases = []
-    for i in range(len(phases)):
-        i_phase = init_phases[i]
-        o_phase = outp_phases[i]
-        phase = phases[i]
-        for kw in phase:
-            if kw in ('angle', 'angle_deg') and phase[kw] == 'random':
-                phase[kw] = scipy.stats.uniform(loc=0, scale=360)
-            if kw == 'angle_rad':
-                phase[kw] = scipy.stats.uniform(loc=0, scale=2 * np.pi)
-
-        err_io = {kw: _kw_errs(i_phase[kw], o_phase[kw]) for kw in i_phase}
-        err_po = {kw: _kw_stats(phase[kw], o_phase[kw]) for kw in o_phase}
-
+    for i_phase, o_phase, phase in zip(init_phases, outp_phases, phases):
         err_phase = {}
         for kw in i_phase:
-            if kw == 'orientation':
-                err_phase[kw] = {}
-                continue
-            val = err_io[kw].copy()
-            val.update(err_po[kw])
-            err_phase[kw] = val
+            i_vals = i_phase[kw]
+            o_vals = o_phase.get(kw, [])
+            inp_dist = phase[kw]
+
+            if kw in ('orientation', 'matrix'):
+                if n_dim != 2:
+                    err_phase[kw] = {}
+                    continue
+
+                # 2D: compare the rotation angles, in degrees
+                if _is_random(inp_dist):
+                    inp_dist = scipy.stats.uniform(loc=0, scale=360)
+                    i_vals = _matrix_angles(i_vals, wrap=True)
+                    o_vals = _matrix_angles(o_vals, wrap=True)
+                else:
+                    inp_dist = _matrix_angles([inp_dist])[0]
+                    i_vals = _matrix_angles(i_vals)
+                    o_vals = _matrix_angles(o_vals)
+
+            errs = _kw_errs(i_vals, o_vals)
+            stats = _kw_stats(inp_dist, o_vals)
+            err_phase[kw] = _merge_stats(errs, stats)
 
         err_phases.append(err_phase)
     return err_phases
 
 
-def _kw_errs(y_exp, y_act):
-    if np.array(y_exp).ndim > 1:
-        return [_kw_errs(*tup) for tup in zip(y_exp, y_act)]
+def _matrix_angles(matrices, wrap=False):
+    """Rotation angles, in degrees, of 2D rotation matrices
 
+    None entries are preserved. If ``wrap`` is True, the angles are in
+    [0, 360), otherwise in (-180, 180].
+    """
+    angles = []
+    for m in matrices:
+        if m is None:
+            angles.append(None)
+            continue
+        ang = np.rad2deg(np.arctan2(m[1][0], m[0][0]))
+        if wrap:
+            ang = np.mod(ang, 360)
+        angles.append(ang)
+    return angles
+
+
+def _merge_stats(errs, stats):
+    """Merge error and statistics dictionaries (or per-component lists)"""
+    if isinstance(errs, list) or isinstance(stats, list):
+        if not isinstance(errs, list):
+            errs = [errs for _ in stats]
+        if not isinstance(stats, list):
+            stats = [stats for _ in errs]
+        return [_merge_stats(e, s) for e, s in zip(errs, stats)]
+
+    merged = dict(errs)
+    merged.update(stats)
+    return merged
+
+
+def _kw_errs(y_exp, y_act):
     errs = {}
 
-    mask = np.array([y_a is not None for y_a in y_act])
-    if not np.any(mask):
+    pairs = [(y_e, y_a) for y_e, y_a in zip(y_exp, y_act)
+             if y_e is not None and y_a is not None]
+    if not pairs:
         return errs
 
-    y_expect = np.array(y_exp)[mask]
-    y_actual = np.array([y_a for y_a in y_act if y_a is not None])
+    y_expect = np.array([y_e for y_e, _ in pairs], dtype='float')
+    y_actual = np.array([y_a for _, y_a in pairs], dtype='float')
+
+    if y_expect.ndim > 1:
+        # vector-valued parameter: errors per component
+        return [_kw_errs(*tup) for tup in zip(y_expect.T, y_actual.T)]
 
     r = y_actual - y_expect
 
@@ -960,16 +1030,28 @@ def _r2(y_act, y_exp):
     r_ybar = y_act - y_bar
     mse_baseline = np.mean(r_ybar * r_ybar)
 
+    if mse_baseline == 0:
+        # constant actual values: R^2 is 1 for a perfect match and
+        # undefined otherwise
+        return 1.0 if mse == 0 else float('nan')
+
     coeff_det = 1 - (mse / mse_baseline)
     return coeff_det
 
 
 def _kw_stats(dist_exp, y_act):
-    if isinstance(dist_exp, list):
-        return [_kw_stats(*tup) for tup in zip(dist_exp, y_act)]
+    y_actual = [y_a for y_a in y_act if y_a is not None]
+
+    if _is_vector(dist_exp):
+        # vector-valued parameter: statistics per component
+        if y_actual:
+            comps = np.array(y_actual, dtype='float').T
+        else:
+            comps = [[] for _ in dist_exp]
+        return [_kw_stats(*tup) for tup in zip(dist_exp, comps)]
 
     stats = {}
-    y_actual = np.array([y_a for y_a in y_act if y_a is not None])
+    y_actual = np.array(y_actual, dtype='float')
     if len(y_actual) == 0:
         return stats
 
@@ -1027,13 +1109,14 @@ def write_error_stats(errs, phases, filename='error_stats.txt'):
         name = phase.get('name', 'Material ' + str(i + 1))
 
         kws = set(err_dict.keys()) - set(_misc.gen_kws)
-        for kw in kws:
+        for kw in sorted(kws):
             err_metrics = err_dict[kw]
-            inp_dist = phase[kw]
-            if isinstance(inp_dist, list):
-                for j in range(len(inp_dist)):
-                    row_dict = {'i': i, 'name': name, 'kw': kw + '[' + j + ']'}
-                    row_dict.update(err_metrics[j])
+            if isinstance(err_metrics, list):
+                # vector-valued parameter: one row per component
+                for j, metrics in enumerate(err_metrics):
+                    kw_j = kw + '[' + str(j) + ']'
+                    row_dict = {'i': i, 'name': name, 'kw': kw_j}
+                    row_dict.update(metrics)
                     rows_dict.append(row_dict)
             else:
                 row_dict = {'i': i, 'name': name, 'kw': kw}
@@ -1110,7 +1193,8 @@ def _safe_mean(x):
 
 
 def _safe_rvs(x, size=1):
-    if isinstance(x, list):
+    if _is_vector(x):
+        # vector-valued parameter: samples are (size, n_components)
         return np.array([_safe_rvs(xi, size) for xi in x]).T
 
     try:
@@ -1120,8 +1204,33 @@ def _safe_rvs(x, size=1):
     return samples
 
 
+def _is_random(val):
+    """True if the value is the string 'random'"""
+    return isinstance(val, str) and val.strip().lower() == 'random'
+
+
+def _is_vector(val):
+    """True if the value has one entry per component (list, tuple, array)"""
+    return isinstance(val, (list, tuple, np.ndarray))
+
+
+def _numeric_values(vals):
+    """True if the values contain at least one numeric (non-None) entry"""
+    known = [v for v in vals if v is not None]
+    if not known:
+        return False
+    try:
+        np.asarray(known, dtype='float')
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 def _phase_values(seeds, phases, poly_mesh=None, verif_mask=None):
     """Takes the properties of the seeds and organizes them like the phases
+
+    Phase keywords that are not (numeric) geometry attributes, such as
+    ``max_volume`` or free-text fields, are ignored.
 
     """
     if verif_mask is None:
@@ -1152,7 +1261,8 @@ def _phase_values(seeds, phases, poly_mesh=None, verif_mask=None):
                 else:
                     vals = [_getattr(s.geometry, kw) for s in phase_seeds]
 
-                comp_phase[kw] = vals
+                if _numeric_values(vals):
+                    comp_phase[kw] = vals
             except AttributeError:
                 pass
 
@@ -1169,8 +1279,10 @@ def _getattr(inst, kw):
 
 
 def _mle_dist(values, dist):
-    if isinstance(dist, list):
-        return [_mle_dist(*tup) for tup in zip(values, dist)]
+    if _is_vector(dist):
+        # vector-valued parameter: one MLE per component
+        comps = np.array(values, dtype='float').T
+        return [_mle_dist(*tup) for tup in zip(comps, dist)]
 
     if not (hasattr(dist, 'dist') or isinstance(dist, hist_class)):
         return np.mean(values)
