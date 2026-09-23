@@ -1463,6 +1463,66 @@ def _unify_cell_vertices(voro, lims, per_axes, merge_tol, snap_tol):
     return new_voro
 
 
+def _cut_cell_at_faces(parts, per_axes, lims, tol, snap_tol, clip, n_min):
+    """Cut the parts of a cell at the periodic faces, axis by axis.
+
+    The part below the lower face of an axis is translated to the upper
+    side of the domain, the part above the upper face to the lower side,
+    and the part in between stays. The vertices next to a cut line/plane
+    are snapped onto it first, so that the two cells sharing an edge/face
+    are cut consistently and no sliver pieces are created; flat pieces on
+    a cut are dropped.
+
+    Args:
+        parts (list): (vertices, boundary) tuples: the vertex loop and the
+            adjacent cell of each edge in 2D, the vertices and the faces
+            (vertex lists with their adjacent cells) in 3D.
+        per_axes (list): Periodicity flag of each axis.
+        lims (list): (lower, upper) bounds of the domain, per axis.
+        tol (float): Geometric tolerance.
+        snap_tol (float): Snapping distance to the faces.
+        clip (callable): The clipping function (:func:`_clip_loop` or
+            :func:`_clip_polyhedron`), called as
+            ``clip(vertices, boundary, axis, value, keep_below, wall, tol)``.
+        n_min (int): Minimum number of vertices (and of faces, in 3D) of a
+            piece.
+
+    Returns:
+        list: The pieces, as (vertices, boundary) tuples.
+
+    """
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        lb, ub = lims[axis]
+        length = ub - lb
+        wall_lo = -(2 * axis + 1)
+        wall_hi = -(2 * axis + 2)
+        new_parts = []
+        for pts, bnd in parts:
+            pts = _snap_to_planes(pts, axis, (lb, ub), snap_tol)
+            _check_cell_width(pts, axis, length, tol)
+            # part below the lower face, translated to the upper side
+            below = clip(pts, bnd, axis, lb, True, wall_hi, tol)
+            rest = clip(pts, bnd, axis, lb, False, wall_lo, tol)
+            if len(rest[0]) == 0:
+                inner, above = rest, rest
+            else:
+                inner = clip(rest[0], rest[1], axis, ub, True, wall_hi, tol)
+                above = clip(rest[0], rest[1], axis, ub, False, wall_lo, tol)
+            for (p_pts, p_bnd), shift in ((below, length), (inner, 0),
+                                          (above, -length)):
+                if len(p_pts) < n_min or (n_min > 3 and len(p_bnd) < n_min):
+                    continue
+                p_pts = np.array(p_pts)
+                if p_pts[:, axis].max() - p_pts[:, axis].min() <= tol:
+                    continue  # flat piece, lies on the cut
+                p_pts[:, axis] += shift
+                new_parts.append((p_pts, p_bnd))
+        parts = new_parts
+    return parts
+
+
 def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
     """Split the cells of a periodic 2D tessellation at the periodic faces.
 
@@ -1497,41 +1557,8 @@ def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
     # Cut the cells at the periodic faces
     pieces = []  # (cell number, vertices, edge adjacencies)
     for cell_num, cell in enumerate(voro):
-        parts = [_cell_loop(cell)]
-        for axis, flag in enumerate(per_axes):
-            if not flag:
-                continue
-            lb, ub = lims[axis]
-            length = ub - lb
-            wall_lo = -(2 * axis + 1)
-            wall_hi = -(2 * axis + 2)
-            new_parts = []
-            for pts, adj in parts:
-                # vertices next to a cut line are snapped onto it, so that
-                # the two cells sharing an edge are cut consistently and
-                # no sliver pieces are created
-                pts = _snap_to_planes(pts, axis, (lb, ub), snap_tol)
-                _check_cell_width(pts, axis, length, tol)
-                # part below the lower face, translated to the upper side
-                below = _clip_loop(pts, adj, axis, lb, True, wall_hi, tol)
-                rest = _clip_loop(pts, adj, axis, lb, False, wall_lo, tol)
-                if len(rest[0]) == 0:
-                    inner, above = rest, rest
-                else:
-                    inner = _clip_loop(rest[0], rest[1], axis, ub, True,
-                                       wall_hi, tol)
-                    above = _clip_loop(rest[0], rest[1], axis, ub, False,
-                                       wall_lo, tol)
-                for (p_pts, p_adj), shift in ((below, length), (inner, 0),
-                                              (above, -length)):
-                    if len(p_pts) < 3:
-                        continue
-                    p_pts = np.array(p_pts)
-                    if p_pts[:, axis].max() - p_pts[:, axis].min() <= tol:
-                        continue  # flat piece, lies on the cut line
-                    p_pts[:, axis] += shift
-                    new_parts.append((p_pts, p_adj))
-            parts = new_parts
+        parts = _cut_cell_at_faces([_cell_loop(cell)], per_axes, lims, tol,
+                                   snap_tol, _clip_loop, 3)
         for pts, adj in parts:
             pieces.append((cell_num, pts, adj))
 
@@ -1767,42 +1794,8 @@ def _periodic_pieces_3d(voro, bkdwn2seed, lims, per_axes):
         verts = np.array(cell['vertices'], dtype='float')
         faces = [(list(f['vertices']), f['adjacent_cell'])
                  for f in cell['faces']]
-        parts = [(verts, faces)]
-        for axis, flag in enumerate(per_axes):
-            if not flag:
-                continue
-            lb, ub = lims[axis]
-            length = ub - lb
-            wall_lo = -(2 * axis + 1)
-            wall_hi = -(2 * axis + 2)
-            new_parts = []
-            for p_verts, p_faces in parts:
-                # vertices next to a cut plane are snapped onto it (see
-                # _periodic_pieces_2d)
-                p_verts = _snap_to_planes(p_verts, axis, (lb, ub), snap_tol)
-                _check_cell_width(p_verts, axis, length, tol)
-                below = _clip_polyhedron(p_verts, p_faces, axis, lb, True,
-                                         wall_hi, tol)
-                rest = _clip_polyhedron(p_verts, p_faces, axis, lb, False,
-                                        wall_lo, tol)
-                if len(rest[0]) == 0:
-                    inner, above = rest, rest
-                else:
-                    inner = _clip_polyhedron(rest[0], rest[1], axis, ub,
-                                             True, wall_hi, tol)
-                    above = _clip_polyhedron(rest[0], rest[1], axis, ub,
-                                             False, wall_lo, tol)
-                for (q_verts, q_faces), shift in ((below, length),
-                                                  (inner, 0),
-                                                  (above, -length)):
-                    if len(q_verts) < 4 or len(q_faces) < 4:
-                        continue
-                    q_verts = np.array(q_verts)
-                    if q_verts[:, axis].max() - q_verts[:, axis].min() <= tol:
-                        continue  # flat piece, lies on the cut plane
-                    q_verts[:, axis] += shift
-                    new_parts.append((q_verts, q_faces))
-            parts = new_parts
+        parts = _cut_cell_at_faces([(verts, faces)], per_axes, lims, tol,
+                                   snap_tol, _clip_polyhedron, 4)
         for p_verts, p_faces in parts:
             pieces.append((cell_num, p_verts, p_faces))
 
