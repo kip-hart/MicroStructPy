@@ -88,20 +88,36 @@ class NBox(object):
     # String and Representation Functions                                     #
     # ----------------------------------------------------------------------- #
     def __str__(self):
-        cen = np.array(self.center)
-        sides = np.array(self.side_lengths)
-        cen_str = np.array2string(cen, separator=', ')
-        sides_str = np.array2string(sides, separator=', ')
+        # full precision, in a form that ast.literal_eval can parse back
+        cen_str = repr(tuple([float(x) for x in self.center]))
+        sides_str = repr(tuple([float(x) for x in self.side_lengths]))
 
         str_str = 'Center: ' + cen_str + '\n'
         str_str += 'Side Lengths: ' + sides_str + '\n'
         str_str += 'Matrix: ('
         for row in self.matrix:
             str_str += '('
-            str_str += ', '.join([str(val) for val in row])
+            str_str += ', '.join([repr(float(val)) for val in row])
             str_str += '),'
         str_str = str_str[:-1] + ')'
         return str_str
+
+    # ----------------------------------------------------------------------- #
+    # Equality                                                                #
+    # ----------------------------------------------------------------------- #
+    def __eq__(self, other):
+        if not isinstance(other, NBox):
+            return False
+        c1 = np.array(self.center, dtype='float')
+        c2 = np.array(other.center, dtype='float')
+        if c1.shape != c2.shape or not np.allclose(c1, c2):
+            return False
+        if not np.allclose(self.side_lengths, other.side_lengths):
+            return False
+        return np.allclose(self.matrix, other.matrix)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __repr__(self):
         repr_str = 'NBox('
@@ -187,6 +203,8 @@ class NBox(object):
             pts = pts.reshape(1, -1)
 
         rel_pos = pts - np.array(self.center)
+        # rotate into the local (box-aligned) frame
+        rel_pos = rel_pos.dot(np.array(self.matrix))
         min_dist = 0.5 * np.array(self.side_lengths)
 
         mask = np.all(np.abs(rel_pos) <= min_dist, axis=-1)

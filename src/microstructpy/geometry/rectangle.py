@@ -43,8 +43,10 @@ class Rectangle(NBox):
     """
 
     def __init__(self, **kwargs):
-        if 'length' in kwargs and 'width' in kwargs:
-            kwargs['side_lengths'] = [kwargs['length'], kwargs['width']]
+        if 'length' in kwargs or 'width' in kwargs:
+            # consistent with area_expectation, a missing side defaults to 1
+            kwargs['side_lengths'] = [kwargs.get('length', 1),
+                                      kwargs.get('width', 1)]
 
         if 'angle' in kwargs:
             cp = np.cos(np.radians(kwargs['angle']))
@@ -484,7 +486,7 @@ class Square(Rectangle):
                 area_exp = len_dist * len_dist
             return area_exp
 
-        Rectangle.area_expectation(**kwargs)
+        return Rectangle.area_expectation(**kwargs)
 
     # ----------------------------------------------------------------------- #
     # Circle Approximation                                                    #

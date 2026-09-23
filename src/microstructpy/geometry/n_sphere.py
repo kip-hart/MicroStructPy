@@ -78,7 +78,7 @@ class NSphere(object):
           https://dtcenter.org/met/users/docs/write_ups/circle_fit.pdf
         """  # NOQA: E501
         # convert points to numpy array
-        pts = np.array(points)
+        pts = np.array(points, dtype='float')
         n_pts, n_dim = pts.shape
         if n_pts <= n_dim:
             mid = pts.mean(axis=0)
@@ -103,7 +103,7 @@ class NSphere(object):
         # Solve linear system for the center
         try:
             cen_b = np.linalg.solve(mat, vec)
-        except np.linalg.linalg.LinAlgError:
+        except np.linalg.LinAlgError:
             cen_b = pts.mean(axis=0)
         cen = cen_b + bcenter
 
