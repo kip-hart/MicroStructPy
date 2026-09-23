@@ -95,11 +95,19 @@ class PolyMesh(object):
     # Constructors                                                            #
     # ----------------------------------------------------------------------- #
     def __init__(self, points, facets, regions, seed_numbers=None,
-                 phase_numbers=None, facet_neighbors=None, volumes=None):
+                 phase_numbers=None, facet_neighbors=None, volumes=None,
+                 periodic_axes=None, periodic_points=None,
+                 periodic_facets=None):
 
         self.points = points
         self.facets = facets
         self.regions = regions
+
+        # Periodicity: flags per axis, and the pairs of (low face, high face)
+        # points and facets that are periodic images of each other, per axis
+        self.periodic_axes = periodic_axes
+        self.periodic_points = periodic_points
+        self.periodic_facets = periodic_facets
 
         if facet_neighbors is None:
             # Find facet neighbors
@@ -227,6 +235,18 @@ class PolyMesh(object):
 
         str_str += 'Volumes: ' + str(len(self.volumes)) + '\n'
         str_str += '\n'.join(['\t' + str(v) for v in self.volumes])
+
+        if self.periodic_axes is not None and any(self.periodic_axes):
+            flags = [int(bool(f)) for f in self.periodic_axes]
+            str_str += '\nPeriodic Axes: ' + str(len(flags)) + '\n'
+            str_str += '\t' + ', '.join([str(f) for f in flags])
+            for name, pairs in (('Periodic Points', self.periodic_points),
+                                ('Periodic Facets', self.periodic_facets)):
+                rows = [(ax, lo, hi) for ax in sorted(pairs or {})
+                        for lo, hi in pairs[ax]]
+                str_str += '\n' + name + ': ' + str(len(rows))
+                str_str += ''.join(['\n\t' + ', '.join([str(n) for n in row])
+                                    for row in rows])
         return str_str
 
     # ----------------------------------------------------------------------- #
@@ -447,8 +467,17 @@ class PolyMesh(object):
             seed_numbers = []
             phase_numbers = []
             volumes = []
+            per_axes = None
+            per_pts = []
+            per_fts = []
             for line in file.readlines():
-                if 'Mesh Points'.lower() in line.lower():
+                if 'Periodic Axes'.lower() in line.lower():
+                    stage = 'periodic axes'
+                elif 'Periodic Points'.lower() in line.lower():
+                    stage = 'periodic points'
+                elif 'Periodic Facets'.lower() in line.lower():
+                    stage = 'periodic facets'
+                elif 'Mesh Points'.lower() in line.lower():
                     n_pts = int(line.split(':')[1])
                     stage = 'points'
                 elif 'Mesh Facets'.lower() in line.lower():
@@ -484,6 +513,12 @@ class PolyMesh(object):
                         phase_numbers.append(_misc.from_str(line))
                     elif stage == 'volumes':
                         volumes.append(_misc.from_str(line))
+                    elif stage == 'periodic axes':
+                        per_axes = [bool(int(f)) for f in line.split(',')]
+                    elif stage == 'periodic points':
+                        per_pts.append([int(n) for n in line.split(',')])
+                    elif stage == 'periodic facets':
+                        per_fts.append([int(n) for n in line.split(',')])
                     else:
                         pass
 
@@ -500,15 +535,27 @@ class PolyMesh(object):
         else:
             assert len(f_neighbors) == n_nns
 
+        per_points = None
+        per_facets = None
+        if per_axes is not None:
+            per_points = {ax: [] for ax, f in enumerate(per_axes) if f}
+            per_facets = {ax: [] for ax, f in enumerate(per_axes) if f}
+            for ax, lo, hi in per_pts:
+                per_points[ax].append((lo, hi))
+            for ax, lo, hi in per_fts:
+                per_facets[ax].append((lo, hi))
+
         return cls(pts, facets, regions, seed_numbers, phase_numbers,
-                   volumes=volumes, facet_neighbors=f_neighbors)
+                   volumes=volumes, facet_neighbors=f_neighbors,
+                   periodic_axes=per_axes, periodic_points=per_points,
+                   periodic_facets=per_facets)
 
     # ----------------------------------------------------------------------- #
     # Construct from Seed List                                                #
     # ----------------------------------------------------------------------- #
     @classmethod
     def from_seeds(cls, seedlist, domain, edge_opt=False, n_iter=100,
-                   verbose=False):
+                   verbose=False, periodic=False):
         """Create from :class:`.SeedList` and a domain.
 
         This function creates a polygon/polyhedron mesh from a seed list and
@@ -539,6 +586,15 @@ class PolyMesh(object):
                 Defaults to 100.
             verbose (bool): *(optional)* Print status of edge optimization to
                 screen. Defaults to False.
+            periodic (bool, list, or str): *(optional)* Periodicity of the
+                microstructure: True for all axes, a list of booleans (one
+                per axis), or the names of the periodic axes such as
+                ``'x'`` or ``'xy'``. The tessellation is then periodic across
+                those faces of the (rectangular) domain: cells that cross a
+                periodic face are split into pieces that tile the domain,
+                and the points and facets on opposite faces are paired
+                (see ``periodic_points`` and ``periodic_facets``).
+                Defaults to False.
 
         Returns:
             PolyMesh: A polygon/polyhedron mesh.
@@ -546,6 +602,15 @@ class PolyMesh(object):
         .. _`Voro++`: http://math.lbl.gov/voro++/
 
         """
+        per_axes = _misc.periodic_axes(periodic, domain.n_dim)
+        is_periodic = any(per_axes)
+        if is_periodic:
+            dom_lims = _misc.periodic_domain_limits(domain)
+            if domain.n_dim != 2:
+                e_str = 'Periodic tessellations are currently supported in '
+                e_str += '2D only.'
+                raise NotImplementedError(e_str)
+
         # Collect all breakdowns
         bkdwn2seed = np.array([], dtype='int')
         bkdwns = np.array([])
@@ -553,6 +618,10 @@ class PolyMesh(object):
             if len(seed.breakdown) == 0:
                 seed.update_breakdown()
             bkdwn = np.array(seed.breakdown).reshape(-1, domain.n_dim + 1)
+            if is_periodic:
+                # centers outside the domain along a periodic axis are
+                # wrapped into it (Voro++ needs the particles in the box)
+                bkdwn = _wrap_points(bkdwn, dom_lims, per_axes)
             in_mask = domain.within(bkdwn[:, :-1])
             breakdown = bkdwn[in_mask]
 
@@ -607,7 +676,8 @@ class PolyMesh(object):
             call_str += 'pyvoro.compute_'
             if n_dim == 2:
                 call_str += '2d_'
-            call_str += 'voronoi(pts, lims, sz, rads)\n'
+            call_str += 'voronoi(pts, lims, sz, rads, periodic='
+            call_str += str([bool(f) for f in per_axes]) + ')\n'
 
             file = tempfile.NamedTemporaryFile(mode='w', suffix='.py',
                                                delete=False)
@@ -644,7 +714,15 @@ class PolyMesh(object):
         # compute voronoi diagram
         voro_fun = {2: pyvoro.compute_2d_voronoi,
                     3: pyvoro.compute_voronoi}[n_dim]
-        voro = voro_fun(cens, lims, sz, rads)
+        voro = voro_fun(cens, lims, sz, rads,
+                        periodic=[bool(f) for f in per_axes])
+
+        if is_periodic:
+            # Cells of a periodic tessellation wrap across the periodic
+            # faces: split them at those faces and translate the outside
+            # pieces into the domain
+            voro, bkdwn2seed = _periodic_pieces_2d(voro, bkdwn2seed, lims,
+                                                   per_axes)
 
         # Get only the cells within the domain
         cell_mask = np.full(len(bkdwn2seed), True, dtype='bool')
@@ -761,6 +839,8 @@ class PolyMesh(object):
         # Create initial mesh
         pmesh = cls(pts_global, facet_list, region_list, bkdwn2seed,
                     phase_nums, facet_neighbor_list, vols)
+        if is_periodic:
+            pmesh._set_periodic_pairs(per_axes, dom_lims)
 
         # short edge optimization
         if edge_opt:
@@ -814,7 +894,8 @@ class PolyMesh(object):
                 # Create New Polygonal Mesh
                 try:
                     new_pmesh = cls.from_seeds(trial_seeds, domain,
-                                               edge_opt=False)
+                                               edge_opt=False,
+                                               periodic=periodic)
                 except AssertionError:
                     i_n_attempts += 1
                     continue
@@ -840,6 +921,94 @@ class PolyMesh(object):
                 else:
                     i_n_attempts += 1
         return pmesh
+
+    # ----------------------------------------------------------------------- #
+    # Periodicity                                                             #
+    # ----------------------------------------------------------------------- #
+    def _set_periodic_pairs(self, per_axes, dom_lims):
+        """Pair the points and facets on opposite periodic faces.
+
+        For each periodic axis, every point on the lower face is matched
+        with its image on the upper face; the coordinates of the pair are
+        snapped so that the image is exactly the point translated by the
+        domain length. Facets lying on the faces are paired likewise.
+        The results are stored in ``periodic_axes``, ``periodic_points``
+        (dict: axis -> list of (lower, upper) point numbers) and
+        ``periodic_facets`` (dict: axis -> list of (lower, upper) facet
+        numbers).
+
+        Raises:
+            ValueError: If a point or facet on a periodic face has no
+                image on the opposite face.
+
+        """
+        pts = np.array(self.points, dtype='float')
+        n_dim = pts.shape[1]
+        lengths = [ub - lb for lb, ub in dom_lims]
+        tol = 1e-8 * max(lengths)
+
+        per_points = {}
+        per_facets = {}
+        for axis, flag in enumerate(per_axes):
+            if not flag:
+                continue
+            lb, ub = dom_lims[axis]
+            shift = np.zeros(n_dim)
+            shift[axis] = ub - lb
+            others = [i for i in range(n_dim) if i != axis]
+
+            low = np.nonzero(np.abs(pts[:, axis] - lb) <= tol)[0]
+            high = np.nonzero(np.abs(pts[:, axis] - ub) <= tol)[0]
+            if len(low) != len(high):
+                e_str = 'The periodic faces along axis ' + str(axis)
+                e_str += ' have different numbers of points ('
+                e_str += str(len(low)) + ' and ' + str(len(high)) + ').'
+                raise ValueError(e_str)
+
+            pairs = []
+            if len(low) > 0:
+                dists = distance.cdist(pts[low][:, others],
+                                       pts[high][:, others])
+                for i_low, kp_low in enumerate(low):
+                    i_high = int(np.argmin(dists[i_low]))
+                    if dists[i_low, i_high] > tol:
+                        e_str = 'Point ' + str(kp_low) + ' on the lower '
+                        e_str += 'periodic face of axis ' + str(axis)
+                        e_str += ' has no image on the upper face.'
+                        raise ValueError(e_str)
+                    dists[:, i_high] = np.inf  # one-to-one
+                    kp_high = int(high[i_high])
+                    # snap the pair to exact periodic images
+                    pts[kp_low, axis] = lb
+                    pts[kp_high] = pts[kp_low] + shift
+                    pairs.append((int(kp_low), kp_high))
+            per_points[axis] = pairs
+
+            # facets on the faces
+            kp_map = {lo: hi for lo, hi in pairs}
+            low_set = set(kp_map)
+            high_set = set(kp_map.values())
+            high_facets = {}
+            for f_num, facet in enumerate(self.facets):
+                if all([kp in high_set for kp in facet]):
+                    high_facets[frozenset(facet)] = f_num
+            f_pairs = []
+            for f_num, facet in enumerate(self.facets):
+                if not all([kp in low_set for kp in facet]):
+                    continue
+                key = frozenset([kp_map[kp] for kp in facet])
+                if key not in high_facets:
+                    e_str = 'Facet ' + str(f_num) + ' on the lower periodic'
+                    e_str += ' face of axis ' + str(axis) + ' has no image'
+                    e_str += ' on the upper face.'
+                    raise ValueError(e_str)
+                f_pairs.append((f_num, high_facets[key]))
+            per_facets[axis] = f_pairs
+
+        self.points = pts.tolist()
+        self.periodic_axes = [bool(f) for f in per_axes]
+        self.periodic_points = per_points
+        self.periodic_facets = per_facets
 
     # ----------------------------------------------------------------------- #
     # Plot Mesh                                                               #
@@ -1131,6 +1300,227 @@ class PolyMesh(object):
         same &= np.all(s_phase_nums == o_phase_nums[o_rnum])
 
         return bool(same)
+
+
+def _wrap_points(bkdwn, dom_lims, per_axes):
+    """Wrap the centers of a breakdown into the domain along periodic axes.
+
+    Args:
+        bkdwn (numpy.ndarray): N x (d + 1) array of (center, radius) rows.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+        per_axes (list): Periodicity flag of each axis.
+
+    Returns:
+        numpy.ndarray: The wrapped breakdown.
+
+    """
+    bkdwn = np.array(bkdwn, dtype='float')
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        lb, ub = dom_lims[axis]
+        bkdwn[:, axis] = lb + np.mod(bkdwn[:, axis] - lb, ub - lb)
+    return bkdwn
+
+
+def _cell_loop(cell):
+    """Vertex loop of a 2D pyvoro cell and the adjacent cell of each edge.
+
+    Returns:
+        tuple: The vertices in loop order (N x 2 array) and a list with the
+        adjacent cell of the edge that starts at each vertex.
+
+    """
+    faces = cell['faces']
+    loop = kp_loop([f['vertices'] for f in faces])
+    edge_adj = {frozenset(f['vertices']): f['adjacent_cell'] for f in faces}
+    pts = np.array(cell['vertices'], dtype='float')[loop]
+    n_kp = len(loop)
+    adj = [edge_adj[frozenset((loop[k], loop[(k + 1) % n_kp]))]
+           for k in range(n_kp)]
+    return pts, adj
+
+
+def _clip_loop(pts, adj, axis, value, keep_below, wall, tol):
+    """Clip a convex polygon by an axis-aligned line (Sutherland-Hodgman).
+
+    Args:
+        pts (numpy.ndarray): Vertices of the polygon, in loop order.
+        adj (list): Adjacent cell of the edge starting at each vertex.
+        axis (int): Axis of the clipping line.
+        value (float): Position of the clipping line along the axis.
+        keep_below (bool): Keep the side below the line (True) or above it.
+        wall (int): Adjacent cell id given to the edges created on the
+            line (a negative wall id).
+        tol (float): Points within this distance of the line are on it.
+
+    Returns:
+        tuple: The clipped vertices and their edge adjacencies (empty if
+        the polygon lies entirely on the other side).
+
+    """
+    n_kp = len(pts)
+    if keep_below:
+        inside = pts[:, axis] <= value + tol
+    else:
+        inside = pts[:, axis] >= value - tol
+
+    new_pts = []
+    new_adj = []
+    for k in range(n_kp):
+        k1 = (k + 1) % n_kp
+        p, q = pts[k], pts[k1]
+        if inside[k]:
+            new_pts.append(p)
+            new_adj.append(adj[k])
+        if inside[k] != inside[k1]:
+            t = (value - p[axis]) / (q[axis] - p[axis])
+            x = p + t * (q - p)
+            x[axis] = value
+            new_pts.append(x)
+            # leaving the kept side: the next edge lies on the line;
+            # entering it: the edge from the crossing to q is the original
+            new_adj.append(wall if inside[k] else adj[k])
+
+    if len(new_pts) < 3:
+        return np.zeros((0, pts.shape[1])), []
+
+    # edges that lie on the line are walls
+    new_pts = np.array(new_pts)
+    for k in range(len(new_pts)):
+        k1 = (k + 1) % len(new_pts)
+        if (abs(new_pts[k, axis] - value) <= tol and
+                abs(new_pts[k1, axis] - value) <= tol):
+            new_adj[k] = wall
+    return new_pts, new_adj
+
+
+def _periodic_pieces_2d(voro, bkdwn2seed, lims, per_axes):
+    """Split the cells of a periodic 2D tessellation at the periodic faces.
+
+    The cells computed by Voro++ in periodic mode wrap across the periodic
+    faces of the domain. Each cell is cut at those faces and the pieces
+    outside the domain are translated into it, so that the pieces tile the
+    domain. The cut edges become domain boundary facets (Voro++ wall ids
+    -1/-2 for the x faces, -3/-4 for the y faces) and the adjacent cell of
+    every other edge is resolved to the piece that shares it.
+
+    Args:
+        voro (list): The cells from pyvoro.
+        bkdwn2seed (numpy.ndarray): Seed number of each cell.
+        lims (list): (lower, upper) bounds of the domain, per axis.
+        per_axes (list): Periodicity flag of each axis.
+
+    Returns:
+        tuple: The pieces, in the pyvoro cell format, and the seed number
+        of each piece.
+
+    Raises:
+        ValueError: If a cell is wider than the domain (too few seeds for
+            a periodic tessellation) or an edge cannot be matched.
+
+    """
+    lengths = [ub - lb for lb, ub in lims]
+    tol = 1e-10 * max(lengths)
+    area_tol = 1e-12 * np.prod(lengths)
+
+    # Cut the cells at the periodic faces
+    pieces = []  # (cell number, vertices, edge adjacencies)
+    for cell_num, cell in enumerate(voro):
+        parts = [_cell_loop(cell)]
+        for axis, flag in enumerate(per_axes):
+            if not flag:
+                continue
+            lb, ub = lims[axis]
+            length = ub - lb
+            wall_lo = -(2 * axis + 1)
+            wall_hi = -(2 * axis + 2)
+            new_parts = []
+            for pts, adj in parts:
+                extent = pts[:, axis].max() - pts[:, axis].min()
+                if extent > length + tol:
+                    e_str = 'A cell of the periodic tessellation is wider '
+                    e_str += 'than the domain along axis ' + str(axis)
+                    e_str += '. More seeds are needed for a periodic '
+                    e_str += 'microstructure.'
+                    raise ValueError(e_str)
+                # part below the lower face, translated to the upper side
+                below = _clip_loop(pts, adj, axis, lb, True, wall_hi, tol)
+                rest = _clip_loop(pts, adj, axis, lb, False, wall_lo, tol)
+                if len(rest[0]) == 0:
+                    inner, above = rest, rest
+                else:
+                    inner = _clip_loop(rest[0], rest[1], axis, ub, True,
+                                       wall_hi, tol)
+                    above = _clip_loop(rest[0], rest[1], axis, ub, False,
+                                       wall_lo, tol)
+                for (p_pts, p_adj), shift in ((below, length), (inner, 0),
+                                              (above, -length)):
+                    if len(p_pts) < 3:
+                        continue
+                    if _loop_area(p_pts, list(range(len(p_pts)))) < area_tol:
+                        continue
+                    p_pts = np.array(p_pts)
+                    p_pts[:, axis] += shift
+                    new_parts.append((p_pts, p_adj))
+            parts = new_parts
+        for pts, adj in parts:
+            pieces.append((cell_num, pts, adj))
+
+    # Resolve the adjacent cells of the edges to pieces
+    cell_pieces = {}
+    for piece_num, (cell_num, _, _) in enumerate(pieces):
+        cell_pieces.setdefault(cell_num, []).append(piece_num)
+
+    new_voro = []
+    for piece_num, (cell_num, pts, adj) in enumerate(pieces):
+        n_kp = len(pts)
+        faces = []
+        for k in range(n_kp):
+            k1 = (k + 1) % n_kp
+            adj_cell = adj[k]
+            if adj_cell >= 0:
+                candidates = [p for p in cell_pieces.get(adj_cell, [])
+                              if p != piece_num]
+                adj_cell = _matching_piece(pts[k], pts[k1], candidates,
+                                           pieces, tol)
+                if adj_cell is None:
+                    adj_cell = _wall_of_edge(pts[k], pts[k1], lims, tol)
+            faces.append({'adjacent_cell': int(adj_cell),
+                          'vertices': [k, k1]})
+        new_voro.append({'vertices': pts.tolist(),
+                         'faces': faces,
+                         'adjacency': [[(k - 1) % n_kp, (k + 1) % n_kp]
+                                       for k in range(n_kp)],
+                         'original': voro[cell_num]['original'],
+                         'volume': _loop_area(pts, list(range(n_kp)))})
+    new_bkdwn2seed = np.array([bkdwn2seed[cell_num]
+                               for cell_num, _, _ in pieces], dtype='int')
+    return new_voro, new_bkdwn2seed
+
+
+def _matching_piece(pt_a, pt_b, candidates, pieces, tol):
+    """Piece among the candidates that has vertices at both points."""
+    for piece_num in candidates:
+        pts = pieces[piece_num][1]
+        d_a = np.min(np.linalg.norm(pts - pt_a, axis=1))
+        d_b = np.min(np.linalg.norm(pts - pt_b, axis=1))
+        if d_a <= tol and d_b <= tol:
+            return piece_num
+    return None
+
+
+def _wall_of_edge(pt_a, pt_b, lims, tol):
+    """Wall id of an edge lying on a face of the domain."""
+    for axis, (lb, ub) in enumerate(lims):
+        if abs(pt_a[axis] - lb) <= tol and abs(pt_b[axis] - lb) <= tol:
+            return -(2 * axis + 1)
+        if abs(pt_a[axis] - ub) <= tol and abs(pt_b[axis] - ub) <= tol:
+            return -(2 * axis + 2)
+    e_str = 'Cannot resolve the neighbor of the edge between '
+    e_str += str(pt_a.tolist()) + ' and ' + str(pt_b.tolist())
+    e_str += ' in the periodic tessellation.'
+    raise ValueError(e_str)
 
 
 def _match_index_sets(items, other_items):
