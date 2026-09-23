@@ -58,7 +58,8 @@ A grain that barely crosses a periodic face, or ends just inside it, leaves
 a thin piece of itself on the opposite face and very small elements there.
 ``periodic_margin`` rejects the positions where a seed ends within the
 margin of a periodic face or crosses it by less than the margin; ``auto``
-sets the margin to half the target edge length of the mesh.
+sets the margin to half the target edge length of the mesh, or to an eighth
+of the smallest grain if that is smaller.
 The edge optimization removes the shortest edges of the polygonal mesh, for
 the same reason, and with the margin it also thickens or removes the pieces
 of the grains at the periodic faces that are thinner than the margin, which

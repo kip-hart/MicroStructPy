@@ -32,12 +32,16 @@ phases_2d = [
 # of the area, so that all of them can be placed). The margin keeps the
 # seeds from ending within half a target edge length of a periodic face,
 # or crossing one by less, which would leave thin pieces of grains on the
-# opposite face and very small triangles there.
+# opposite face and very small triangles there. The smallest grain needs
+# about four elements across it, so the margin is at most an eighth of its
+# smallest diameter (the CLI setting periodic_margin = auto does the same).
 max_volume = 0.004
 h_target = np.sqrt(4 * max_volume / np.sqrt(3))
-margin = 0.5 * h_target
 seeds_2d = msp.seeding.SeedList.from_info(phases_2d, 0.9 * domain_2d.area,
                                           rng_seeds={'size': 1})
+d_min = min([2 * min(getattr(s.geometry, 'axes', (s.geometry.size / 2,)))
+             for s in seeds_2d])
+margin = min(0.5 * h_target, d_min / 8)
 seeds_2d.position(domain_2d, rng_seed=1, periodic=True,
                   periodic_margin=margin)
 

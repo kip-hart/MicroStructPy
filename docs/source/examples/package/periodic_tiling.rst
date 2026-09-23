@@ -28,7 +28,9 @@ and positioned with :func:`~microstructpy.seeding.SeedList.position`, with
 for overlaps on the opposite face.
 The ``periodic_margin`` keeps the seeds from ending within half a target
 edge length of a face, or crossing one by less, since such seeds leave thin
-pieces of grains on the opposite face and very small triangles there.
+pieces of grains on the opposite face and very small triangles there; it is
+capped at an eighth of the smallest grain, which needs about four elements
+across it.
 The polygonal mesh is created with
 :func:`~microstructpy.meshing.PolyMesh.from_seeds`, again with
 ``periodic=True``, and the triangular mesh with

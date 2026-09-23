@@ -41,6 +41,12 @@ longer, and TetGen grades the element size between the two.
 
 The mesh has a minimum dihedral angle of 15 degrees.
 
+The seeds are placed a margin away from the periodic faces (``periodic_margin``
+set to ``auto``: half the target edge length, or an eighth of the smallest
+grain if that is smaller) and the edge optimization moves the seeds that
+leave a thin piece of a grain on a face, or a very short edge, since either
+forces very small tetrahedra.
+
 
 Output Files
 ============

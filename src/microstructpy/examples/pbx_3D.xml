@@ -44,6 +44,13 @@
         <!-- the overlap tolerance: with 0.7 all the seeds can be placed -->
         <rtol> 0.7 </rtol>
 
+        <!-- the seeds and the grains stay a margin away from the periodic
+             faces, or cross them by more than the margin: auto is half the
+             target edge length, at most an eighth of the smallest grain -->
+        <periodic_margin> auto </periodic_margin>
+        <edge_opt> True </edge_opt>
+        <edge_opt_n_iter> 10 </edge_opt_n_iter>
+
         <mesh_min_angle> 15 </mesh_min_angle>
         <mesh_max_volume> 0.02 </mesh_max_volume>
 

@@ -46,8 +46,13 @@ Settings
 The overlap tolerance ``rtol`` is set to 0.5: with the default fitted value
 some of the small binder seeds do not fit between the inclusions and are
 rejected.
-The random number generator seeds make the microstructure repeatable, and
-the edge optimization removes the shortest edges of the polygonal mesh.
+The random number generator seeds make the microstructure repeatable.
+
+The seeds are placed a margin away from the periodic faces (``periodic_margin``
+set to ``auto``: half the target edge length, or an eighth of the smallest
+grain if that is smaller) and the edge optimization moves the seeds that
+leave a thin piece of a grain on a face, or a very short edge, since either
+forces very small triangles.
 
 The mesh has a minimum angle of 25 degrees and a maximum element area of
 0.01.

@@ -265,12 +265,17 @@ _tri_exts = {'abaqus': '.inp', 'txt': '.txt', 'str': '.txt', 'tet/tri': '',
              'vtk': '.vtk'}
 
 
-def _periodic_margin(periodic_margin, n_dim, max_volume, max_edge_length):
+def _periodic_margin(periodic_margin, n_dim, max_volume, max_edge_length,
+                     seeds=None):
     """Margin between the seeds and the periodic faces, from the settings.
 
-    ``'auto'`` is half the target edge length of the mesh: the maximum
-    edge length if it is set, otherwise the edge of the equilateral
-    triangle (2D) or regular tetrahedron (3D) with the maximum volume.
+    ``'auto'`` is the smaller of half the target edge length of the mesh
+    (the maximum edge length if it is set, otherwise the edge of the
+    equilateral triangle (2D) or regular tetrahedron (3D) with the maximum
+    volume) and an eighth of the size of the smallest seed (its smallest
+    diameter or side): the smallest seed needs about four elements across
+    it, so the mesh cannot be coarser than a quarter of it, and a margin
+    larger than the seed could not be satisfied by the seed anyway.
     """
     if not isinstance(periodic_margin, str):
         return float(periodic_margin)
@@ -287,9 +292,25 @@ def _periodic_margin(periodic_margin, n_dim, max_volume, max_edge_length):
             h_val = min(h_val, np.sqrt(4 * max_volume / np.sqrt(3)))
         else:
             h_val = min(h_val, (6 * np.sqrt(2) * max_volume) ** (1.0 / 3))
+    if seeds:
+        h_val = min(h_val, 0.25 * min([_seed_size(s) for s in seeds]))
     if not np.isfinite(h_val):
         return 0.0
     return 0.5 * h_val
+
+
+def _seed_size(seed):
+    """Smallest dimension of a seed: the smallest diameter of an ellipse
+    or ellipsoid, the shortest side of a box, the diameter of a circle or
+    sphere; infinity if the geometry has none of these."""
+    geom = seed.geometry
+    if hasattr(geom, 'axes'):
+        return 2 * min(geom.axes)
+    if hasattr(geom, 'side_lengths'):
+        return min(geom.side_lengths)
+    if hasattr(geom, 'r'):
+        return 2 * geom.r
+    return getattr(geom, 'size', float('inf'))
 
 
 def run(phases, domain, verbose=False, restart=True, directory='.',
@@ -425,12 +446,16 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             ends within this distance inside a face, or crosses a face by
             less than this distance, is placed elsewhere, since it would
             give elements much smaller than the target size of the mesh.
-            ``'auto'`` uses half the target edge length of the mesh
-            (``mesh_max_edge_length`` or, from ``mesh_max_volume``, the
-            edge of the equilateral triangle or regular tetrahedron of that
-            volume). With `edge_opt`, the pieces of the cells at the
-            periodic faces thinner than the margin are thickened or
-            removed by moving their seeds. Defaults to 0 (no margin).
+            ``'auto'`` uses the smaller of half the target edge length of
+            the mesh (``mesh_max_edge_length`` or, from
+            ``mesh_max_volume``, the edge of the equilateral triangle or
+            regular tetrahedron of that volume) and an eighth of the size
+            of the smallest seed (its smallest diameter or side), since
+            the smallest seed needs about four elements across it and
+            cannot satisfy a margin larger than itself. With `edge_opt`,
+            the pieces of the cells at the periodic faces thinner than the
+            margin are thickened or removed by moving their seeds.
+            Defaults to 0 (no margin).
 
     .. _`Specifying Colors`: https://matplotlib.org/users/colors.html
     .. _`Choosing Colormaps in Matplotlib`: https://matplotlib.org/tutorials/colors/colormaps.html
@@ -495,8 +520,6 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     # ----------------------------------------------------------------------- #
     seed_basename = 'seeds.txt'
     seed_filename = os.path.join(directory, seed_basename)
-    margin = _periodic_margin(periodic_margin, domain.n_dim,
-                              mesh_max_volume, mesh_max_edge_length)
     if restart and os.path.exists(seed_filename):
         # Read seeds from file
         if verbose:
@@ -519,8 +542,13 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         kw = 'position'
         rng_seed = rng_seeds.get(kw, 0)
         pos_dists = {i: p[kw] for i, p in enumerate(phases) if kw in p}
+        margin = _periodic_margin(periodic_margin, domain.n_dim,
+                                  mesh_max_volume, mesh_max_edge_length,
+                                  seeds)
         seeds.position(domain, pos_dists, rng_seed, rtol=rtol, verbose=verbose,
                        periodic=periodic, periodic_margin=margin)
+    margin = _periodic_margin(periodic_margin, domain.n_dim, mesh_max_volume,
+                              mesh_max_edge_length, seeds)
 
     # Write seeds
     seeds_types = filetypes.get('seeds', [])

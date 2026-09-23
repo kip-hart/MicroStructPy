@@ -8,6 +8,7 @@ import microstructpy as msp
 from microstructpy import cli
 from microstructpy.meshing import PolyMesh
 from microstructpy.meshing import TriMesh
+from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
 
 PERIODIC_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -138,3 +139,26 @@ def test_periodic_margin_setting():
     assert cli._periodic_margin('none', 2, 0.004, inf) == 0
     with pytest.raises(ValueError):
         cli._periodic_margin('big', 2, 1, 1)
+
+    # the smallest seed limits the margin to an eighth of its size (its
+    # smallest diameter or side), so that it keeps four elements across
+    # it and can satisfy the margin
+    big = Seed.factory('circle', r=0.5)
+    small = Seed.factory('circle', r=0.05)
+    seeds = SeedList([big, small])
+    assert np.isclose(cli._periodic_margin('auto', 2, 0.004, inf, [big]),
+                      0.5 * h_2d)
+    assert np.isclose(cli._periodic_margin('auto', 2, 0.004, inf, seeds),
+                      0.1 / 8)
+    assert np.isclose(cli._periodic_margin('auto', 2, inf, inf, seeds),
+                      0.1 / 8)
+    ellipse = Seed.factory('ellipse', a=0.5, b=0.02)
+    assert np.isclose(cli._periodic_margin('auto', 2, inf, inf, [ellipse]),
+                      0.04 / 8)
+    box = Seed.factory('rectangle', side_lengths=[0.3, 0.08])
+    assert np.isclose(cli._periodic_margin('auto', 2, inf, inf, [box]),
+                      0.08 / 8)
+    sphere = Seed.factory('sphere', r=0.2)
+    assert np.isclose(cli._periodic_margin('auto', 3, 0.02, inf, [sphere]),
+                      0.4 / 8)
+    assert cli._periodic_margin(0.03, 2, 0.004, inf, seeds) == 0.03
