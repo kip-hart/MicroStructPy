@@ -134,6 +134,10 @@ Fixed
 
 Changed
 '''''''
+- The continuous integration installs the current pytest and no longer
+  installs tox from the requirements: the pinned tox 3.14 forced an old
+  pluggy that the current pytest-cov cannot load, so no test could run.
+  The jobs of the test matrix no longer cancel each other on a failure.
 - The facets of the triangular and tetrahedral meshes created from a
   polygonal mesh are sorted (nodes in ascending order within a facet,
   facets in lexicographic order), whatever the mesher. Triangle and TetGen
