@@ -2,6 +2,8 @@
 import copy
 
 import numpy as np
+from periodic_helpers import min_edge
+from periodic_helpers import wedge_seeds_2d
 
 from microstructpy import geometry
 from microstructpy.meshing import PolyMesh
@@ -14,8 +16,6 @@ from microstructpy.meshing.polymesh import _select_target
 from microstructpy.meshing.polymesh import _wedge_geometry
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
-from periodic_helpers import min_edge
-from periodic_helpers import wedge_seeds_2d
 
 
 # --------------------------------------------------------------------------- #

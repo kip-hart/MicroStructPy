@@ -19,12 +19,12 @@ import meshpy.tet
 import meshpy.triangle
 import numpy as np
 import pygmsh as pg
-from scipy.spatial import cKDTree
 from matplotlib import collections
 from matplotlib import patches
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from scipy.spatial import cKDTree
 
 from microstructpy import _misc
 

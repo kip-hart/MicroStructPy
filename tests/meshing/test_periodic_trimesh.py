@@ -2,6 +2,8 @@
 import numpy as np
 import pytest
 import scipy.stats
+from periodic_helpers import check_periodic_pairs
+from periodic_helpers import wedge_seeds_2d
 
 import microstructpy as msp
 from microstructpy.meshing import PolyMesh
@@ -9,8 +11,6 @@ from microstructpy.meshing import RasterMesh
 from microstructpy.meshing import TriMesh
 from microstructpy.meshing import trimesh as trimesh_module
 from microstructpy.seeding import SeedList
-from periodic_helpers import check_periodic_pairs
-from periodic_helpers import wedge_seeds_2d
 
 
 # --------------------------------------------------------------------------- #

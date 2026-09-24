@@ -2,15 +2,15 @@
 import numpy as np
 import pytest
 import scipy.stats
+from periodic_helpers import check_periodic_pairs
+from periodic_helpers import seed_volumes
+from periodic_helpers import tiled_reference_volumes
 
 import microstructpy as msp
 from microstructpy.meshing import PolyMesh
 from microstructpy.meshing.polymesh import kp_loop
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
-from periodic_helpers import check_periodic_pairs
-from periodic_helpers import seed_volumes
-from periodic_helpers import tiled_reference_volumes
 
 
 # --------------------------------------------------------------------------- #

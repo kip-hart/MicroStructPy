@@ -16,6 +16,7 @@ import time
 import numpy as np
 from matplotlib import path as mpath
 from matplotlib import pyplot as plt
+from periodic_helpers import min_edge
 
 from microstructpy import geometry
 from microstructpy.meshing.polymesh import PolyMesh
@@ -24,7 +25,6 @@ from microstructpy.meshing.polymesh import _segment_cross
 from microstructpy.meshing.polymesh import kp_loop
 from microstructpy.seeding import Seed
 from microstructpy.seeding import SeedList
-from periodic_helpers import min_edge
 
 
 # --------------------------------------------------------------------------- #
