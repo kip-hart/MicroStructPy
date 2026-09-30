@@ -147,6 +147,10 @@ Changed
   installs tox from the requirements: the pinned tox 3.14 forced an old
   pluggy that the current pytest-cov cannot load, so no test could run.
   The jobs of the test matrix no longer cancel each other on a failure.
+- Read the Docs builds the documentation with Python 3.10 instead of 3.8,
+  which pyvoro-rimoli and the current versions of other dependencies do not
+  support, and installs ``requirements.txt`` like the documentation check
+  of the continuous integration.
 - The facets of the triangular and tetrahedral meshes created from a
   polygonal mesh are sorted (nodes in ascending order within a facet,
   facets in lexicographic order), whatever the mesher. Triangle and TetGen
