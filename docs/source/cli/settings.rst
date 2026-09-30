@@ -1,3 +1,5 @@
+.. _cli_settings:
+
 =========================
 ``<settings>`` - Settings
 =========================
@@ -277,11 +279,28 @@ This optimization process, however, will increase the time to generate a
 polygonal mesh.
 To track the progress of the optimizer, set ``verbose`` to ``True``.
 
+In a periodic domain (see :ref:`cli_domain`), the cells that cross a periodic
+face are split into pieces, and a cell that barely crosses a face leaves a
+thin piece on the opposite face, which forces very small elements there.
+With ``edge_opt`` and a positive ``periodic_margin``, the optimizer also
+treats the thickness of each piece at a periodic face as a feature of the
+mesh, like an edge, and moves the seeds of every piece thinner than the
+margin (and of its neighbors) normal to the face, until the piece is at least
+as thick as the margin or the cell no longer crosses the face.
+A corner of a cell at a periodic face that is narrower than ``mesh_min_angle``
+is treated the same way: the mesher cannot reach the minimum angle in such a
+corner and fills it with shells of very small elements instead, so the
+optimizer moves the seeds on both sides of the facet along it to open the
+corner.
+A change is kept when the shortest feature it modifies gets longer, so the
+shorter features of the mesh never get worse.
+
 edge_opt_n_iter
 ---------------
 
 This field specifies how many times the optimizer should attempt to increase
-the length of the shortest edge in the polygonal mesh.
+the length of the shortest edge in the polygonal mesh (or the thickness of a
+piece at a periodic face).
 The default is ``<edge_opt_n_iter> 100 </edge_opt_n_iter>``, which limits the
 optimizer to 100 attempts per edge.
 This field is ignored if ``edge_opt`` is set to ``False``.
@@ -341,14 +360,42 @@ This setting controls the aspect ratio of the elements, with angles between
 The default is ``<mesh_min_angle> 0 </mesh_min_angle>``, which effectively
 turns off the angle quality control.
 
+periodic_margin
+---------------
+
+This field sets the minimum distance between the surface of a seed and a
+periodic face of the domain (see :ref:`cli_domain` for periodic domains).
+A position where a seed ends within this distance inside a face, or crosses
+a face by less than this distance, is rejected and another one is tried:
+such seeds leave thin pieces of grains on the faces of the domain, and
+elements much smaller than the target size of the mesh there.
+The value ``auto`` uses the smaller of two lengths: half the target edge
+length of the mesh, taken from ``mesh_max_edge_length`` or, if it is not set,
+from ``mesh_max_volume``; and an eighth of the size of the smallest seed (its
+smallest diameter or side).
+The smallest seeds need about four elements across them, so the mesh cannot
+be coarser than a quarter of their size, and a seed cannot satisfy a margin
+larger than itself: with such a margin, the positions near the faces would
+all be rejected and the seeds dropped.
+A large margin makes the seeds harder to place near the faces.
+The margin also applies to the cells: with ``edge_opt``, the optimizer
+thickens or removes the pieces of the cells at the periodic faces that are
+thinner than the margin, which the placement of the seeds alone cannot
+prevent (a cell extends beyond its seed, and its corners can cross a face
+by a small amount).
+The default is ``<periodic_margin> 0 </periodic_margin>``, which turns off
+the margin. It has no effect on non-periodic domains.
+
 mesh_max_edge_length
 --------------------
 
-This field defines the maximum edge length along a grain boundary in a 2D
-triangular mesh.
+This field defines the maximum edge length along a grain boundary: of the
+segments of a 2D triangular mesh, and of the triangles on the facets of a 3D
+tetrahedral mesh.
 A small maximum edge length will increase resolution of the mesh at grain
-boundaries.
-Currently this feature has no equivalent in 3D.
+boundaries, while the size of the elements inside the grains is controlled
+by the maximum volume (see the :ref:`ex_pbx_interface_2d` and
+:ref:`ex_pbx_interface_3d`).
 The default value is ``<mesh_max_edge_length> inf </mesh_max_edge_length>``,
 which effectively turns off the edge length quality control.
 

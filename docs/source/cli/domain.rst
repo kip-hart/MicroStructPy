@@ -1,3 +1,5 @@
+.. _cli_domain:
+
 ====================================
 ``<domain>`` - Microstructure Domain
 ====================================
@@ -298,3 +300,65 @@ Below are some example square domain definitions.
             <center> 5, 0 </center>
         </domain>
     </input>
+
+Periodicity
+^^^^^^^^^^^
+
+Rectangular domains (rectangle, square, box, cube) can be made periodic with
+the ``<periodic>`` field, which lists the periodic axes. Seeds that cross a
+periodic face are placed so that they do not overlap seeds on the opposite
+side, the tessellation is periodic across those faces (a grain that crosses a
+face continues on the opposite side), and the triangular mesh has matching
+nodes on opposite faces. The pairs of periodic nodes are written with the
+meshes, and the Abaqus output contains a node set per periodic face, in
+matching order.
+
+.. code-block:: XML
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!-- Example periodic domains -->
+    <input>
+        <domain>
+            <shape> square </shape>
+            <side_length> 10 </side_length>
+            <!-- periodic in both directions -->
+            <periodic> True </periodic>
+        </domain>
+
+        <domain>
+            <shape> rectangle </shape>
+            <side_lengths> 10, 5 </side_lengths>
+            <!-- periodic in x only -->
+            <periodic> x </periodic>
+        </domain>
+
+        <domain>
+            <shape> cube </shape>
+            <side_length> 10 </side_length>
+            <!-- periodic in x and z, free in y -->
+            <periodic> xz </periodic>
+        </domain>
+    </input>
+
+A seed that barely crosses a periodic face, or ends just inside it, leaves a
+thin piece of its grain on the opposite face and very small elements there;
+the ``periodic_margin`` setting rejects such positions and, with
+``edge_opt``, moves the seeds of the cells that still leave such pieces (see
+:ref:`cli_settings`).
+
+The mesher must be Triangle/TetGen for periodic microstructures (with gmsh the
+nodes on opposite faces are not guaranteed to match), and the mesh size of a
+raster mesh must divide the domain length along the periodic axes.
+The mesh quality and size settings (``mesh_min_angle``, ``mesh_max_volume``,
+the ``max_volume`` of each phase and ``mesh_max_edge_length``) apply to
+periodic meshes as to non-periodic ones. In 2D, the cells next to the
+periodic faces are copied outside the faces while meshing, so that Triangle
+refines both faces of a pair the same way; if some nodes on the faces have
+no image, the mesh is built again from all of its points, with the points
+of a periodic face and of its image merged and put on both faces, so that
+Triangle only refines it around those points. In 3D, the
+mesh is built once as usual, then the facets are triangulated with the points
+TetGen added on them (the facets on opposite periodic faces with the points
+of both) and the mesh is built again with the facets fixed; the elements next
+to the periodic faces are slightly more numerous and of slightly lower
+quality than in a non-periodic mesh.

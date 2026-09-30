@@ -53,7 +53,7 @@ class Ellipse(object):
             if kw in kwargs and kwargs[kw] <= 0:
                 raise ValueError(kw + ' should be positive.')
         if 'axes' in kwargs:
-            for i, ax in kwargs['axes']:
+            for i, ax in enumerate(kwargs['axes']):
                 if ax <= 0:
                     raise ValueError('axes[{}] should be positive'.format(i))
 
@@ -62,7 +62,7 @@ class Ellipse(object):
                 m = np.array(kwargs[kw])
                 if m.shape != (2, 2):
                     raise ValueError(kw + ' should be 2x2.')
-                if not np.all(np.isclose(m * m.T, np.eye(2))):
+                if not np.all(np.isclose(m.dot(m.T), np.eye(2))):
                     raise ValueError(kw + ' should be orthonormal.')
 
         # position
@@ -253,6 +253,24 @@ class Ellipse(object):
         return repr_str
 
     # ----------------------------------------------------------------------- #
+    # Equality                                                                #
+    # ----------------------------------------------------------------------- #
+    def __eq__(self, other):
+        if not isinstance(other, Ellipse):
+            return False
+        c1 = np.array(self.center, dtype='float')
+        c2 = np.array(other.center, dtype='float')
+        if c1.shape != c2.shape or not np.allclose(c1, c2):
+            return False
+        if not np.allclose([self.a, self.b], [other.a, other.b]):
+            return False
+        d_ang = (self.angle - other.angle + 180) % 360 - 180
+        return np.isclose(d_ang, 0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    # ----------------------------------------------------------------------- #
     # Size and Orientation Getters                                            #
     # ----------------------------------------------------------------------- #
     @property
@@ -368,10 +386,10 @@ class Ellipse(object):
         """  # NOQA: E501
         if 'size' in kwargs:
             s_dist = kwargs['size']
-
-            if type(s_dist) in (float, int):
+            try:
+                return 0.25 * np.pi * s_dist.moment(2)
+            except AttributeError:
                 return 0.25 * np.pi * s_dist * s_dist
-            return 0.25 * np.pi * s_dist.moment(2)
 
         if 'area' in kwargs:
             a_dist = kwargs['area']
@@ -381,16 +399,11 @@ class Ellipse(object):
                 a_exp = a_dist
             return a_exp
 
+        if 'axes' in kwargs:
+            return np.pi * _prod_exp(*kwargs['axes'])
+
         if ('a' in kwargs) and ('b' in kwargs):
-            exp = np.pi
-            for kw in ('a', 'b'):
-                dist = kwargs[kw]
-                if type(dist) in (float, int):
-                    mu = dist
-                else:
-                    mu = dist.moment(1)
-                exp *= mu
-            return exp
+            return np.pi * _prod_exp(kwargs['a'], kwargs['b'])
 
         if ('b' in kwargs) and ('aspect_ratio' in kwargs):
             exp = np.pi
@@ -407,13 +420,14 @@ class Ellipse(object):
 
         if ('a' in kwargs) and ('aspect_ratio' in kwargs):
             n = 1000
+            rng = np.random.RandomState(0)
             try:
-                a = kwargs['a'].rvs(size=n)
+                a = kwargs['a'].rvs(size=n, random_state=rng)
             except AttributeError:
                 a = np.full(n, kwargs['a'])
 
             try:
-                k = kwargs['aspect_ratio'].rvs(size=n)
+                k = kwargs['aspect_ratio'].rvs(size=n, random_state=rng)
             except AttributeError:
                 k = np.full(n, kwargs['aspect_ratio'])
             return np.pi * np.mean((a * a) / k)
@@ -689,11 +703,24 @@ class Ellipse(object):
         new_dist = 2 - dist[mask]
         scl = new_dist / dist[mask]
 
-        new_scl_pos = scl_pos[mask] * scl
-        new_rel_pos = new_scl_pos.dot(self.orientation.T)
+        new_scl_pos = scl_pos[mask] * scl.reshape(-1, 1)
+        new_rot_pos = new_scl_pos * np.array(self.axes).reshape(1, -1)
+        new_rel_pos = new_rot_pos.dot(self.orientation.T)
         new_pos = new_rel_pos + np.array(self.center)
 
         if single_pt:
             return new_pos[0]
         else:
             return new_pos
+
+
+def _prod_exp(*args):
+    """Product of the expected values of constants and distributions."""
+    prod = 1
+    for arg in args:
+        try:
+            arg_mu = arg.moment(1)
+        except AttributeError:
+            arg_mu = arg
+        prod *= arg_mu
+    return prod

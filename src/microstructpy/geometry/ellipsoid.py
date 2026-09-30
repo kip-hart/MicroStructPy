@@ -137,7 +137,7 @@ class Ellipsoid(object):
                 if (ratio_ab is not None) and (self.a is not None):
                     self.b = self.a / ratio_ab
                 elif (ratio_bc is not None) and (self.c is not None):
-                    self.b = ratio_bc * self.a
+                    self.b = ratio_bc * self.c
 
             if self.c is None:
                 if (ratio_ac is not None) and (self.a is not None):
@@ -338,13 +338,10 @@ class Ellipsoid(object):
         str_str += 'b: ' + str(self.b) + '\n'
         str_str += 'c: ' + str(self.c)
         if len(self.rot_seq) > 0:
-            str_str += '\nrot_seq: ('
-            for i, (ax, ang) in enumerate(self.rot_seq):
-                str_str += '(' + str(ax) + ', ' + str(ang) + ')'
-                if i < len(self.rot_seq) - 1:
-                    str_str += ', '
-                else:
-                    str_str += ')'
+            # axis names must be quoted so that the string can be parsed
+            # back (see Seed.from_str)
+            rot_seq = tuple([(ax, float(ang)) for ax, ang in self.rot_seq])
+            str_str += '\nrot_seq: ' + repr(rot_seq)
         return str_str
 
     def __repr__(self):
@@ -355,6 +352,23 @@ class Ellipsoid(object):
         repr_str += ', rot_seq=' + rot_str
         repr_str += ')'
         return repr_str
+
+    # ----------------------------------------------------------------------- #
+    # Equality                                                                #
+    # ----------------------------------------------------------------------- #
+    def __eq__(self, other):
+        if not isinstance(other, Ellipsoid):
+            return False
+        c1 = np.array(self.center, dtype='float')
+        c2 = np.array(other.center, dtype='float')
+        if c1.shape != c2.shape or not np.allclose(c1, c2):
+            return False
+        if not np.allclose(self.axes, other.axes):
+            return False
+        return np.allclose(self.matrix, other.matrix)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     # ----------------------------------------------------------------------- #
     # Size and Orientation Getters                                            #
@@ -531,9 +545,10 @@ class Ellipsoid(object):
         # Check for size distribution
         if 'size' in kwargs:
             s_dist = kwargs['size']
-            if type(s_dist) in (float, int):
+            try:
+                return 0.5 * np.pi * s_dist.moment(3) / 3
+            except AttributeError:
                 return 0.5 * np.pi * s_dist * s_dist * s_dist / 3
-            return 0.5 * np.pi * s_dist.moment(3) / 3
 
         if 'volume' in kwargs:
             v_dist = kwargs['volume']
@@ -559,14 +574,15 @@ class Ellipsoid(object):
 
         # Use Monte Carlo to determine expected volume
         n_trials = 1000
-        kws = set(kwargs.keys()) - set(_misc.ori_kws)
+        kws = sorted(set(kwargs.keys()) - set(_misc.ori_kws))
+        rng = np.random.RandomState(0)
 
         total_vol = 0
         for i in range(n_trials):
             params = {}
             for kw in kws:
                 try:
-                    params[kw] = kwargs[kw].rvs()
+                    params[kw] = kwargs[kw].rvs(random_state=rng)
                 except AttributeError:
                     params[kw] = kwargs[kw]
             total_vol += Ellipsoid(**params).volume
@@ -635,12 +651,17 @@ class Ellipsoid(object):
             a = self.c
             b = self.a
             c = self.b
-            inds = [0, 2, 1]
-        else:
+            inds = [1, 2, 0]
+        elif (self.c >= self.b) and (self.b >= self.a):
             a = self.c
             b = self.b
             c = self.a
             inds = [2, 1, 0]
+        else:  # (self.b >= self.c) and (self.c >= self.a)
+            a = self.b
+            b = self.c
+            c = self.a
+            inds = [2, 0, 1]
 
         # Prolate Ellipsoid
         if np.isclose(b, c):
@@ -761,7 +782,7 @@ class Ellipsoid(object):
 
         mod_kwargs = {}
         for key, val in kwargs.items():
-            if key == 'facecolors' and type(val) != list:
+            if key == 'facecolors' and not isinstance(val, list):
                 mod_kwargs['color'] = val
             else:
                 mod_kwargs[key] = val
@@ -773,26 +794,13 @@ class Ellipsoid(object):
     @property
     def limits(self):
         """list: List of (lower, upper) bounds for the bounding box"""
-        if np.all(np.isclose(self.matrix, np.eye(3))):
-            ax = np.array(self.axes)
-            cen = np.array(self.center)
-            return [(x - r, x + r) for x, r in zip(cen, ax)]
-
-        n = 4
-        u = np.linspace(0, 2 * np.pi, 1 + 4 * n)
-        cv = np.linspace(-1, 1, 1 + 2 * n)
-        uu, cvv = np.meshgrid(u, cv)
-        svv = np.sin(np.arccos(cvv))
-
-        xp = self.a * np.cos(uu) * svv
-        yp = self.b * np.sin(uu) * svv
-        zp = self.c * cvv
-
-        pts = np.array([xp.flatten(), yp.flatten(), zp.flatten()])
-        r_pts = self.matrix.dot(pts)
-        lbs = r_pts.min(axis=-1) + np.array(self.center)
-        ubs = r_pts.max(axis=-1) + np.array(self.center)
-        return list(zip(lbs, ubs))
+        # The i-th coordinate of a surface point is sum_j R_ij a_j u_j with
+        # |u| = 1, so the half-extent along axis i is the 2-norm of the
+        # vector (R_ij a_j)_j.
+        scl_mat = np.array(self.matrix) * np.array(self.axes).reshape(1, -1)
+        half = np.sqrt(np.sum(scl_mat * scl_mat, axis=1))
+        cen = np.array(self.center)
+        return [(x - r, x + r) for x, r in zip(cen, half)]
 
     @property
     def sample_limits(self):
@@ -867,8 +875,9 @@ class Ellipsoid(object):
         new_dist = 2 - dist[mask]
         scl = new_dist / dist[mask]
 
-        new_scl_pos = scl_pos[mask] * scl
-        new_rel_pos = new_scl_pos.dot(self.orientation.T)
+        new_scl_pos = scl_pos[mask] * scl.reshape(-1, 1)
+        new_rot_pos = new_scl_pos * np.array(self.axes).reshape(1, -1)
+        new_rel_pos = new_rot_pos.dot(self.orientation.T)
         new_pos = new_rel_pos + np.array(self.center)
 
         if single_pt:

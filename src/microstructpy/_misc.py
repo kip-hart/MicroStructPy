@@ -4,6 +4,7 @@ This private module contains miscellaneous functions.
 """
 
 import ast
+import re
 
 import numpy as np
 
@@ -40,6 +41,12 @@ def from_str(string):
 
     This function takes a string and converts it into a number or a list.
 
+    Booleans are recognized regardless of case (``true``, ``FALSE``, ...),
+    on their own or inside a tuple/list such as ``(true, false)``.
+    Strings that merely contain these words (``true_cdf.csv``) are returned
+    unchanged. Values that Python does not accept as literals but ``float``
+    does, such as ``inf``, ``-inf`` and ``nan``, are converted to floats.
+
     Args:
         string (str): The string.
 
@@ -49,25 +56,32 @@ def from_str(string):
     """
     s = string.strip()
     try:
-        val = ast.literal_eval(s)
+        return ast.literal_eval(s)
     except (ValueError, SyntaxError):
-        if 'true' in s.lower():
-            tmp_s = s.lower().replace('true', 'True')
-            tmp_val = from_str(tmp_s)
-            if tmp_val != tmp_s:
-                val = tmp_val
-            else:
-                val = s
-        elif 'false' in s.lower():
-            tmp_s = s.lower().replace('false', 'False')
-            tmp_val = from_str(tmp_s)
-            if tmp_val != tmp_s:
-                val = tmp_val
-            else:
-                val = s
-        else:
-            val = s
-    return val
+        pass
+
+    # Booleans, case-insensitive
+    if s.lower() in ('true', 'false'):
+        return s.lower() == 'true'
+
+    # Booleans inside a literal, e.g. '(true, False)'
+    norm_s = _bool_re.sub(lambda m: m.group(0).capitalize(), s)
+    if norm_s != s:
+        try:
+            return ast.literal_eval(norm_s)
+        except (ValueError, SyntaxError):
+            pass
+
+    # Floats that are not Python literals: inf, -inf, nan
+    try:
+        return float(s)
+    except ValueError:
+        pass
+
+    return s
+
+
+_bool_re = re.compile(r'\b(true|false)\b', flags=re.IGNORECASE)
 
 
 # --------------------------------------------------------------------------- #
@@ -164,3 +178,313 @@ def ax_objects(ax):
     for att in ['collections', 'images', 'lines', 'patches', 'texts']:
         n += len(getattr(ax, att))
     return n
+
+
+# --------------------------------------------------------------------------- #
+#                                                                             #
+# Periodicity                                                                 #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+def periodic_axes(periodic, n_dim):
+    """Per-axis periodicity flags.
+
+    The periodicity of a microstructure can be given as a boolean (all axes
+    or none), a list of booleans (one per axis), or a string with the names
+    of the periodic axes, such as ``'x'``, ``'xy'`` or ``'xz'``.
+
+    Args:
+        periodic (bool, list, or str): The periodicity specification.
+        n_dim (int): Number of dimensions of the domain.
+
+    Returns:
+        list: ``n_dim`` booleans, True for the periodic axes.
+
+    Raises:
+        ValueError: If the specification cannot be interpreted.
+
+    """
+    if periodic is None:
+        return [False for _ in range(n_dim)]
+
+    if isinstance(periodic, (bool, np.bool_)):
+        return [bool(periodic) for _ in range(n_dim)]
+
+    axis_names = 'xyz'[:n_dim]
+    if isinstance(periodic, str):
+        text = periodic.strip().lower()
+        if text in ('true', 'all', 'yes'):
+            return [True for _ in range(n_dim)]
+        if text in ('false', 'none', 'no', ''):
+            return [False for _ in range(n_dim)]
+        flags = [False for _ in range(n_dim)]
+        for word in text.replace(',', ' ').split():
+            for char in word:
+                if char not in axis_names:
+                    e_str = 'Cannot interpret periodic axes ' + repr(periodic)
+                    e_str += '. Use a boolean, a list of ' + str(n_dim)
+                    e_str += ' booleans, or axis names such as '
+                    e_str += repr(axis_names) + '.'
+                    raise ValueError(e_str)
+                flags[axis_names.index(char)] = True
+        return flags
+
+    flags = [bool(f) for f in periodic]
+    if len(flags) != n_dim:
+        e_str = 'Expected ' + str(n_dim) + ' periodicity flags, got '
+        e_str += str(len(flags)) + ': ' + repr(periodic) + '.'
+        raise ValueError(e_str)
+    return flags
+
+
+class UnionFind(object):
+    """Disjoint sets of hashable items, with path halving.
+
+    Args:
+        items (iterable): The items, each initially in its own set.
+
+    """
+    def __init__(self, items):
+        self.parent = {item: item for item in items}
+
+    def find(self, item):
+        """Root of the set of an item."""
+        parent = self.parent
+        while parent[item] != item:
+            parent[item] = parent[parent[item]]
+            item = parent[item]
+        return item
+
+    def union(self, item_a, item_b):
+        """Join the sets of two items under the smaller of their roots, so
+        that the root of a set of integers is its smallest member."""
+        r_a, r_b = self.find(item_a), self.find(item_b)
+        if r_a != r_b:
+            self.parent[max(r_a, r_b)] = min(r_a, r_b)
+
+    def attach(self, item_a, item_b):
+        """Put the root of the set of the first item under the root of the
+        set of the second one."""
+        self.parent[self.find(item_a)] = self.find(item_b)
+
+
+def wall_axis_side(wall):
+    """Axis and side of a wall id of a rectangular domain.
+
+    The walls are numbered -1, -2 for the lower and upper faces along x,
+    -3, -4 along y and -5, -6 along z (the convention of Voro++).
+
+    Args:
+        wall (int): The wall id (negative).
+
+    Returns:
+        tuple: The axis (0, 1 or 2) and the side (0 for the lower face, 1
+        for the upper face).
+
+    """
+    return divmod(-wall - 1, 2)
+
+
+def periodic_domain_limits(domain):
+    """(lower, upper) bounds of a rectangular, axis-aligned domain.
+
+    Periodic microstructures are only supported in such domains.
+
+    Args:
+        domain (from :mod:`microstructpy.geometry`): The domain.
+
+    Returns:
+        list: One (lower, upper) tuple per axis.
+
+    Raises:
+        ValueError: If the domain is not a rectangle, square, box, or cube,
+            or if it is rotated.
+
+    """
+    name = type(domain).__name__.lower()
+    if name not in ('rectangle', 'square', 'box', 'cube'):
+        e_str = 'Periodic microstructures require a rectangular domain '
+        e_str += '(Rectangle, Square, Box, or Cube), not ' + name + '.'
+        raise ValueError(e_str)
+    if not np.allclose(np.array(domain.matrix), np.eye(domain.n_dim)):
+        e_str = 'Periodic microstructures require an axis-aligned domain.'
+        raise ValueError(e_str)
+    return [(float(lb), float(ub)) for lb, ub in domain.limits]
+
+
+def periodic_bounds(points, per_axes):
+    """(lower, upper) bounds of the domain of a periodic mesh.
+
+    The points of a mesh that fills a rectangular domain span the domain,
+    so its bounds are the extents of the points.
+
+    Args:
+        points (list or numpy.ndarray): The points of the mesh.
+        per_axes (list): Periodicity flag of each axis.
+
+    Returns:
+        list: One (lower, upper) tuple per axis.
+
+    """
+    pts = np.array(points, dtype='float')
+    return [(float(lb), float(ub)) for lb, ub in
+            zip(pts.min(axis=0), pts.max(axis=0))]
+
+
+def pair_periodic_points(points, per_axes, dom_lims, rel_tol=1e-8):
+    """Pair the points on opposite periodic faces of a domain.
+
+    For each periodic axis, every point on the lower face is matched with
+    its image on the upper face, and the coordinates of the pair are
+    snapped so that the image is exactly the point translated by the
+    domain length.
+
+    Args:
+        points (list or numpy.ndarray): The points.
+        per_axes (list): Periodicity flag of each axis.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+        rel_tol (float): Matching tolerance, relative to the largest
+            domain length.
+
+    Returns:
+        tuple: The snapped points (numpy.ndarray) and a dictionary that
+        maps each periodic axis to a list of (lower, upper) point numbers.
+
+    Raises:
+        ValueError: If a point on a periodic face has no image on the
+            opposite face.
+
+    """
+    pts = np.array(points, dtype='float')
+    n_dim = pts.shape[1]
+    lengths = [ub - lb for lb, ub in dom_lims]
+    tol = rel_tol * max(lengths)
+
+    pairs = {}
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        lb, ub = dom_lims[axis]
+        shift = np.zeros(n_dim)
+        shift[axis] = ub - lb
+        others = [i for i in range(n_dim) if i != axis]
+
+        low = np.nonzero(np.abs(pts[:, axis] - lb) <= tol)[0]
+        high = np.nonzero(np.abs(pts[:, axis] - ub) <= tol)[0]
+        if len(low) != len(high):
+            e_str = 'The periodic faces along axis ' + str(axis)
+            e_str += ' have different numbers of points ('
+            e_str += str(len(low)) + ' and ' + str(len(high)) + ').'
+            raise ValueError(e_str)
+
+        axis_pairs = []
+        if len(low) > 0:
+            rel = pts[low][:, None, :][:, :, others]
+            rel = rel - pts[high][None, :, :][:, :, others]
+            dists = np.sqrt(np.sum(rel * rel, axis=-1))
+            for i_low, kp_low in enumerate(low):
+                i_high = int(np.argmin(dists[i_low]))
+                if dists[i_low, i_high] > tol:
+                    e_str = 'Point ' + str(kp_low) + ' on the lower '
+                    e_str += 'periodic face of axis ' + str(axis)
+                    e_str += ' has no image on the upper face.'
+                    raise ValueError(e_str)
+                dists[:, i_high] = np.inf  # one-to-one
+                kp_high = int(high[i_high])
+                pts[kp_low, axis] = lb
+                pts[kp_high] = pts[kp_low] + shift
+                axis_pairs.append((int(kp_low), kp_high))
+        pairs[axis] = axis_pairs
+    return pts, pairs
+
+
+def pair_periodic_mesh(points, facets, per_axes, dom_lims):
+    """Pair the points and the facets of a mesh on opposite periodic faces.
+
+    See :func:`pair_periodic_points` and :func:`pair_periodic_facets`.
+
+    Args:
+        points (list or numpy.ndarray): The points.
+        facets (list or None): The facets, or None if the mesh has none.
+        per_axes (list): Periodicity flag of each axis.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+
+    Returns:
+        tuple: The snapped points (numpy.ndarray), the point pairs and the
+        facet pairs (dictionaries: axis -> list of (lower, upper) numbers;
+        the facet pairs are empty lists if the mesh has no facets).
+
+    """
+    pts, point_pairs = pair_periodic_points(points, per_axes, dom_lims)
+    if facets is None:
+        facet_pairs = {axis: [] for axis in point_pairs}
+    else:
+        facet_pairs = pair_periodic_facets(facets, point_pairs)
+    return pts, point_pairs, facet_pairs
+
+
+def pair_periodic_facets(facets, point_pairs):
+    """Pair the facets lying on opposite periodic faces.
+
+    Args:
+        facets (list): Facets (lists of point numbers).
+        point_pairs (dict): Output of :func:`pair_periodic_points`.
+
+    Returns:
+        dict: Maps each periodic axis to a list of (lower, upper) facet
+        numbers.
+
+    Raises:
+        ValueError: If a facet on a periodic face has no image.
+
+    """
+    pairs = {}
+    for axis, axis_pairs in point_pairs.items():
+        kp_map = dict(axis_pairs)
+        low_set = set(kp_map)
+        high_set = set(kp_map.values())
+        high_facets = {}
+        for f_num, facet in enumerate(facets):
+            if len(facet) > 0 and all([kp in high_set for kp in facet]):
+                high_facets[frozenset(facet)] = f_num
+        f_pairs = []
+        for f_num, facet in enumerate(facets):
+            if len(facet) == 0 or not all([kp in low_set for kp in facet]):
+                continue
+            key = frozenset([kp_map[kp] for kp in facet])
+            if key not in high_facets:
+                e_str = 'Facet ' + str(f_num) + ' on the lower periodic'
+                e_str += ' face of axis ' + str(axis) + ' has no image'
+                e_str += ' on the upper face.'
+                raise ValueError(e_str)
+            f_pairs.append((f_num, high_facets[key]))
+        pairs[axis] = f_pairs
+    return pairs
+
+
+def unwrap_points(points, center, per_axes, dom_lims):
+    """Translate points by domain lengths to the image nearest a center.
+
+    Used to reassemble a grain that a periodic domain splits into pieces:
+    along each periodic axis, every point is moved by a multiple of the
+    domain length so that it lies within half a length of the center.
+
+    Args:
+        points (list or numpy.ndarray): The points.
+        center (list or numpy.ndarray): The reference point (e.g. the seed
+            position).
+        per_axes (list): Periodicity flag of each axis.
+        dom_lims (list): (lower, upper) bounds of the domain, per axis.
+
+    Returns:
+        numpy.ndarray: The unwrapped points.
+
+    """
+    pts = np.array(points, dtype='float')
+    cen = np.array(center, dtype='float')
+    for axis, flag in enumerate(per_axes):
+        if not flag:
+            continue
+        length = dom_lims[axis][1] - dom_lims[axis][0]
+        n_shift = np.round((cen[axis] - pts[:, axis]) / length)
+        pts[:, axis] += n_shift * length
+    return pts

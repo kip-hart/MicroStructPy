@@ -66,15 +66,39 @@ class Seed(object):
         self.geometry = seed_geometry
         self.phase = phase
 
-        if position is None and self.geometry is not None:
-            self.position = [0 for _ in range(self.geometry.n_dim)]
+        if self.geometry is None:
+            geom_cen = None
         else:
-            self.position = position
+            geom_cen = [float(x) for x in self.geometry.center]
 
-        if breakdown is None:
-            self.breakdown = seed_geometry.approximate()
+        # A generated breakdown lies at the geometry center; a breakdown
+        # given by the caller is assumed to already be at ``position``.
+        generated = breakdown is None
+        if generated:
+            if self.geometry is None:
+                breakdown = []
+            else:
+                breakdown = self.geometry.approximate()
+        self.breakdown = _breakdown_array(breakdown)
+
+        if position is None:
+            position = [] if geom_cen is None else geom_cen
+        if generated and geom_cen is not None:
+            self._position = geom_cen
         else:
-            self.breakdown = breakdown
+            self._position = [float(x) for x in position]
+        self.position = position
+
+    # ----------------------------------------------------------------------- #
+    # Update Breakdown                                                        #
+    # ----------------------------------------------------------------------- #
+    def update_breakdown(self):
+        """Recompute the breakdown from the geometry.
+
+        The circles/spheres are recomputed with the geometry's
+        ``approximate`` method, at the current position of the seed.
+        """
+        self.breakdown = _breakdown_array(self.geometry.approximate())
 
     # ----------------------------------------------------------------------- #
     # Factory Method                                                          #
@@ -137,15 +161,11 @@ class Seed(object):
             geom = None
         else:
             geom = geometry.factory(seed_type, **kwargs)
-
-        if breakdown is None:
-            if seed_type in ('circle', 'sphere'):
-                breakdown = np.append(geom.center, geom.r).reshape(1, -1)
-            else:
-                breakdown = geom.approximate()
-
-        if position is None:
-            position = [0 for _ in range(geom.n_dim)]
+            if not hasattr(geom, 'approximate'):
+                e_str = 'Seeds of type ' + seed_type + ' are not supported,'
+                e_str += ' since the geometry cannot be approximated by'
+                e_str += ' circles/spheres.'
+                raise ValueError(e_str)
 
         return cls(geom, phase, breakdown, position)
 
@@ -190,8 +210,9 @@ class Seed(object):
 
         if 'breakdown' in str_dict:
             breakdown = str_dict['breakdown']
-            if not isinstance(breakdown[0], tuple):
+            if not isinstance(breakdown[0], (tuple, list)):
                 breakdown = (breakdown,)
+            breakdown = _breakdown_array(breakdown)
             del str_dict['breakdown']
         else:
             breakdown = None
@@ -212,11 +233,14 @@ class Seed(object):
         str_str = 'Geometry: ' + geom_name + '\n'
         str_str += str(self.geometry) + '\n'
         str_str += 'Phase: ' + str(self.phase) + '\n'
-        bkdwn_str = ', '.join([str(tuple(b)) for b in self.breakdown])
+        # plain floats, so that the string can be parsed back exactly
+        bkdwn_str = ', '.join([repr(tuple([float(x) for x in b])) for b in
+                               self.breakdown])
         if len(self.breakdown) == 1:
             bkdwn_str += ','  # breakdowns will be a tuple of length 1
         str_str += 'Breakdown: (' + bkdwn_str + ')\n'
-        str_str += 'Position: (' + ', '.join([str(x) for x in self.position])
+        str_str += 'Position: ('
+        str_str += ', '.join([repr(float(x)) for x in self.position])
         str_str += ')'
         return str_str
 
@@ -224,9 +248,13 @@ class Seed(object):
         repr_str = 'Seed('
         repr_str += repr(self.geometry) + ', '
         repr_str += 'phase=' + repr(self.phase) + ', '
-        bkdwn_str = ', '.join([repr(tuple(b)) for b in self.breakdown])
+        bkdwn_str = ', '.join([repr(tuple([float(x) for x in b])) for b in
+                               self.breakdown])
+        if len(self.breakdown) == 1:
+            bkdwn_str += ','
         repr_str += 'breakdown=(' + bkdwn_str + '), '
-        repr_str += 'position=(' + ', '.join([repr(x) for x in self.position])
+        repr_str += 'position=('
+        repr_str += ', '.join([repr(float(x)) for x in self.position])
         repr_str += ')'
         repr_str += ')'
         return repr_str
@@ -261,16 +289,23 @@ class Seed(object):
         if seed.phase != self.phase:
             return False
 
-        if not np.all(np.isclose(seed.breakdown, self.breakdown)):
+        b1 = np.array(self.breakdown, dtype='float')
+        b2 = np.array(seed.breakdown, dtype='float')
+        if b1.shape != b2.shape or not np.allclose(b1, b2):
             return False
 
         if seed.geometry != self.geometry:
             return False
 
-        if not np.all(np.isclose(seed.position, self.position)):
+        p1 = np.array(self.position, dtype='float')
+        p2 = np.array(seed.position, dtype='float')
+        if p1.shape != p2.shape or not np.allclose(p1, p2):
             return False
 
         return True
+
+    def __ne__(self, seed):
+        return not self.__eq__(seed)
 
     # ----------------------------------------------------------------------- #
     # Position Getter/Setter                                                  #
@@ -291,26 +326,20 @@ class Seed(object):
 
     @position.setter
     def position(self, pos):
-        try:
-            old_pos = np.array(self.position)
-        except AttributeError:
+        pos = [float(x) for x in pos]
+        old_pos = getattr(self, '_position', None)
+        if old_pos is None or len(old_pos) != len(pos):
             old_pos = np.zeros(len(pos))
 
-        try:
-            displace = np.array(pos) - old_pos
-            for i, bkdwn in enumerate(self.breakdown):
-                coords = bkdwn[:-1]
-                rad = bkdwn[-1]
-                new_coords = [x + d for x, d in zip(coords, displace)]
-                new_bkdwn = new_coords + [rad]
-                self.breakdown[i] = new_bkdwn
-        except AttributeError:
-            pass
+        breakdown = getattr(self, 'breakdown', None)
+        if breakdown is not None and len(breakdown) > 0 and len(pos) > 0:
+            displace = np.array(pos) - np.array(old_pos, dtype='float')
+            new_breakdown = _breakdown_array(breakdown)
+            new_breakdown[:, :-1] += displace.reshape(1, -1)
+            self.breakdown = new_breakdown
 
-        try:
+        if self.geometry is not None:
             self.geometry.center = pos
-        except AttributeError:
-            pass
 
         self._position = pos
 
@@ -379,3 +408,11 @@ class Seed(object):
         else:
             [geometry.Sphere(r=r, center=(x, y, z)).plot(**kwargs)
              for x, y, z, r in self.breakdown]
+
+
+def _breakdown_array(breakdown):
+    """Breakdown as an N x (d + 1) array of floats (N x 0 if empty)."""
+    arr = np.array(breakdown, dtype='float')
+    if arr.size == 0:
+        return np.zeros((0, 0))
+    return arr.reshape(-1, arr.shape[-1])
