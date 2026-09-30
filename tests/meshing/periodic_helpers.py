@@ -102,23 +102,41 @@ def seed_volumes(pmesh, n_seeds):
     return vols
 
 
-def tiled_reference_volumes(seeds, domain, per_axes):
+def tiled_reference_volumes(seeds, domain, per_axes, margin=None):
     """Volumes of the cells of the seeds in a periodic tessellation,
     computed as a non-periodic tessellation of the seeds tiled across the
-    periodic axes (3 copies per periodic axis)."""
+    periodic axes (3 copies per periodic axis).
+
+    With a ``margin``, only the copies whose center is within that distance
+    of the domain are kept, and the tiled domain ends there (plus the extent
+    of the largest breakdown): the cells of the original seeds only reach
+    seeds that close. In 3D this makes the reference tessellation several
+    times smaller; with all the copies, it needs gigabytes of memory.
+    """
     lims = np.array(domain.limits)
     lengths = lims[:, 1] - lims[:, 0]
     options = [[-length, 0.0, length] if flag else [0.0]
                for length, flag in zip(lengths, per_axes)]
+    if margin is None:
+        reach = lengths
+    else:
+        extent = max([np.max(np.abs(np.array(s.breakdown)[:, :-1]
+                                    - s.position)) for s in seeds])
+        reach = np.full(len(lengths), margin + extent)
     tiled = SeedList()
-    for t in itertools.product(*options):
-        for seed in seeds:
+    copies = []  # (translation number, seed number) of each copy
+    for i_t, t in enumerate(itertools.product(*options)):
+        for seed_num, seed in enumerate(seeds):
+            pos = np.array(seed.position) + np.array(t)
+            if margin is not None and np.any((pos < lims[:, 0] - margin)
+                                             | (pos > lims[:, 1] + margin)):
+                continue
             copy_seed = copy.deepcopy(seed)
-            copy_seed.position = list(np.array(seed.position) + np.array(t))
+            copy_seed.position = list(pos)
             tiled.append(copy_seed)
-    n_seeds = len(seeds)
-    big_lims = [(lb - length, ub + length) if flag else (lb, ub)
-                for (lb, ub), length, flag in zip(lims, lengths, per_axes)]
+            copies.append((i_t, seed_num))
+    big_lims = [(lb - r, ub + r) if flag else (lb, ub)
+                for (lb, ub), r, flag in zip(lims, reach, per_axes)]
     if len(lims) == 2:
         big_domain = msp.geometry.Rectangle(limits=big_lims)
     else:
@@ -127,9 +145,9 @@ def tiled_reference_volumes(seeds, domain, per_axes):
     # the cells of the original copies (the zero translation)
     i_zero = [i for i, t in enumerate(itertools.product(*options))
               if not any(t)][0]
-    vols = np.zeros(n_seeds)
-    for seed_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
-        block, local = divmod(seed_num, n_seeds)
-        if block == i_zero:
-            vols[local] += vol
+    vols = np.zeros(len(seeds))
+    for tiled_num, vol in zip(pmesh.seed_numbers, pmesh.volumes):
+        i_t, seed_num = copies[tiled_num]
+        if i_t == i_zero:
+            vols[seed_num] += vol
     return vols

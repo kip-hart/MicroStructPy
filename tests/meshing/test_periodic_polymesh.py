@@ -223,7 +223,11 @@ def test_periodic_3d_matches_tiled_reference(per_axes):
     assert np.all(np.array(pmesh.volumes) > 0)
     assert set(pmesh.seed_numbers) == set(range(len(seeds)))
     vols = seed_volumes(pmesh, len(seeds))
-    ref = tiled_reference_volumes(seeds, domain, per_axes)
+    # The copies within 1 of the domain are enough for these seeds: the
+    # volumes are the same as with all the copies, to rounding. With all
+    # of them, the reference tessellation (27 copies of about 3000
+    # breakdown spheres) needs about 10 GB of memory.
+    ref = tiled_reference_volumes(seeds, domain, per_axes, margin=1)
     # vertices within 1e-5 of the faces are snapped onto them
     assert np.allclose(vols, ref, rtol=1e-6, atol=1e-6)
     _check_periodic_structure(pmesh, domain, per_axes)
