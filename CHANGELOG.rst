@@ -134,6 +134,15 @@ Fixed
 
 Changed
 '''''''
+- pyvoro is installed from the ``pyvoro-rimoli`` package instead of
+  ``pyvoro-mmalahe``. Both provide the same ``pyvoro`` module, but
+  pyvoro-mmalahe bundles Voro++ 0.4.6, whose radical (Laguerre)
+  tessellation can return a cell uncut: the cells then overlap, and
+  Triangle and TetGen can crash on the resulting polygonal mesh.
+  pyvoro-rimoli bundles the current Voro++, where this is fixed, and has
+  wheels for Linux, macOS and Windows. Uninstall pyvoro-mmalahe before
+  upgrading (``pip uninstall pyvoro-mmalahe``), since the two packages
+  install the same files.
 - The continuous integration installs the current pytest and no longer
   installs tox from the requirements: the pinned tox 3.14 forced an old
   pluggy that the current pytest-cov cannot load, so no test could run.
