@@ -15,6 +15,17 @@ import microstructpy as msp
 
 locale.setlocale(locale.LC_NUMERIC, "C")
 
+# Digest of the example inputs and of the library that meshes them.
+#
+# Sphinx-Gallery skips this script when its hash matches the .md5 beside
+# the output of an earlier build, which is what lets a cached build skip
+# the examples. The examples are found by glob below and none of them are
+# named here, so without this line the hash would not move when one of
+# them is edited, and the build would serve stale figures.
+#
+# Managed by docs/example_digest.py. Do not edit by hand.
+EXAMPLES_DIGEST = '9b6dc72f9fe7b839'
+
 example_dir = '../../../src/microstructpy/examples'
 
 welcome_fnames = ['intro_2_quality/trimesh.png',
