@@ -24,7 +24,7 @@ locale.setlocale(locale.LC_NUMERIC, "C")
 # them is edited, and the build would serve stale figures.
 #
 # Managed by docs/example_digest.py. Do not edit by hand.
-EXAMPLES_DIGEST = '9b6dc72f9fe7b839'
+EXAMPLES_DIGEST = '314fadcaec7cb6e5'
 
 example_dir = '../../../src/microstructpy/examples'
 
