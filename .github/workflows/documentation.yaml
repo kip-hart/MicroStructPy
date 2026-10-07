@@ -10,6 +10,10 @@ jobs:
   docs-checks:
     name: ${{ matrix.doc-type }}
     strategy:
+      # Let every format report. Without this, one failing format cancels
+      # the other two, and a build that fails partway through the examples
+      # takes the evidence of the others with it.
+      fail-fast: false
       matrix:
         doc-type: [html, latex, epub]
 
