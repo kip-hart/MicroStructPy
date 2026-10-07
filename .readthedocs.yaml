@@ -26,12 +26,17 @@ build:
     # examples run, and the build is likely to time out. That is the
     # intended failure: publish the cache for this commit, then rebuild.
     post_install:
-      - python docs/example_cache.py name > /tmp/cache_name
       - |
-        curl -sSfL -o /tmp/examples.tar.gz \
-          "https://github.com/kip-hart/MicroStructPy/releases/download/docs-cache/$(cat /tmp/cache_name)" \
-          && python docs/example_cache.py restore /tmp/examples.tar.gz \
-          || echo "No example cache for this commit, the examples will be run."
+        set -u
+        name=$(python docs/example_cache.py name) || exit 0
+        url=https://github.com/kip-hart/MicroStructPy/releases/download/docs-cache
+        echo "Looking for $name"
+        if curl -sSfL -o /tmp/examples.tar.gz "$url/$name"; then
+          python docs/example_cache.py restore /tmp/examples.tar.gz \
+            || echo "The archive was refused, the examples will be run."
+        else
+          echo "No archive published for this commit, the examples will be run."
+        fi
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
