@@ -155,6 +155,11 @@ class NSphere(object):
     def __neq__(self, nsphere):
         return not self.__eq__(nsphere)
 
+    # Equality allows for round-off, which no hash can follow, so the
+    # instances keep the identity-based hash of object. (Defining __eq__
+    # alone would make the class unhashable.)
+    __hash__ = object.__hash__
+
     # ----------------------------------------------------------------------- #
     # Size Setters/Getters                                                    #
     # ----------------------------------------------------------------------- #

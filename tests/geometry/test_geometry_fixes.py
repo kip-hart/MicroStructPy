@@ -10,6 +10,7 @@ from pyquaternion import Quaternion
 
 from microstructpy.geometry import Box
 from microstructpy.geometry import Circle
+from microstructpy.geometry import Cube
 from microstructpy.geometry import Ellipse
 from microstructpy.geometry import Ellipsoid
 from microstructpy.geometry import Rectangle
@@ -225,3 +226,16 @@ def test_nbox_equality():
     r2 = Rectangle(center=(1, 1), side_lengths=(2, 1), angle=30)
     assert r1 == r2
     assert r1 != Rectangle(center=(1, 1), length=2, width=1, angle=31)
+
+
+def test_geometries_are_hashable():
+    # defining __eq__ alone makes a class unhashable; the geometries keep
+    # the identity-based hash, so they work in sets and as dictionary keys
+    shapes = [Circle(r=1), Sphere(r=1), Ellipse(a=2, b=1),
+              Ellipsoid(a=3, b=2, c=1), Rectangle(side_lengths=(2, 1)),
+              Square(side_length=1), Box(side_lengths=(1, 2, 3)),
+              Cube(side_length=1)]
+    for shape in shapes:
+        assert shape in {shape}
+        assert {shape: 'value'}[shape] == 'value'
+    assert len(set(shapes)) == len(shapes)
