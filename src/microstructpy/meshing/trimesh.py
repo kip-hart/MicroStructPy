@@ -2955,7 +2955,7 @@ def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
     mins = p_arr.min(axis=0)
     maxs = p_arr.max(axis=0)
     tol = 1e-9 * (maxs - mins).max()
-    for _ in range(_MAX_PERIODIC_PASSES):
+    for i_pass in range(_MAX_PERIODIC_PASSES):
         # the elements inside the domain
         all_pts = np.array(tri_mesh.points)
         tri_elems = np.array(tri_mesh.elements)
@@ -2972,11 +2972,14 @@ def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
         if not _unmatched_periodic_nodes(tri_pts, polymesh):
             break
 
-        # all the points of the mesh become the input of the next pass
         n_input = len(pts)
         if (len(all_pts) < n_input or
                 not np.allclose(all_pts[:n_input], pts, rtol=0, atol=tol)):
             raise RuntimeError('Triangle did not keep the input points.')
+        if i_pass == _MAX_PERIODIC_PASSES - 1:
+            break  # no pass is left to use a new mesh
+
+        # all the points of the mesh become the input of the next pass
         pts, facets, facet_nums, n_new = _split_periodic_boundary_2d(
             all_pts, pts, facets, facet_nums, polymesh, n_input)
         if n_new == 0:
