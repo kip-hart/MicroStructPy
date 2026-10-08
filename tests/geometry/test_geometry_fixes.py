@@ -229,8 +229,8 @@ def test_nbox_equality():
 
 
 def test_geometries_are_hashable():
-    # defining __eq__ alone makes a class unhashable; the geometries keep
-    # the identity-based hash, so they work in sets and as dictionary keys
+    # defining __eq__ alone makes a class unhashable. The geometries keep
+    # the identity-based hash, so they work in sets and as dictionary keys.
     shapes = [Circle(r=1), Sphere(r=1), Ellipse(a=2, b=1),
               Ellipsoid(a=3, b=2, c=1), Rectangle(side_lengths=(2, 1)),
               Square(side_length=1), Box(side_lengths=(1, 2, 3)),

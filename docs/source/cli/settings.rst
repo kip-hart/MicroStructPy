@@ -369,10 +369,10 @@ A position where a seed ends within this distance inside a face, or crosses
 a face by less than this distance, is rejected and another one is tried:
 such seeds leave thin pieces of grains on the faces of the domain, and
 elements much smaller than the target size of the mesh there.
-The value ``auto`` uses the smaller of two lengths: half the target edge
-length of the mesh, taken from ``mesh_max_edge_length`` or, if it is not set,
-from ``mesh_max_volume``; and an eighth of the size of the smallest seed (its
-smallest diameter or side).
+The value ``auto`` uses the smaller of two lengths. The first is half the
+target edge length of the mesh, taken from ``mesh_max_edge_length`` or, if it
+is not set, from ``mesh_max_volume``. The second is an eighth of the size of
+the smallest seed (its smallest diameter or side).
 The smallest seeds need about four elements across them, so the mesh cannot
 be coarser than a quarter of their size, and a seed cannot satisfy a margin
 larger than itself: with such a margin, the positions near the faces would

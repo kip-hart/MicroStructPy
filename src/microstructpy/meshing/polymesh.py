@@ -900,7 +900,7 @@ class PolyMesh(object):
         """Pair the points and facets on opposite periodic faces.
 
         For each periodic axis, every point on the lower face is matched
-        with its image on the upper face; the coordinates of the pair are
+        with its image on the upper face. The coordinates of the pair are
         snapped so that the image is exactly the point translated by the
         domain length. Facets lying on the faces are paired likewise.
         The results are stored in ``periodic_axes``, ``periodic_points``
@@ -1378,7 +1378,7 @@ def _clip_loop(pts, adj, axis, value, keep_below, wall, tol):
             new_adj.append(adj[k])
         if inside[k] != inside[k1]:
             if inside[k] and on_line[k]:
-                # p itself is the crossing point; the next edge is the cut
+                # p itself is the crossing point. The next edge is the cut.
                 new_adj[-1] = wall
                 continue
             if inside[k1] and on_line[k1]:
@@ -1387,8 +1387,8 @@ def _clip_loop(pts, adj, axis, value, keep_below, wall, tol):
             x = p + t * (q - p)
             x[axis] = value
             new_pts.append(x)
-            # leaving the kept side: the next edge lies on the line;
-            # entering it: the edge from the crossing to q is the original
+            # leaving the kept side, the next edge lies on the line.
+            # Entering it, the edge from the crossing to q is the original.
             new_adj.append(wall if inside[k] else adj[k])
 
     if len(new_pts) < 3:
@@ -1470,7 +1470,7 @@ def _cut_cell_at_faces(parts, per_axes, lims, tol, snap_tol, clip, n_min):
     side of the domain, the part above the upper face to the lower side,
     and the part in between stays. The vertices next to a cut line/plane
     are snapped onto it first, so that the two cells sharing an edge/face
-    are cut consistently and no sliver pieces are created; flat pieces on
+    are cut consistently and no sliver pieces are created. Flat pieces on
     a cut are dropped.
 
     Args:
@@ -2008,7 +2008,7 @@ def _clip_cell_2d(cell_data, domain, n_samples=64, n_bnd_pts=64):
 
     elif len(kept_pts) == 2:
         # the domain crosses a single edge of the cell, so the clipped cell
-        # is bounded by that edge and an arc; the midpoint of the arc is added
+        # is bounded by that edge and an arc. The midpoint of the arc is added
         # so that the cell has a non-zero area
         n_faces = sum([f is not None for f in kept_faces])
         if n_faces != 1:
@@ -2259,8 +2259,8 @@ def _optimize_features(cls, pmesh, seedlist, domain, n_iter, verbose,
     creates is longer than the shortest one that it removes (for the
     shortest edge of the mesh, this is the usual criterion that the
     shortest edge gets longer). A target that does not improve in
-    ``n_iter`` consecutive trials is left alone and the next one is taken;
-    the optimization ends when no target is left. The accepted
+    ``n_iter`` consecutive trials is left alone and the next one is taken.
+    The optimization ends when no target is left. The accepted
     displacements are applied to ``seedlist``.
 
     Returns:
@@ -2462,7 +2462,7 @@ def _wedge_geometry(pts, wall_facet, facet, shared, cen):
     """Angle of the corner between a wall facet and a facet of a convex
     cell at their shared vertex (2D) or edge (3D), the shorter extent of
     the two facets from it, the unit vector along the facet away from the
-    wall, and the location of the corner; None if degenerate."""
+    wall, and the location of the corner. None if degenerate."""
     if len(shared) == 1:
         kp = shared[0]
         a_vec = pts[[k for k in wall_facet if k != kp][0]] - pts[kp]
@@ -2512,7 +2512,7 @@ def _wedge_geometry(pts, wall_facet, facet, shared, cen):
 
 def _select_target(features, margin, stuck):
     """The shortest feature, or the thinnest piece or corner under the
-    margin, that is not stuck; None when there is no such target."""
+    margin, that is not stuck. None when there is no such target."""
     sizes = np.array([f['size'] for f in features])
     order = np.argsort(sizes, kind='stable')
     cands = [order[0]]

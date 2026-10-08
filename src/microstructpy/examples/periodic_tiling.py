@@ -47,7 +47,7 @@ seeds_2d.position(domain_2d, rng_seed=1, periodic=True,
 
 # Create the polygonal and triangular meshes. The edge optimization moves
 # the seeds slightly to remove the shortest edges of the polygonal mesh,
-# which would otherwise force very small triangles in the mesh; with the
+# which would otherwise force very small triangles in the mesh. With the
 # margin, it also thickens or removes the pieces of the grains at the
 # periodic faces that are thinner than the margin, and opens the corners
 # of the grains at the faces that are narrower than the minimum angle of

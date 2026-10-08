@@ -45,8 +45,8 @@ with :func:`~microstructpy.seeding.SeedList.position` with
 for overlaps on the opposite face.
 The ``periodic_margin`` keeps the seeds from ending within half a target
 edge length of a face, or crossing one by less, since such seeds leave thin
-pieces of grains on the opposite face and very small triangles there; it is
-capped at an eighth of the smallest grain, which needs about four elements
+pieces of grains on the opposite face and very small triangles there. The
+margin is capped at an eighth of the smallest grain, which needs about four elements
 across it (the ``auto`` value of the CLI setting does the same).
 
 Polygon and Triangle Meshing

@@ -82,7 +82,7 @@ def test_piece_features_2d():
 
     # the shifted seed (number 1) has a piece about 0.1 thick on the face
     # x = 3 (the part of its cell beyond x = 0) and its main part on the
-    # face x = 0, about 0.9 thick; the other pieces are about 0.25 thick
+    # face x = 0, about 0.9 thick. The other pieces are about 0.25 thick.
     thin = [p for p in pieces if p['seed'] == 1 and p['axis'] == 0
             and p['side'] == 1]
     assert len(thin) == 1
@@ -143,7 +143,7 @@ def test_accept_trial():
     assert not _accept_trial(new, old, 1e-9)
     # nothing changes: rejected
     assert not _accept_trial(copy.deepcopy(old), old, 1e-9)
-    # a feature is only removed: accepted; only added: rejected
+    # a feature only removed is accepted, a feature only added rejected
     assert _accept_trial(old[:3], old, 1e-9)
     assert not _accept_trial(old + [_feature('edge', 0.9, 'g')], old, 1e-9)
     # a removed and an added feature of the same size cancel out, so the
@@ -331,7 +331,7 @@ def test_wedge_features_2d():
     domain = geometry.Square(side_length=3, corner=(0, 0))
     seeds = wedge_seeds_2d(15.0)
     pmesh = PolyMesh.from_seeds(seeds, domain, periodic='x')
-    # no wedges narrower than 10 degrees; two narrower than 25: the corner
+    # no wedges narrower than 10 degrees. Two narrower than 25: the corner
     # of the cell of B (seed 1) on the face x = 3, and its image on the
     # face x = 0, where the facet continues into the piece of A (seed 0)
     assert _wedges(pmesh, domain, [True, False], 10.0) == []

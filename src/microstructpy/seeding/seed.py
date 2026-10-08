@@ -71,7 +71,7 @@ class Seed(object):
         else:
             geom_cen = [float(x) for x in self.geometry.center]
 
-        # A generated breakdown lies at the geometry center; a breakdown
+        # A generated breakdown lies at the geometry center. A breakdown
         # given by the caller is assumed to already be at ``position``.
         generated = breakdown is None
         if generated:

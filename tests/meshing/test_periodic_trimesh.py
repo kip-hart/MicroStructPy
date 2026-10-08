@@ -171,7 +171,7 @@ def _min_edge(mesh):
 
 def test_periodic_trimesh_no_cascade_at_wedges():
     # a corner narrower than the minimum angle makes Triangle refine it in
-    # shells of small elements; the passes that match the periodic faces
+    # shells of small elements. The passes that match the periodic faces
     # must not deepen the shells (they did, one level per pass)
     phases = [{'shape': 'circle', 'size': 0.4}]
     for angle_deg, min_angle in ((15.0, 20), (15.0, 25)):
@@ -231,8 +231,8 @@ def test_periodic_passes_build_no_unused_mesh(periodic_case, monkeypatch):
         return real_build(*args, **kwargs)
 
     def never_matched(tri_pts, polymesh):
-        # unmatched at every pass, so that the passes run out; the later
-        # calls (mirroring the leftover nodes) get the real answer
+        # unmatched at every pass, so that the passes run out. The later
+        # calls (mirroring the leftover nodes) get the real answer.
         checks.append(1)
         if len(checks) <= trimesh_module._MAX_PERIODIC_PASSES:
             return True

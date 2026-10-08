@@ -852,7 +852,7 @@ class SeedList(object):
                 a face by less than this distance, is rejected and another
                 one is tried. Such seeds give thin pieces of cells on the
                 faces, and elements much smaller than the target size of the
-                mesh; a margin of about half the target edge length avoids
+                mesh. A margin of about half the target edge length avoids
                 most of them. Defaults to 0 (no margin).
 
         """  # NOQA: E501
@@ -1021,8 +1021,8 @@ def _periodic_images(limits, dom_lims, per_axes, include_zero=False):
     """Translations of the periodic images of a shape.
 
     A shape whose bounding box ``limits`` crosses a periodic face of the
-    domain has an image translated by the domain length across that axis;
-    crossing several faces (edges, corners) gives every combination.
+    domain has an image translated by the domain length across that axis.
+    Crossing several faces (edges, corners) gives every combination.
 
     Args:
         limits (list): (lower, upper) bounds of the shape, per axis.

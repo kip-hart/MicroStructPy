@@ -10,36 +10,42 @@ Unreleased
 ----------
 Added
 '''''
-- Periodic microstructures, in 2D and 3D: the ``<periodic>`` field of the
-  domain (or the ``periodic`` argument of ``cli.run``, ``SeedList.position``
-  and ``PolyMesh.from_seeds``) selects the periodic axes. Seeds crossing a
-  periodic face are placed without overlapping the opposite side, the
-  Laguerre tessellation is periodic across those faces (cells crossing a
-  face are cut and their pieces tile the domain), and the triangular,
-  tetrahedral and raster meshes have matching nodes on opposite faces
-  with the quality and size settings (``min_angle``, ``max_volume``, the
-  ``max_volume`` of each phase, ``max_edge_length``) acting as on
-  non-periodic meshes: in 2D the cells next to the periodic faces are
-  copied outside the faces while meshing, so that Triangle refines both
-  faces the same way; in 3D the facets are triangulated with the points
-  TetGen adds on them in a first pass, identically on opposite faces, and
-  the mesh is built again with the facets fixed. The pairs of periodic
-  points/nodes and facets
-  are stored in the meshes and their text files; the Abaqus output has a
-  node set per periodic face in matching order; the verification unwraps
-  grains that are split by the faces. The examples ``periodic_2D.xml``,
-  ``periodic_3D.xml`` and ``periodic_tiling.py`` demonstrate periodic
-  microstructures, ``pbx_2D.xml`` and ``pbx_3D.xml`` a periodic
-  particulate composite (crystalline inclusions in a binder), and
-  ``pbx_interface_2D.xml`` and ``pbx_interface_3D.xml`` meshes refined at
-  the grain boundaries. Cells of the same amorphous phase
-  that touch across a periodic face are merged into one region, like cells
-  that share a facet, and the merged region is labelled with the smallest
-  seed number among its cells by every mesher and writer. The element
-  attributes and the facets of periodic meshes are computed from the
-  geometry of the polymesh, since TetGen can leave sub-faces of a facet
-  unmarked when it may not modify the boundary and its region attributes
-  then leak between cells. gmsh is not supported for periodic meshes.
+- Periodic microstructures, in 2D and 3D. The ``<periodic>`` field of the
+  domain selects the periodic axes: ``True`` (or ``1``) for all of them, or
+  their names, such as ``xz``. The same option is an argument of
+  ``cli.run``, ``SeedList.position`` and ``PolyMesh.from_seeds``.
+- Periodic seed placement: seeds crossing a periodic face are placed
+  without overlapping the seeds on the opposite side.
+- Periodic tessellation: the Laguerre tessellation is periodic across the
+  faces. Cells crossing a face are cut, and their pieces tile the domain.
+- Periodic meshes: the triangular, tetrahedral and raster meshes have
+  matching nodes on opposite faces. The quality and size settings
+  (``min_angle``, ``max_volume``, the ``max_volume`` of each phase,
+  ``max_edge_length``) act as on non-periodic meshes. In 2D, the cells next
+  to the periodic faces are copied outside the faces while meshing, so that
+  Triangle refines both faces the same way. In 3D, the facets are
+  triangulated with the points that TetGen adds on them in a first pass,
+  identically on opposite faces, and the mesh is built again with the
+  facets fixed.
+- gmsh is not supported for periodic meshes, which need the default mesher,
+  Triangle/TetGen.
+- Output of periodic meshes: the pairs of periodic points, nodes and facets
+  are stored in the meshes and in their text files. The Abaqus output has a
+  node set per periodic face, in matching order. The verification unwraps
+  grains that are split by the faces.
+- Cells of the same amorphous phase that touch across a periodic face are
+  merged into one region, like cells that share a facet. Every mesher and
+  writer labels the merged region with the smallest seed number among its
+  cells.
+- The element attributes and the facets of periodic meshes are computed
+  from the geometry of the polymesh. TetGen can leave sub-faces of a facet
+  unmarked when it may not modify the boundary, and its region attributes
+  then leak between cells.
+- Examples: ``periodic_2D.xml``, ``periodic_3D.xml`` and
+  ``periodic_tiling.py`` demonstrate periodic microstructures,
+  ``pbx_2D.xml`` and ``pbx_3D.xml`` a periodic particulate composite
+  (crystalline inclusions in a binder), and ``pbx_interface_2D.xml`` and
+  ``pbx_interface_3D.xml`` meshes refined at the grain boundaries.
 - ``periodic_margin`` (a setting, and an argument of ``SeedList.position``
   and ``cli.run``): the minimum distance between the surface of a seed and
   a periodic face. A seed that ends within the margin of a face, or crosses
@@ -51,23 +57,24 @@ Added
   margin larger than itself).
 - ``PolyMesh.from_seeds(edge_opt=True, periodic_margin=...)``: the edge
   optimization of periodic meshes treats the thickness of each piece of a
-  cell at a periodic face as a feature like an edge, and moves the seeds of
-  the pieces thinner than the margin (and of their neighbors) normal to the
-  face until the piece reaches the margin or the cell no longer crosses the
-  face. The CLI passes its ``periodic_margin`` setting on. A trial of the
-  optimization is now kept when the shortest feature that it changes gets
-  longer (for the shortest edge of the mesh, the criterion is unchanged),
-  a target that does not improve in ``n_iter`` trials is left alone and the
-  next one is taken, and the seeds moved across a periodic face are wrapped
-  back into the domain. The CLI writes and plots the seeds again after the
-  optimization, so that the seed files match the polygonal mesh. The
-  periodic examples use ``periodic_margin`` ``auto`` and ``edge_opt``.
-  With ``min_angle`` (the minimum angle of the mesh to be built, passed by
-  the CLI from ``mesh_min_angle``), the corners of the cells at the
-  periodic faces narrower than that angle are features too, since the
-  mesher cannot reach the minimum angle there and fills them with shells of
-  very small elements: the seeds on both sides of the facet are moved along
-  it to open the corner.
+  cell at a periodic face as a feature, like an edge. It moves the seeds of
+  the pieces thinner than the margin, and of their neighbors, normal to the
+  face, until the piece reaches the margin or the cell no longer crosses
+  the face. The CLI passes its ``periodic_margin`` setting on.
+- ``PolyMesh.from_seeds(edge_opt=True, min_angle=...)``: the corners of the
+  cells at the periodic faces narrower than the minimum angle of the mesh
+  are features too, since the mesher cannot reach the minimum angle there
+  and fills them with shells of very small elements. The seeds on both
+  sides of the facet are moved along it to open the corner. The CLI passes
+  ``mesh_min_angle``.
+- Edge optimization: a trial is now kept when the shortest feature that it
+  changes gets longer (for the shortest edge of the mesh, the criterion is
+  unchanged). A target that does not improve in ``n_iter`` trials is left
+  alone and the next one is taken, and the seeds moved across a periodic
+  face are wrapped back into the domain. The CLI writes and plots the seeds
+  again after the optimization, so that the seed files match the polygonal
+  mesh. The periodic examples use ``periodic_margin`` ``auto`` and
+  ``edge_opt``.
 - When the nodes on the periodic faces of a 2D mesh do not match after the
   first pass, the next pass starts from all the points of the mesh (those on
   a periodic face and on its image merged and put on both faces), so that
@@ -85,35 +92,37 @@ Fixed
   and ``filetypes`` arguments (or their mutable defaults).
 - ``<dist_type> cdf </dist_type>`` inputs are no longer distorted when the
   x-values in the CSV file are not evenly spaced (``density=False`` is now
-  passed to ``scipy.stats.rv_histogram``); ``pdf`` is accepted as an alias
+  passed to ``scipy.stats.rv_histogram``). ``pdf`` is accepted as an alias
   of ``histogram``.
 - 3D ``mesh_max_volume`` and per-phase ``max_volume`` are now honored by
-  TetGen; in 2D a per-phase ``max_volume`` larger than the global value is
+  TetGen. In 2D, a per-phase ``max_volume`` larger than the global value is
   no longer capped, and an infinite ``mesh_max_volume`` is no longer passed
   to Triangle as the (mis-parsed) switch ``ainf``.
 - ``Ellipsoid.approximate`` mapped the axes incorrectly for the ordering
-  c >= a >= b, so those grains were tessellated with the wrong orientation;
-  the b >= c >= a ordering is now sorted explicitly as well.
-- Seeds read back from ``seeds.txt`` can be repositioned; ellipsoid seeds
+  c >= a >= b, so those grains were tessellated with the wrong orientation.
+  The b >= c >= a ordering is now sorted explicitly as well.
+- Seeds read back from ``seeds.txt`` can be repositioned. Ellipsoid seeds
   with a rotation sequence are written in a form that can be read back.
 - Cells that intersect a circular or elliptical domain without having a
   vertex inside it are no longer dropped, cells cut twice by the boundary
   are clipped correctly, and the stored areas of clipped cells are correct
   (``PolyMesh.volumes``, ``verification.volume_fractions``).
-- ``_segment_cross`` no longer hangs for large coordinate values;
+- ``_segment_cross`` no longer hangs for large coordinate values, and
   ``sample_pos_within`` raises instead of looping forever when the position
   distribution does not cover the domain.
 - ``cli.plot_tri`` no longer hangs in 3D when a void grain touches the
   boundary of the domain.
 - Relative ``<filename>`` and ``<directory>`` paths inside repeated tags
   (e.g. several ``<material>`` blocks) are resolved relative to the input
-  file; a top-level ``<include>`` no longer discards materials; values such
-  as ``true_cdf.csv`` no longer cause infinite recursion; ``inf`` is parsed
-  as a float.
+  file. A top-level ``<include>`` no longer discards materials, values such
+  as ``true_cdf.csv`` no longer cause infinite recursion, and ``inf`` is
+  parsed as a float.
 - Verification: ``angle_rad`` inputs are no longer replaced by a uniform
   distribution, ``<orientation> random </orientation>`` and vector-valued
   parameters (``side_lengths``, ``axes``) no longer crash, unknown phase
-  fields are ignored, the caller's phases are not modified.
+  fields are ignored, the caller's phases are not modified. The statistics
+  of 2D orientations compare the angles modulo the symmetry of the shape,
+  a half turn for ellipses and rectangles and a quarter turn for squares.
 - ``RasterMesh``: elements are counter-clockwise / right-handed (valid for
   Abaqus CPS4/C3D8), facets and their attributes are correct, ``vtk`` and
   ``abaqus`` output work (including with voids), 3D plotting works.
@@ -122,8 +131,10 @@ Fixed
   points in text files, no dangling headers for meshes without attributes.
 - ``PolyMesh.from_seeds(edge_opt=True)`` leaves the seed list in the
   accepted state (positions and breakdowns consistent) and is quiet unless
-  ``verbose``; ``PolyMesh.write(format='poly')`` writes the file;
+  ``verbose``. ``PolyMesh.write(format='poly')`` writes the file, and
   ``PolyMesh.__eq__`` is silent and no longer cubic.
+- ``Circle`` and ``Sphere`` are hashable, by identity, like the other
+  geometries, so they can be put in sets and used as dictionary keys.
 - ``Ellipse(axes=...)``, ``Ellipse(matrix=...)``, ``Ellipsoid(c=..,
   ratio_bc=..)``, ``Square.area_expectation(side_lengths=...)``, the
   ``*_expectation`` methods with numpy scalars, ``Sphere.plot`` and 3D
@@ -135,22 +146,25 @@ Fixed
 Changed
 '''''''
 - pyvoro is installed from the ``pyvoro-rimoli`` package instead of
-  ``pyvoro-mmalahe``. Both provide the same ``pyvoro`` module, but
+  ``pyvoro-mmalahe``. Both provide the same ``pyvoro`` module.
   pyvoro-mmalahe bundles Voro++ 0.4.6, whose radical (Laguerre)
-  tessellation can return a cell uncut: the cells then overlap, and
-  Triangle and TetGen can crash on the resulting polygonal mesh.
-  pyvoro-rimoli bundles the current Voro++, where this is fixed, and has
-  wheels for Linux, macOS and Windows. Uninstall pyvoro-mmalahe before
-  upgrading (``pip uninstall pyvoro-mmalahe``), since the two packages
-  install the same files.
+  tessellation can return a cell uncut when the compiler fuses
+  multiply-adds. On macOS, pip compiles pyvoro-mmalahe from source, and
+  Apple clang fuses them by default on Apple silicon. The cells then
+  overlap, and Triangle and TetGen can crash on the resulting polygonal
+  mesh. pyvoro-rimoli bundles the current Voro++, which gives the same
+  cells either way, and has wheels for Linux, macOS and Windows. Uninstall
+  pyvoro-mmalahe before upgrading (``pip uninstall pyvoro-mmalahe``),
+  since the two packages install the same files.
 - The continuous integration installs the current pytest and no longer
-  installs tox from the requirements: the pinned tox 3.14 forced an old
-  pluggy that the current pytest-cov cannot load, so no test could run.
+  installs tox from the requirements. The pinned tox 3.14 forced an old
+  pluggy, with which pytest itself fails to import, so no test could run.
   The jobs of the test matrix no longer cancel each other on a failure.
 - Read the Docs builds the documentation with Python 3.10 instead of 3.8,
   which pyvoro-rimoli and the current versions of other dependencies do not
-  support, and installs ``requirements.txt`` like the documentation check
-  of the continuous integration.
+  support. It installs ``requirements.txt`` like the documentation check of
+  the continuous integration, and ``docs/requirements.txt`` also keeps numpy
+  below 2, so that numpy is installed once.
 - The facets of the triangular and tetrahedral meshes created from a
   polygonal mesh are sorted (nodes in ascending order within a facet,
   facets in lexicographic order), whatever the mesher. Triangle and TetGen
@@ -174,12 +188,11 @@ Changed
   rejected during placement.
 - ``Ellipsoid.limits`` is exact for rotated ellipsoids (it was sampled).
 - A ``Seed`` created with a ``position`` (or a geometry with a center) has
-  its breakdown at that position; the geometry center is no longer reset
+  its breakdown at that position. The geometry center is no longer reset
   to the origin.
 - ``Ellipse``, ``Ellipsoid`` and ``NBox`` geometries compare equal when
-  their parameters are equal.
+  their parameters are equal, and keep their identity-based hash.
 - Unused sampling helpers were removed from ``seeding.seedlist``.
-
 
 `1.5.9`_ - 2023-10-05
 --------------------------

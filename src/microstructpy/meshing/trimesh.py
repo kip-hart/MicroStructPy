@@ -255,7 +255,7 @@ class TriMesh(object):
                                     max_edge_length, periodic=periodic)
         elif key == 'gmsh':
             if periodic:
-                e_str = 'Periodic meshes are not supported with gmsh; use '
+                e_str = 'Periodic meshes are not supported with gmsh. Use '
                 e_str += 'the Triangle/TetGen mesher.'
                 raise NotImplementedError(e_str)
             tri_args = _call_gmsh(polymesh, phases, mesh_size, max_edge_length)
@@ -279,8 +279,8 @@ class TriMesh(object):
         """Pair the nodes and facets on opposite periodic faces.
 
         The nodes on the lower face of each periodic axis are matched with
-        their images on the upper face and snapped to exact translates;
-        the facets on the faces are paired likewise. The results are stored
+        their images on the upper face and snapped to exact translates.
+        The facets on the faces are paired likewise. The results are stored
         in ``periodic_axes``, ``periodic_nodes`` (dict: axis -> list of
         (lower, upper) node numbers) and ``periodic_facets`` (dict: axis ->
         list of (lower, upper) facet numbers).
@@ -1463,7 +1463,7 @@ def _call_meshpy(polymesh, phases=None, min_angle=0, max_volume=float('inf'),
     regions = []
     holes = []
 
-    # Merged cells are labelled with the smallest seed number among them
+    # Merged cells are labeled with the smallest seed number among them
     # (the same convention as the other writers and meshers), which is not
     # the seed number of the first cell of the group in a periodic mesh.
     labels = _merged_seed_numbers(polymesh, phases)
@@ -1582,7 +1582,7 @@ def _sorted_facets(facets, facet_atts):
     """Facets with their nodes in ascending order, in lexicographic order.
 
     Triangle and TetGen list the edges/faces of a mesh in an order, and
-    with an orientation, that vary from one run to the next; the sorted
+    with an orientation, that vary from one run to the next. The sorted
     facets make a mesh, and its files, reproducible. MicroStructPy does not
     use the orientation of the facets.
 
@@ -1910,7 +1910,7 @@ def _merged_seed_numbers(pmesh, phases):
     """Label (seed number) of each region after merging amorphous cells.
 
     Cells of the same amorphous phase that share a facet are merged into a
-    single region of the mesh, labelled with the smallest seed number among
+    single region of the mesh, labeled with the smallest seed number among
     them. In a periodic mesh, the pieces of one seed and the cells that touch
     across a periodic face belong to the same region.
 
@@ -2048,8 +2048,8 @@ def _edge_key(kp_a, kp_b):
 
 
 def _points_on_segment(new_pts, pt_a, pt_b, with_ids=False):
-    """Parameters (0 < t < 1) of the points that lie on a segment, sorted;
-    with ``with_ids``, the indices of the points in the same order too."""
+    """Parameters (0 < t < 1) of the points that lie on a segment, sorted.
+    With ``with_ids``, the indices of the points in the same order too."""
     if len(new_pts) == 0:
         return ([], []) if with_ids else []
     rel = np.array(new_pts) - pt_a
@@ -2112,7 +2112,7 @@ def _triangle_polygon(loop_pts, h_val, allow_boundary_steiner, extra_pts=(),
 
     With ``quality``, the triangles have a minimum angle of 20 degrees
     and, if ``h_val`` is finite, at most the area of the equilateral
-    triangle with that edge length; Steiner points are added on the edges
+    triangle with that edge length. Steiner points are added on the edges
     of the polygon only if allowed. Without it, the triangulation is the
     constrained Delaunay triangulation of the points. The extra points,
     inside the polygon, are vertices of the triangulation.
@@ -2224,7 +2224,7 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
             upper[f_lo] = (axis, f_hi)
     is_upper = set([f_hi for _, f_hi in upper.values()])
 
-    # 1. Edges of the facets; an edge and its periodic images are
+    # 1. Edges of the facets. An edge and its periodic images are
     # subdivided identically
     edge_keys = set()
     for f_num in facet_nums:
@@ -2272,7 +2272,7 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
             splits.setdefault(find(key), []).extend(
                 zip(ts, [s for _, s in vals]))
 
-    # 3. Subdivide the edges; the images of an edge get translated copies of
+    # 3. Subdivide the edges. The images of an edge get translated copies of
     # its points, recorded in image_map (lower point -> upper point)
     edge_pts = {}
     image_map = {axis: {kps[a]: kps[b] for a, b in pairs} for axis, pairs in
@@ -2338,11 +2338,11 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
             new_loop.extend(ids if kp_a == key[0] else ids[::-1])
         loops[f_num - 1] = new_loop
 
-    # 5. Triangulate the facets with their edges fixed; the facets on the
+    # 5. Triangulate the facets with their edges fixed. The facets on the
     # upper periodic faces are the images of those on the lower faces. The
     # facets on the periodic faces are refined to the mesh size when one is
     # given (TetGen cannot refine them afterwards), and all the facets to
-    # the maximum edge length when it is given; the others are the
+    # the maximum edge length when it is given. The others are the
     # constrained Delaunay triangulations of their points.
     new_facets = []
     new_nums = []
@@ -2356,7 +2356,7 @@ def _triangulate_facets_3d(polymesh, phases, kps, pts, facet_nums, max_volume,
         h_val = h_facets[f]
         if quality and np.isfinite(h_val):
             # the area bound is met by equilateral triangles of that edge
-            # length; a smaller area keeps the edges of the other triangles
+            # length. A smaller area keeps the edges of the other triangles
             # at about the maximum edge length, and the elements on the
             # faces, which TetGen may not split, below the maximum volume
             h_val = 0.75 * h_val
@@ -2431,7 +2431,7 @@ def _collect_facet_points_3d(new_pts, polymesh, edge_t, face_pts):
 
     A point on an edge of a facet is added to the parameters of that edge
     (``edge_t``), a point inside a facet to the extra points of the facet
-    (``face_pts``); points inside the cells are ignored. A point on an
+    (``face_pts``). Points inside the cells are ignored. A point on an
     upper periodic face is moved to the lower face and recorded with the
     facet there, so that the next triangulation of the facets has the
     point, and its images, on both faces. Each point is recorded with its
@@ -2598,7 +2598,7 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh,
         facet_nums (list): Polymesh facet number + 1 of each facet.
         polymesh (PolyMesh): The periodic polymesh.
         n_input (int): *(optional)* Number of points of the input of the
-            mesh that Triangle built; the points after them are the ones
+            mesh that Triangle built. The points after them are the ones
             it added. Defaults to the number of ``pts``.
 
     Returns:
@@ -2900,7 +2900,7 @@ def _ghost_layer(polymesh, phases, labels, kps, pts, facets, facet_nums,
                 # their copies too, and the copy of a facet on a periodic
                 # face, moved along the axis of that face only, is the
                 # facet on the opposite face (possibly subdivided), which
-                # the input already has; moved along other axes too, it
+                # the input already has. Moved along other axes too, it
                 # lies outside the domain and closes the copy
                 if (other >= 0 and trans in copies.get(other, []) and
                         not facet_check(neighs, polymesh, phases)):
@@ -3027,7 +3027,7 @@ def _attributes_from_polymesh(tri_pts, tri_elems, polymesh, labels):
     Each element belongs to the (convex) cell of the polymesh that contains
     its centroid and its attribute is the label of that cell. The facets of
     the mesh are the faces between elements of cells with different labels
-    and the faces on the boundary of the mesh; their attributes are the
+    and the faces on the boundary of the mesh. Their attributes are the
     numbers of the polymesh facets they lie on.
 
     TetGen can leave some sub-faces of a facet unmarked when it may not

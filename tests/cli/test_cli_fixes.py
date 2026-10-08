@@ -167,7 +167,7 @@ def test_cdf_file_is_reproduced(tmp_path):
     cdf_act = dist.cdf(xs)
 
     # The first value can be non-zero in the file while the histogram
-    # starts at 0 there; the remaining mismatch is the normalization.
+    # starts at 0 there. The remaining mismatch is the normalization.
     assert np.max(np.abs(cdf_act - cdf_exp)) < 2e-2
     assert np.abs(dist.mean() - np.trapz(1 - cdf_exp, xs) - xs[0]) < 1e-2
 

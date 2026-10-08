@@ -413,8 +413,8 @@ def pair_periodic_mesh(points, facets, per_axes, dom_lims):
 
     Returns:
         tuple: The snapped points (numpy.ndarray), the point pairs and the
-        facet pairs (dictionaries: axis -> list of (lower, upper) numbers;
-        the facet pairs are empty lists if the mesh has no facets).
+        facet pairs (dictionaries: axis -> list of (lower, upper) numbers).
+        The facet pairs are empty lists if the mesh has no facets.
 
     """
     pts, point_pairs = pair_periodic_points(points, per_axes, dom_lims)

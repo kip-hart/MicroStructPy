@@ -61,7 +61,7 @@ The three plots that this file generates are the seeding, the polygon mesh,
 and the triangular mesh.
 The seeds and the polygonal mesh are those of the :ref:`ex_pbx_2d`
 (:numref:`f_ex_pbx2d_seeds` and :numref:`f_ex_pbx2d_poly`), since the seeds
-and the settings of the optimization are the same; only the triangular mesh
+and the settings of the optimization are the same. Only the triangular mesh
 differs, shown in :numref:`f_ex_pbxint2d_tri`.
 
 .. _f_ex_pbxint2d_tri:
