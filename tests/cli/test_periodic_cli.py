@@ -95,6 +95,13 @@ def test_periodic_run(tmp_path):
     assert os.path.exists(str(out_dir / 'verification' / 'mles.txt'))
 
 
+def test_periodic_flag_as_number(tmp_path):
+    # <periodic> 0 </periodic> turns periodicity off instead of raising
+    out_dir = _run(tmp_path, '0')
+    pmesh = PolyMesh.from_file(str(out_dir / 'polymesh.txt'))
+    assert not pmesh.periodic_axes  # a non-periodic mesh has none stored
+
+
 def test_periodic_run_single_axis(tmp_path):
     out_dir = _run(tmp_path, 'y')
     tmesh = TriMesh.from_file(str(out_dir / 'trimesh.txt'))

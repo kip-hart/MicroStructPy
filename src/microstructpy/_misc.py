@@ -190,10 +190,13 @@ def periodic_axes(periodic, n_dim):
 
     The periodicity of a microstructure can be given as a boolean (all axes
     or none), a list of booleans (one per axis), or a string with the names
-    of the periodic axes, such as ``'x'``, ``'xy'`` or ``'xz'``.
+    of the periodic axes, such as ``'x'``, ``'xy'`` or ``'xz'``. A number
+    counts as a boolean, so ``1`` makes all the axes periodic and ``0``
+    none.
 
     Args:
-        periodic (bool, list, or str): The periodicity specification.
+        periodic (bool, int, float, list, or str): The periodicity
+            specification.
         n_dim (int): Number of dimensions of the domain.
 
     Returns:
@@ -206,7 +209,7 @@ def periodic_axes(periodic, n_dim):
     if periodic is None:
         return [False for _ in range(n_dim)]
 
-    if isinstance(periodic, (bool, np.bool_)):
+    if isinstance(periodic, (bool, int, float, np.bool_, np.number)):
         return [bool(periodic) for _ in range(n_dim)]
 
     axis_names = 'xyz'[:n_dim]

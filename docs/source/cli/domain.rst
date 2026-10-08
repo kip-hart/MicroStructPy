@@ -321,7 +321,7 @@ matching order.
         <domain>
             <shape> square </shape>
             <side_length> 10 </side_length>
-            <!-- periodic in both directions -->
+            <!-- periodic in both directions (1 works too) -->
             <periodic> True </periodic>
         </domain>
 
