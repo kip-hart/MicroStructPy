@@ -2649,14 +2649,15 @@ def _split_periodic_boundary_2d(tri_pts, pts, facets, facet_nums, polymesh,
         pt_a, pt_b = ends[i]
         for axis, flag in enumerate(per_axes):
             if not flag or not np.allclose([pt_a[axis], pt_b[axis]],
-                                           mins[axis], atol=tol):
+                                           mins[axis], rtol=0, atol=tol):
                 continue
             shift = np.zeros(len(mins))
             shift[axis] = lengths[axis]
             dist, k = tree.query(0.5 * (pt_a + pt_b) + shift)
             j = seg_ids[k]
             if dist <= tol and j != i:
-                same = np.allclose(ends[j][0], pt_a + shift, atol=tol)
+                same = np.allclose(ends[j][0], pt_a + shift, rtol=0,
+                                   atol=tol)
                 pair_of[i] = (j, shift, same)
     is_upper = set([j for j, _, _ in pair_of.values()])
 
@@ -2974,7 +2975,7 @@ def _build_periodic_2d(polymesh, phases, labels, kps, pts, facets,
         # all the points of the mesh become the input of the next pass
         n_input = len(pts)
         if (len(all_pts) < n_input or
-                not np.allclose(all_pts[:n_input], pts, atol=tol)):
+                not np.allclose(all_pts[:n_input], pts, rtol=0, atol=tol)):
             raise RuntimeError('Triangle did not keep the input points.')
         pts, facets, facet_nums, n_new = _split_periodic_boundary_2d(
             all_pts, pts, facets, facet_nums, polymesh, n_input)
