@@ -32,6 +32,15 @@ For Windows, it may be in a path similar to
     If the install fails and the last several error messages reference
     ``pybind11``, run ``pip install pybind11`` first then install MicroStructPy.
 
+.. note::
+    MicroStructPy computes the tessellations with the ``pyvoro`` module of the
+    ``pyvoro-rimoli`` package. Earlier versions used ``pyvoro-mmalahe``, which
+    installs the same module with an older Voro++. When upgrading, remove it
+    first::
+
+        pip uninstall pyvoro-mmalahe
+        pip install --upgrade microstructpy
+
 Running Demonstrations
 ----------------------
 

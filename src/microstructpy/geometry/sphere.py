@@ -115,10 +115,11 @@ class Sphere(NSphere):
         elif 'r' in kwargs:
             r_dist = kwargs['r']
 
-        if type(r_dist) in (float, int):
-            return 4 * np.pi * r_dist * r_dist * r_dist / 3
-        elif r_dist is not None:
-            return 4 * np.pi * r_dist.moment(3) / 3
+        if r_dist is not None:
+            try:
+                return 4 * np.pi * r_dist.moment(3) / 3
+            except AttributeError:
+                return 4 * np.pi * r_dist * r_dist * r_dist / 3
 
         # Check for diameter distribution
         d_dist = None
@@ -127,10 +128,11 @@ class Sphere(NSphere):
                 d_dist = kwargs[d_kw]
                 break
 
-        if type(d_dist) in (float, int):
-            return 0.5 * np.pi * d_dist * d_dist * d_dist / 3
-        elif d_dist is not None:
-            return 0.5 * np.pi * d_dist.moment(3) / 3
+        if d_dist is not None:
+            try:
+                return 0.5 * np.pi * d_dist.moment(3) / 3
+            except AttributeError:
+                return 0.5 * np.pi * d_dist * d_dist * d_dist / 3
 
         if 'volume' in kwargs:
             v_dist = kwargs['volume']
@@ -163,7 +165,7 @@ class Sphere(NSphere):
         if plt.gcf().axes:
             ax = plt.gca()
         else:
-            ax = plt.add_subplot(projection=Axes3D.name)
+            ax = plt.gcf().add_subplot(projection=Axes3D.name)
 
         u = np.linspace(0, 2 * np.pi, 11)
         cv = np.linspace(-1, 1, 12)
@@ -179,7 +181,7 @@ class Sphere(NSphere):
 
         mod_kwargs = {}
         for key, val in kwargs.items():
-            if key == 'facecolors' and type(val) != list:
+            if key == 'facecolors' and not isinstance(val, list):
                 mod_kwargs['color'] = val
             else:
                 mod_kwargs[key] = val
