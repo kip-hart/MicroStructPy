@@ -852,7 +852,7 @@ class SeedList(object):
                 a face by less than this distance, is rejected and another
                 one is tried. Such seeds give thin pieces of cells on the
                 faces, and elements much smaller than the target size of the
-                mesh; a margin of about half the target edge length avoids
+                mesh. A margin of about half the target edge length avoids
                 most of them. Defaults to 0 (no margin).
 
         """  # NOQA: E501
@@ -1021,8 +1021,8 @@ def _periodic_images(limits, dom_lims, per_axes, include_zero=False):
     """Translations of the periodic images of a shape.
 
     A shape whose bounding box ``limits`` crosses a periodic face of the
-    domain has an image translated by the domain length across that axis;
-    crossing several faces (edges, corners) gives every combination.
+    domain has an image translated by the domain length across that axis.
+    Crossing several faces (edges, corners) gives every combination.
 
     Args:
         limits (list): (lower, upper) bounds of the shape, per axis.
@@ -1246,9 +1246,11 @@ def calc_rtol(seeds):
     """Calculate relative overlap tolerance.
 
     The tolerance is the error-minimizing rational polynomial fit to the
-    coefficient of variation in seed area/volume, Eqs. (14) and (15) of
+    coefficient of variation in seed area/volume, plotted in Fig. 10 of
     Hart and Rimoli, *Comput. Methods Appl. Mech. Engrg.* 370 (2020)
-    113242.
+    113242. Eqs. (14) and (15) of that paper print other coefficients,
+    which reproduce neither the fitted curves nor the data points of
+    Fig. 10. These coefficients do.
 
     Args:
         seeds (SeedList or list): The seeds, used for their volumes and
@@ -1261,11 +1263,11 @@ def calc_rtol(seeds):
     cv = scipy.stats.variation(vols) if len(vols) > 1 else 0.0
     n_dim = seeds[0].geometry.n_dim
     if n_dim == 2:
-        numer = 0.182 * cv * cv - 0.0135 * cv + 0.198
-        denom = cv * cv - 0.613 * cv + 0.390
+        numer = 0.362954 * cv * cv - 0.419069 * cv + 0.184959
+        denom = cv * cv - 1.05989 * cv + 0.365096
     elif n_dim == 3:
-        numer = 0.457 * cv * cv - 0.575 * cv + 0.253
-        denom = cv * cv - 1.07 * cv + 0.419
+        numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
+        denom = cv * cv - 1.08469 * cv + 0.428216
     else:
         raise ValueError('Cannot calculate rtol for {}-D.'.format(n_dim))
     return numer / denom

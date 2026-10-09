@@ -906,8 +906,14 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
         In 2D, a ``random`` orientation (``angle``, ``angle_deg``,
         ``angle_rad`` or ``orientation``) is compared against a uniform
         distribution over the full circle. Orientation matrices are compared
-        through their rotation angle, in degrees. In 3D, the statistics of
-        the ``orientation`` are not computed.
+        through their rotation angle, in degrees. Angles are compared modulo
+        the symmetry of the shape, a half turn for ellipses and rectangles
+        and a quarter turn for squares. The errors are the smallest angles
+        between the input and output orientations, R^2 measures the spread
+        of the output angles around their circular mean, and the
+        distribution statistics compare the angles on the same window of
+        one period. In 3D, the statistics of the ``orientation`` are not
+        computed.
 
     """
 
@@ -939,6 +945,7 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
             i_vals = i_phase[kw]
             o_vals = o_phase.get(kw, [])
             inp_dist = phase[kw]
+            period = _angle_period(kw, phase, n_dim)
 
             if kw in ('orientation', 'matrix'):
                 if n_dim != 2:
@@ -955,8 +962,8 @@ def error_stats(fit_seeds, seeds, phases, poly_mesh=None, verif_mask=None):
                     i_vals = _matrix_angles(i_vals)
                     o_vals = _matrix_angles(o_vals)
 
-            errs = _kw_errs(i_vals, o_vals)
-            stats = _kw_stats(inp_dist, o_vals)
+            errs = _kw_errs(i_vals, o_vals, period)
+            stats = _kw_stats(inp_dist, o_vals, period)
             err_phase[kw] = _merge_stats(errs, stats)
 
         err_phases.append(err_phase)
@@ -981,6 +988,36 @@ def _matrix_angles(matrices, wrap=False):
     return angles
 
 
+def _angle_period(kw, phase, n_dim):
+    """Period of the orientation of a 2D shape, in the units of ``kw``.
+
+    The orientation of an ellipse or a rectangle repeats every half turn,
+    and that of a square every quarter turn. Returns None if ``kw`` is not
+    an orientation of a 2D shape.
+    """
+    if n_dim != 2 or kw not in ('angle', 'angle_deg', 'angle_rad',
+                                'orientation', 'matrix'):
+        return None
+    turn = 2 * np.pi if kw == 'angle_rad' else 360.0
+    shape = str(phase.get('shape', 'circle')).strip().lower()
+    if shape == 'square':
+        return turn / 4
+    return turn / 2
+
+
+def _wrap(values, period):
+    """Values brought into [-period/2, period/2)"""
+    half = 0.5 * period
+    return (np.asarray(values, dtype='float') + half) % period - half
+
+
+def _circular_mean(values, period):
+    """Mean direction of periodic values, in (-period/2, period/2]"""
+    ang = 2 * np.pi * np.asarray(values, dtype='float') / period
+    mean_ang = np.arctan2(np.mean(np.sin(ang)), np.mean(np.cos(ang)))
+    return period * mean_ang / (2 * np.pi)
+
+
 def _merge_stats(errs, stats):
     """Merge error and statistics dictionaries (or per-component lists)"""
     if isinstance(errs, list) or isinstance(stats, list):
@@ -995,7 +1032,12 @@ def _merge_stats(errs, stats):
     return merged
 
 
-def _kw_errs(y_exp, y_act):
+def _kw_errs(y_exp, y_act, period=None):
+    """Error statistics between expected and actual values.
+
+    With a ``period``, the values are angles of that period and the
+    residuals are the smallest differences between them.
+    """
     errs = {}
 
     pairs = [(y_e, y_a) for y_e, y_a in zip(y_exp, y_act)
@@ -1011,6 +1053,8 @@ def _kw_errs(y_exp, y_act):
         return [_kw_errs(*tup) for tup in zip(y_expect.T, y_actual.T)]
 
     r = y_actual - y_expect
+    if period:
+        r = _wrap(r, period)
 
     # MAE
     mae = np.mean(np.abs(r))
@@ -1025,7 +1069,7 @@ def _kw_errs(y_exp, y_act):
     errs['rmse'] = rmse
 
     # R^2
-    coeff_det = _r2(y_actual, y_expect)
+    coeff_det = _r2(y_actual, y_expect, period)
     errs['R^2'] = coeff_det
 
     # Max Error
@@ -1035,11 +1079,16 @@ def _kw_errs(y_exp, y_act):
     return errs
 
 
-def _r2(y_act, y_exp):
+def _r2(y_act, y_exp, period=None):
     r = y_act - y_exp
+    if period:
+        # angles: smallest differences, spread around the circular mean
+        r = _wrap(r, period)
+        r_ybar = _wrap(y_act - _circular_mean(y_act, period), period)
+    else:
+        y_bar = np.mean(y_act)
+        r_ybar = y_act - y_bar
     mse = np.mean(r * r)
-    y_bar = np.mean(y_act)
-    r_ybar = y_act - y_bar
     mse_baseline = np.mean(r_ybar * r_ybar)
 
     if mse_baseline == 0:
@@ -1051,7 +1100,13 @@ def _r2(y_act, y_exp):
     return coeff_det
 
 
-def _kw_stats(dist_exp, y_act):
+def _kw_stats(dist_exp, y_act, period=None):
+    """Statistics comparing actual values with an expected distribution.
+
+    With a ``period``, the values are angles of that period, and both the
+    actual values and the samples of the distribution are put on the same
+    window of one period, centered on the circular mean of the samples.
+    """
     y_actual = [y_a for y_a in y_act if y_a is not None]
 
     if _is_vector(dist_exp):
@@ -1068,6 +1123,10 @@ def _kw_stats(dist_exp, y_act):
         return stats
 
     y_pred = _safe_rvs(dist_exp, 5000)
+    if period:
+        center = _circular_mean(y_pred, period)
+        y_actual = center + _wrap(y_actual - center, period)
+        y_pred = center + _wrap(y_pred - center, period)
 
     # Wasserstein Distance
     wass = scipy.stats.wasserstein_distance(y_actual, y_pred)
@@ -1078,13 +1137,20 @@ def _kw_stats(dist_exp, y_act):
     stats['energy_distance'] = e_dist
 
     # K-S Test
-    if hasattr(dist_exp, 'cdf'):
-        cdf_func = dist_exp.cdf
+    if period and hasattr(dist_exp, 'cdf'):
+        # the distribution of the wrapped angles is known by its samples
+        ks_stat, ks_p = scipy.stats.ks_2samp(y_actual, y_pred)
     else:
-        def cdf_func(x):
-            return (x > dist_exp).astype('float')
+        if hasattr(dist_exp, 'cdf'):
+            cdf_func = dist_exp.cdf
+        else:
+            # a constant, wrapped like the actual values if it is an angle
+            point = y_pred[0] if period else dist_exp
 
-    ks_stat, ks_p = scipy.stats.kstest(y_actual, cdf_func)
+            def cdf_func(x):
+                return (x > point).astype('float')
+
+        ks_stat, ks_p = scipy.stats.kstest(y_actual, cdf_func)
     stats['ks_statistic'] = ks_stat
     stats['ks_p_value'] = ks_p
 

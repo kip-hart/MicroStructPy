@@ -171,7 +171,7 @@ def _min_edge(mesh):
 
 def test_periodic_trimesh_no_cascade_at_wedges():
     # a corner narrower than the minimum angle makes Triangle refine it in
-    # shells of small elements; the passes that match the periodic faces
+    # shells of small elements. The passes that match the periodic faces
     # must not deepen the shells (they did, one level per pass)
     phases = [{'shape': 'circle', 'size': 0.4}]
     for angle_deg, min_angle in ((15.0, 20), (15.0, 25)):
@@ -215,6 +215,39 @@ def test_ghost_layer_copies_are_closed(periodic_case):
     lims = np.array(domain.limits)
     outside = (arr < lims[:, 0] - 1e-9) | (arr > lims[:, 1] + 1e-9)
     assert np.any(np.all(outside, axis=1))
+
+
+def test_periodic_passes_build_no_unused_mesh(periodic_case, monkeypatch):
+    # when the passes run out, the mesh of the last pass is the result:
+    # no further mesh is built (one build, then one per pass but the last)
+    domain, phases, seeds, pmesh = periodic_case
+    builds = []
+    checks = []
+    real_build = trimesh_module._build_2d
+    real_unmatched = trimesh_module._unmatched_periodic_nodes
+
+    def counting_build(*args, **kwargs):
+        builds.append(1)
+        return real_build(*args, **kwargs)
+
+    def never_matched(tri_pts, polymesh):
+        # unmatched at every pass, so that the passes run out. The later
+        # calls (mirroring the leftover nodes) get the real answer.
+        checks.append(1)
+        if len(checks) <= trimesh_module._MAX_PERIODIC_PASSES:
+            return True
+        return real_unmatched(tri_pts, polymesh)
+
+    def same_input(all_pts, pts, facets, facet_nums, polymesh, n_input):
+        return pts, facets, facet_nums, 1
+
+    monkeypatch.setattr(trimesh_module, '_build_2d', counting_build)
+    monkeypatch.setattr(trimesh_module, '_unmatched_periodic_nodes',
+                        never_matched)
+    monkeypatch.setattr(trimesh_module, '_split_periodic_boundary_2d',
+                        same_input)
+    TriMesh.from_polymesh(pmesh, phases, min_angle=20)
+    assert len(builds) == trimesh_module._MAX_PERIODIC_PASSES
 
 
 def test_periodic_gmsh_not_supported(periodic_case):

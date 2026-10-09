@@ -98,6 +98,43 @@ def test_error_stats_matrix_orientation():
     assert errs[0]['orientation']['mae'] < 5
 
 
+def test_angle_errors_wrap_around():
+    # a near-perfect fit across the 0/360 wrap: the errors are the
+    # smallest angles between the orientations (0.2, 0.3, 0.8, 0.7)
+    errs = verification._kw_errs([359.9, 0.2, 359.5, 0.5],
+                                 [0.1, 359.9, 0.3, 359.8], period=180)
+    assert np.isclose(errs['mae'], 0.5)
+    assert np.isclose(errs['inf_norm'], 0.8)
+    assert np.isclose(errs['rmse'], np.sqrt(0.315))
+
+    # the same ellipses, described with the major axis the other way round
+    errs = verification._kw_errs([10.0, 20.0, 30.0], [-170.0, -160.0, -150.0],
+                                 period=180)
+    assert np.isclose(errs['mae'], 0)
+    assert np.isclose(errs['inf_norm'], 0)
+    assert np.isclose(errs['R^2'], 1)
+
+    # a square repeats every quarter turn
+    errs = verification._kw_errs([0.0, 45.0], [90.0, -45.0], period=90)
+    assert np.isclose(errs['inf_norm'], 0)
+
+
+def test_error_stats_angles_modulo_symmetry():
+    # input ellipses around 180 degrees, fitted ones written in [-90, 90)
+    angles = 180 + np.linspace(-80, 80, 41)
+    fitted = np.mod(angles + 90, 180) - 90 + 0.1
+    seeds = _ellipse_seeds(angles, angle_kw='angle_deg')
+    fit_seeds = _ellipse_seeds(fitted, angle_kw='angle_deg')
+    phases = [{'shape': 'ellipse', 'size': 1, 'aspect_ratio': 2,
+               'angle_deg': scipy.stats.uniform(100, 160)}]
+
+    stats = verification.error_stats(fit_seeds, seeds, phases)[0]['angle_deg']
+    assert np.isclose(stats['mae'], 0.1)
+    assert np.isclose(stats['inf_norm'], 0.1)
+    assert stats['R^2'] > 0.99
+    assert stats['ks_statistic'] < 0.1
+
+
 def test_error_stats_orientation_skipped_in_3d():
     seeds = seeding.SeedList([Seed.factory('ellipsoid', phase=0, a=1,
                                            b=0.5, c=0.5) for _ in range(5)])

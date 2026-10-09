@@ -119,6 +119,11 @@ class NBox(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    # Equality allows for round-off, which no hash can follow, so the
+    # instances keep the identity-based hash of object. (Defining __eq__
+    # alone would make the class unhashable.)
+    __hash__ = object.__hash__
+
     def __repr__(self):
         repr_str = 'NBox('
         repr_str += 'center=' + repr(tuple(self.center)) + ', '

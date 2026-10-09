@@ -149,7 +149,7 @@ def test_cells_partition_the_domain(case):
         n /= np.linalg.norm(n)
         assert np.abs((loop - loop[0]) @ n).max() < geom_tol
 
-    # facet neighbors and regions agree; wall facets are on their wall
+    # facet neighbors and regions agree, and wall facets are on their wall
     for f, neighs in enumerate(pmesh.facet_neighbors):
         for r in neighs:
             if r >= 0:
@@ -162,7 +162,7 @@ def test_cells_partition_the_domain(case):
         for f in region:
             assert r in pmesh.facet_neighbors[f]
 
-    # every cell is closed and convex; volumes add up to the domain volume
+    # every cell is closed and convex, and the volumes add up to the domain
     vols = np.zeros(len(pmesh.regions))
     all_planes = []
     for r in range(len(pmesh.regions)):
@@ -179,8 +179,8 @@ def test_cells_partition_the_domain(case):
     rng = np.random.default_rng(0)
     lengths = lims[:, 1] - lims[:, 0]
     sample = lims[:, 0] + rng.random((20000, n_dim)) * lengths
-    # (no gaps: every point is in a cell widened by the tolerance; no
-    # overlaps: at most one cell contains it when the cells are shrunk)
+    # No gaps: every point is in a cell widened by the tolerance. No
+    # overlaps: at most one cell contains it when the cells are shrunk.
     n_loose = np.zeros(len(sample), dtype=int)
     n_strict = np.zeros(len(sample), dtype=int)
     for planes in all_planes:
@@ -222,8 +222,9 @@ def test_elements_partition_the_cells(case):
                         for ax in range(n_dim) for k in range(2)])
 
     # element attributes: cells of the same amorphous phase are merged and
-    # labelled with one seed number; the element volumes of each attribute
-    # add up to the volume of its cells and every element lies in one of them
+    # labeled with one seed number. The element volumes of each attribute
+    # add up to the volume of its cells, and every element lies in one of
+    # them.
     attrs = np.array(mesh.element_attributes)
     conv = _amorphous_seed_numbers(pmesh, phases)
     att_of_reg = np.array([conv.get(s, s) for s in pmesh.seed_numbers])

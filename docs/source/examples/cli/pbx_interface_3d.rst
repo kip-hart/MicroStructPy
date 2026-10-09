@@ -62,7 +62,7 @@ The three plots that this file generates are the seeding, the polyhedral
 mesh, and the tetrahedral mesh.
 The seeds and the polyhedral mesh are those of the :ref:`ex_pbx_3d`
 (:numref:`f_ex_pbx3d_seeds` and :numref:`f_ex_pbx3d_poly`), since the seeds
-and the settings of the optimization are the same; only the tetrahedral
+and the settings of the optimization are the same. Only the tetrahedral
 mesh differs, shown (its facets) in :numref:`f_ex_pbxint3d_tri`.
 
 .. _f_ex_pbxint3d_tri:

@@ -22,7 +22,7 @@
         <shape> cube </shape>
         <side_length> 4 </side_length>
         <corner> (0, 0, 0) </corner>
-        <!-- periodic in all three directions; xz would leave y free -->
+        <!-- periodic in all three directions (xz would leave y free) -->
         <periodic> xyz </periodic>
     </domain>
 

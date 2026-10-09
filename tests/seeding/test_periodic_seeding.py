@@ -70,6 +70,13 @@ def test_periodic_axes_parsing():
     assert _misc.periodic_axes('True', 2) == [True, True]
     assert _misc.periodic_axes([True, False], 2) == [True, False]
     assert _misc.periodic_axes(np.array([0, 1, 1]), 3) == [False, True, True]
+    # numbers count as booleans: <periodic> 0 </periodic> is read as 0
+    assert _misc.periodic_axes(0, 2) == [False, False]
+    assert _misc.periodic_axes(1, 3) == [True, True, True]
+    assert _misc.periodic_axes(1.0, 2) == [True, True]
+    assert _misc.periodic_axes(np.int64(0), 3) == [False, False, False]
+    assert _misc.periodic_axes(_misc.from_str('0'), 2) == [False, False]
+    assert _misc.periodic_axes(_misc.from_str('1'), 2) == [True, True]
     with pytest.raises(ValueError):
         _misc.periodic_axes('xw', 3)
     with pytest.raises(ValueError):

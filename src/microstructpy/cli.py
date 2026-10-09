@@ -302,7 +302,7 @@ def _periodic_margin(periodic_margin, n_dim, max_volume, max_edge_length,
 def _seed_size(seed):
     """Smallest dimension of a seed: the smallest diameter of an ellipse
     or ellipsoid, the shortest side of a box, the diameter of a circle or
-    sphere; infinity if the geometry has none of these."""
+    sphere. Infinity if the geometry has none of these."""
     geom = seed.geometry
     if hasattr(geom, 'axes'):
         return 2 * min(geom.axes)
@@ -440,7 +440,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             axis), or the names of the periodic axes such as ``'x'`` or
             ``'xy'``. Seeds are placed, the domain is tessellated and the
             mesh is generated so that opposite faces of the (rectangular)
-            domain match; the pairs of periodic nodes are stored in the
+            domain match. The pairs of periodic nodes are stored in the
             meshes. In the XML input, ``<periodic>`` is a field of
             ``<domain>``. Defaults to False.
         periodic_margin (float or str): *(optional)* Minimum distance
@@ -1388,7 +1388,7 @@ def _rv_histogram(bin_vals, bin_bnds, density):
     """Histogram distribution from bin values and boundaries
 
     The CDF increments of a ``cdf`` file are probability masses, so they
-    are passed with ``density=False``; otherwise SciPy would re-weight the
+    are passed with ``density=False``. Otherwise SciPy would re-weight the
     bins by their widths whenever the bin boundaries are not evenly spaced.
     The bin heights of a ``pdf``/``histogram`` file are densities.
     """

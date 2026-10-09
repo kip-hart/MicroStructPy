@@ -111,7 +111,7 @@ def tiled_reference_volumes(seeds, domain, per_axes, margin=None):
     of the domain are kept, and the tiled domain ends there (plus the extent
     of the largest breakdown): the cells of the original seeds only reach
     seeds that close. In 3D this makes the reference tessellation several
-    times smaller; with all the copies, it needs gigabytes of memory.
+    times smaller. With all the copies, it needs gigabytes of memory.
     """
     lims = np.array(domain.limits)
     lengths = lims[:, 1] - lims[:, 0]

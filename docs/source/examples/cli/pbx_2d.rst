@@ -66,7 +66,7 @@ The three plots that this file generates are the seeding, the polygon mesh,
 and the triangular mesh.
 These three plots are shown in :numref:`f_ex_pbx2d_seeds` -
 :numref:`f_ex_pbx2d_tri`.
-The binder is one region of the mesh; its boundaries with the inclusions are
+The binder is one region of the mesh. Its boundaries with the inclusions are
 facets of the mesh.
 
 .. _f_ex_pbx2d_seeds:

@@ -59,31 +59,39 @@ def test_from_info_does_not_mutate_rng_seeds():
 # --------------------------------------------------------------------------- #
 # Overlap tolerance                                                           #
 # --------------------------------------------------------------------------- #
-def test_calc_rtol_matches_paper():
-    # Eq. (14): sigma = 0.5 -> cv = 0.53 -> alpha = 0.70 (paper, Sec. 3.1)
-    cv = np.sqrt(np.exp(0.25) - 1)
-    numer = 0.182 * cv * cv - 0.0135 * cv + 0.198
-    denom = cv * cv - 0.613 * cv + 0.390
-    assert np.isclose(numer / denom, 0.70, atol=0.005)
+def _fit(cv, coeffs):
+    a, b, c, d, e = coeffs
+    return (a * cv * cv + b * cv + c) / (cv * cv + d * cv + e)
 
-    # build seeds with exactly that coefficient of variation
+
+FIT_2D = (0.362954, -0.419069, 0.184959, -1.05989, 0.365096)
+FIT_3D = (0.471115, -0.602324, 0.297562, -1.08469, 0.428216)
+
+
+def test_calc_rtol_matches_paper_figure():
+    # the fitted curves of Fig. 10 of Hart and Rimoli (2020), read from
+    # the figure: at cv = 0.5 and 1.0, about 0.81 and 0.42 in 2D, 0.86 and
+    # 0.49 in 3D (Eqs. (14) and (15) as printed give 0.71, 0.47, 0.60
+    # and 0.39)
+    assert np.allclose(_fit(np.array([0.5, 1.0]), FIT_2D), [0.81, 0.42],
+                       atol=0.04)
+    assert np.allclose(_fit(np.array([0.5, 1.0]), FIT_3D), [0.86, 0.49],
+                       atol=0.03)
+
+    # seeds with a lognormal size distribution
     rng = np.random.RandomState(0)
     areas = np.exp(-9 + 0.5 * rng.normal(size=4000))
     seeds = [Seed.factory('circle', area=a) for a in areas]
     cv_s = scipy.stats.variation(areas)
-    expected = ((0.182 * cv_s ** 2 - 0.0135 * cv_s + 0.198) /
-                (cv_s ** 2 - 0.613 * cv_s + 0.390))
-    assert np.isclose(calc_rtol(seeds), expected)
+    assert np.isclose(calc_rtol(seeds), _fit(cv_s, FIT_2D))
 
     seeds_3d = [Seed.factory('sphere', volume=a) for a in areas]
-    expected_3d = ((0.457 * cv_s ** 2 - 0.575 * cv_s + 0.253) /
-                   (cv_s ** 2 - 1.07 * cv_s + 0.419))
-    assert np.isclose(calc_rtol(seeds_3d), expected_3d)
+    assert np.isclose(calc_rtol(seeds_3d), _fit(cv_s, FIT_3D))
 
     # constant sizes: cv = 0 (a single seed as well)
     same = [Seed.factory('circle', r=1) for _ in range(3)]
-    assert np.isclose(calc_rtol(same), 0.198 / 0.390)
-    assert np.isclose(calc_rtol(same[:1]), 0.198 / 0.390)
+    assert np.isclose(calc_rtol(same), 0.184959 / 0.365096)
+    assert np.isclose(calc_rtol(same[:1]), 0.184959 / 0.365096)
 
 
 def test_position_uses_calc_rtol(monkeypatch):

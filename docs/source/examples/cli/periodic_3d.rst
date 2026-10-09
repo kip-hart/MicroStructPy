@@ -46,7 +46,7 @@ The mesh has a minimum dihedral angle of 15 degrees and a maximum element
 volume of 0.02.
 In 3D, the domain is meshed once as usual, then the facets are
 triangulated with the points TetGen added on them, identically on opposite
-faces, and the mesh is built again with these facets; the quality and size
+faces, and the mesh is built again with these facets. The quality and size
 settings act as on a non-periodic mesh.
 
 The seeds are placed a margin away from the periodic faces (``periodic_margin``

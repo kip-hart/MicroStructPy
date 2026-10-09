@@ -321,7 +321,7 @@ matching order.
         <domain>
             <shape> square </shape>
             <side_length> 10 </side_length>
-            <!-- periodic in both directions -->
+            <!-- periodic in both directions (1 works too) -->
             <periodic> True </periodic>
         </domain>
 
@@ -341,8 +341,8 @@ matching order.
     </input>
 
 A seed that barely crosses a periodic face, or ends just inside it, leaves a
-thin piece of its grain on the opposite face and very small elements there;
-the ``periodic_margin`` setting rejects such positions and, with
+thin piece of its grain on the opposite face and very small elements there.
+The ``periodic_margin`` setting rejects such positions and, with
 ``edge_opt``, moves the seeds of the cells that still leave such pieces (see
 :ref:`cli_settings`).
 
@@ -353,12 +353,12 @@ The mesh quality and size settings (``mesh_min_angle``, ``mesh_max_volume``,
 the ``max_volume`` of each phase and ``mesh_max_edge_length``) apply to
 periodic meshes as to non-periodic ones. In 2D, the cells next to the
 periodic faces are copied outside the faces while meshing, so that Triangle
-refines both faces of a pair the same way; if some nodes on the faces have
+refines both faces of a pair the same way. If some nodes on the faces have
 no image, the mesh is built again from all of its points, with the points
 of a periodic face and of its image merged and put on both faces, so that
 Triangle only refines it around those points. In 3D, the
 mesh is built once as usual, then the facets are triangulated with the points
 TetGen added on them (the facets on opposite periodic faces with the points
-of both) and the mesh is built again with the facets fixed; the elements next
+of both) and the mesh is built again with the facets fixed. The elements next
 to the periodic faces are slightly more numerous and of slightly lower
 quality than in a non-periodic mesh.
