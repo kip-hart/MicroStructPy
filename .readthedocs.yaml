@@ -13,6 +13,30 @@ build:
     python: "3.10"
   apt_packages:
     - freeglut3-dev
+  jobs:
+    # Running every example takes about twenty minutes, and a build here
+    # is stopped at fifteen. The documentation workflow runs them on a
+    # machine without that limit and publishes what they produced, keyed
+    # by a digest of the example inputs and of the library. Restore that
+    # and Sphinx-Gallery skips the examples.
+    #
+    # The archive is only restored when its digest is the digest of this
+    # commit, so an edited example is never served with older figures.
+    # When there is no archive to match, nothing is restored, the
+    # examples run, and the build is likely to time out. That is the
+    # intended failure: publish the cache for this commit, then rebuild.
+    post_install:
+      - |
+        set -u
+        name=$(python docs/example_cache.py name) || exit 0
+        url=https://github.com/kip-hart/MicroStructPy/releases/download/docs-cache
+        echo "Looking for $name"
+        if curl -sSfL -o /tmp/examples.tar.gz "$url/$name"; then
+          python docs/example_cache.py restore /tmp/examples.tar.gz \
+            || echo "The archive was refused, the examples will be run."
+        else
+          echo "No archive published for this commit, the examples will be run."
+        fi
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

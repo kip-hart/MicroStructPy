@@ -142,7 +142,7 @@
         <verbose> True </verbose>
         <verify> True </verify>
 
-        <mesh_max_edge_length> 0.01 </mesh_max_edge_length>
+        <mesh_max_edge_length> 0.02 </mesh_max_edge_length>
         <mesh_min_angle> 20 </mesh_min_angle>
         <mesh_max_volume> 0.05 </mesh_max_volume>
 
