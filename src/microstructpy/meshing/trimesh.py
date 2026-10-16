@@ -217,8 +217,8 @@ class TriMesh(object):
             polymesh (PolyMesh): A polygon/polyhedron mesh.
             phases (list): *(optional)* A list of dictionaries containing
                 options for each phase.
-                Default is
-                ``{'material_type': 'solid', 'max_volume': float('inf')}``.
+                Default is ``{'material_type': 'solid'}`` for each phase,
+                meshed with the ``max_volume`` argument.
             mesher (str): {'Triangle/TetGen' | 'Triangle'  | 'TetGen' | 'gmsh'}
                 specify the mesh generator. Default is 'Triangle/TetGen'.
             min_angle (float): The minimum interior angle, in degrees, of an
@@ -844,8 +844,7 @@ class RasterMesh(TriMesh):
             mesh_size (float): The side length of each pixel/voxel.
             phases (list): *(optional)* A list of dictionaries containing
                 options for each phase.
-                Default is
-                ``{'material_type': 'solid', 'max_volume': float('inf')}``.
+                Default is ``{'material_type': 'solid'}`` for each phase.
 
         """
         if phases is None:
@@ -1965,10 +1964,13 @@ def _amorphous_seed_numbers(pmesh, phases):
 
 
 def _default_phases(polymesh):
-    """Default phases: one solid phase per phase number of the polymesh."""
+    """Default phases: one solid phase per phase number of the polymesh.
+
+    They have no ``max_volume``, so the ``max_volume`` argument of the
+    mesher applies to their regions.
+    """
     n_phases = int(np.max(polymesh.phase_numbers)) + 1
-    return [{'material_type': 'solid', 'max_volume': float('inf')}
-            for _ in range(n_phases)]
+    return [{'material_type': 'solid'} for _ in range(n_phases)]
 
 
 def _pt3d(pt):

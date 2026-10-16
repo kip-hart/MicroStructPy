@@ -342,6 +342,19 @@ def test_triangle_per_phase_max_volume_exceeds_global(case_2d):
     assert np.all(areas[elem_phases != 0] <= 1e-3 + 1e-9)
 
 
+@pytest.mark.parametrize('periodic', [False, True])
+def test_triangle_max_volume_without_phases(periodic):
+    # Without phases, the max_volume argument limits the area of the
+    # triangles. The default phases must not carry a limit of their own,
+    # which would replace it (an infinite one left it unapplied).
+    domain = msp.geometry.Square(side_length=4, corner=(0, 0))
+    seeds = msp.seeding.SeedList([msp.seeding.Seed.factory(
+        'circle', r=1.5, position=(2.2, 1.9))])
+    pmesh = msp.meshing.PolyMesh.from_seeds(seeds, domain, periodic=periodic)
+    mesh = TriMesh.from_polymesh(pmesh, min_angle=20, max_volume=0.4)
+    assert np.max(simplex_volumes(mesh)) <= 0.4 + 1e-9
+
+
 def test_triangle_infinite_max_volume_not_passed(case_2d, monkeypatch):
     pmesh, phases, _ = case_2d
     captured = {}
