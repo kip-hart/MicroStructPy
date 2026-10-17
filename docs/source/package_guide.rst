@@ -293,7 +293,7 @@ phase-specific.
 .. _`MeshPy`: https://mathema.tician.de/software/meshpy/
 .. _`Power Diagram`: https://en.wikipedia.org/wiki/Power_diagram
 .. _`pygmsh`: https://pygmsh.readthedocs.io
-.. _`pyvoro`: https://github.com/mmalahe/pyvoro
+.. _`pyvoro`: https://github.com/rimoli/pyvoro
 .. _`TetGen`: http://wias-berlin.de/software/tetgen/
 .. _`Triangle`: https://www.cs.cmu.edu/~quake/triangle.html
 .. _`Voro++`: http://math.lbl.gov/voro++/

@@ -75,6 +75,12 @@ CLI Examples
     cli/basalt
     cli/two_phase_3d
     cli/colormap
+    cli/periodic_2d
+    cli/periodic_3d
+    cli/pbx_2d
+    cli/pbx_3d
+    cli/pbx_interface_2d
+    cli/pbx_interface_3d
 
 .. only:: html
 
@@ -103,6 +109,36 @@ CLI Examples
       :width: 32%
       :target: cli/colormap.html
 
+  .. image:: ../../../src/microstructpy/examples/periodic_2D/trimesh.png
+    :alt: Triangular mesh from periodic 2D example.
+    :width: 32%
+    :target: cli/periodic_2d.html
+
+  .. image:: ../../../src/microstructpy/examples/periodic_3D/polymesh.png
+    :alt: Polyhedral mesh from periodic 3D example.
+    :width: 32%
+    :target: cli/periodic_3d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_2D/trimesh.png
+    :alt: Triangular mesh of binder and inclusions.
+    :width: 32%
+    :target: cli/pbx_2d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_3D/polymesh.png
+    :alt: Polyhedral mesh of binder and inclusions.
+    :width: 32%
+    :target: cli/pbx_3d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_interface_2D/trimesh.png
+    :alt: Triangular mesh refined at the interfaces.
+    :width: 32%
+    :target: cli/pbx_interface_2d.html
+
+  .. image:: ../../../src/microstructpy/examples/pbx_interface_3D/trimesh.png
+    :alt: Tetrahedral mesh refined at the interfaces.
+    :width: 32%
+    :target: cli/pbx_interface_3d.html
+
 
 
 .. _package_examples:
@@ -120,6 +156,7 @@ Python Package Examples
     package/grain_neighborhoods
     package/from_image
     package/mesh_process
+    package/periodic_tiling
 
 .. only:: html
 
@@ -156,3 +193,8 @@ Python Package Examples
   .. image:: ../../../src/microstructpy/examples/docs_banner/banner.png
     :alt: Microstructure meshing process..
     :target: package/mesh_process.html
+
+  .. image:: ../../../src/microstructpy/examples/periodic_tiling/tiled_2D.png
+    :alt: Periodic microstructure, tiled 2 x 2.
+    :height: 210px
+    :target: package/periodic_tiling.html

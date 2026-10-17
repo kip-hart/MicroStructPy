@@ -85,7 +85,7 @@ setup(
         'numpy>=1.22.2',
         'pygmsh>=7.0.2',
         'pyquaternion',
-        'pyvoro-mmalahe>=1.3.4',  # install issue with pyvoro
+        'pyvoro-rimoli>=1.4.0',  # pyvoro with the current Voro++
         'scipy',
         'xmltodict'
     ],

@@ -44,6 +44,9 @@ To install MicroStructPy, download it from PyPI using::
 
 If there is an error with the install, try ``pip install pybind11`` first,
 then install MicroStructPy.
+When upgrading from an earlier version, run ``pip uninstall pyvoro-mmalahe``
+first: MicroStructPy now uses ``pyvoro-rimoli``, which installs the same
+``pyvoro`` module.
 
 
 MicroStructPy can also be installed from source::

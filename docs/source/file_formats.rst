@@ -219,6 +219,9 @@ element.
 The facet attribute is the facet number from the polygonal mesh, so all of
 the triangular mesh facets with the same attribute make up a polygonal mesh
 facet.
+The facets of a mesh created from a polygonal mesh are listed with their
+nodes in ascending order and in lexicographic order, so that the file is
+the same from one run to the next.
 
 .. note::
 
