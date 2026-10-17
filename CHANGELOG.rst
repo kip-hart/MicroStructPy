@@ -97,7 +97,10 @@ Fixed
 - 3D ``mesh_max_volume`` and per-phase ``max_volume`` are now honored by
   TetGen. In 2D, a per-phase ``max_volume`` larger than the global value is
   no longer capped, and an infinite ``mesh_max_volume`` is no longer passed
-  to Triangle as the (mis-parsed) switch ``ainf``.
+  to Triangle as the (mis-parsed) switch ``ainf``. The ``max_volume`` of a
+  phase replaces the global value for that phase, an infinite one included,
+  and phases without one, such as the default phases when none are given,
+  use the global value.
 - ``Ellipsoid.approximate`` mapped the axes incorrectly for the ordering
   c >= a >= b, so those grains were tessellated with the wrong orientation.
   The b >= c >= a ordering is now sorted explicitly as well.
