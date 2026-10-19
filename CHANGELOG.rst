@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
-Unreleased
-----------
+`1.6.0`_ - 2026-10-18
+--------------------------
 Added
 '''''
 - Periodic microstructures, in 2D and 3D. The ``<periodic>`` field of the
@@ -508,7 +508,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.9...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.6.0...HEAD
+.. _`1.6.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.9...v1.6.0
 .. _`1.5.9`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.8...v1.5.9
 .. _`1.5.8`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.7...v1.5.8
 .. _`1.5.7`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.6...v1.5.7
