@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`1.6.1`_ - 2026-10-19
+--------------------------
+Fixed
+'''''
+- ``pip install microstructpy`` installs versions of numpy and MeshPy that
+  the package works with: numpy below 2 and MeshPy below 2026. With numpy 2,
+  the text files of the meshes cannot be read back, since numpy writes
+  integers as ``np.int64(4)``, and ``tangent_sphere`` fails. With MeshPy
+  2026, TetGen no longer keeps the elements of 3D meshes under
+  ``max_volume``. numpy below 2 has no releases for Python 3.13 and later,
+  which MicroStructPy does not support yet.
+
 `1.6.0`_ - 2026-10-18
 --------------------------
 Added
@@ -508,7 +520,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.6.0...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.6.1...HEAD
+.. _`1.6.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.6.0...v1.6.1
 .. _`1.6.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.9...v1.6.0
 .. _`1.5.9`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.8...v1.5.9
 .. _`1.5.8`: https://github.com/kip-hart/MicroStructPy/compare/v1.5.7...v1.5.8
