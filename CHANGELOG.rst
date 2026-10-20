@@ -15,8 +15,14 @@ Fixed
   the text files of the meshes cannot be read back, since numpy writes
   integers as ``np.int64(4)``, and ``tangent_sphere`` fails. With MeshPy
   2026, TetGen no longer keeps the elements of 3D meshes under
-  ``max_volume``. numpy below 2 has no releases for Python 3.13 and later,
-  which MicroStructPy does not support yet.
+  ``max_volume``. numpy below 2 has no wheels for Python 3.13 and later, so
+  pip builds it from source there, which needs a compiler.
+
+Changed
+'''''''
+- The continuous integration also runs the tests on an installation without
+  the pins of ``requirements.txt``, as ``pip install microstructpy`` does, so
+  that it sees the dependency versions that users get.
 
 `1.6.0`_ - 2026-10-18
 --------------------------
