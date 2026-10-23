@@ -81,8 +81,8 @@ setup(
         'pybind11',  # must come before meshpy for successful install
         'lsq-ellipse',
         'matplotlib>=3.4.0',
-        'meshpy>=2018.2.1',
-        'numpy>=1.22.2',
+        'meshpy>=2018.2.1,<2026',  # TetGen of 2026 exceeds max_volume
+        'numpy>=1.22.2,<2',  # numpy 2 breaks the mesh text files
         'pygmsh>=7.0.2',
         'pyquaternion',
         'pyvoro-rimoli>=1.4.0',  # pyvoro with the current Voro++
