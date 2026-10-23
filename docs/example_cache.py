@@ -16,7 +16,12 @@ Two sets of files are needed, and both are in the archive:
   skip the examples instead of running them.
 * The PNG files under ``src/microstructpy/examples``, which the pages in
   ``docs/source/examples`` embed with ``figure::``.  The meshes beside
-  them are not in the archive, since no page refers to them.
+  them are not in the archive, since no page refers to them.  Most of
+  these are in an output directory named for the example, and two,
+  ``joined.png`` and ``welcome_examples.png``, are written beside the
+  inputs.  ``welcome.rst`` embeds those two, so leaving them out breaks
+  the home page of a build that restores the archive, and ``pack`` and
+  ``restore`` both refuse an archive without them.
 
 An archive carries the digest of the inputs it was built from, from
 :mod:`docs.example_digest`.  ``restore`` refuses an archive whose digest
@@ -49,6 +54,15 @@ GALLERY = os.path.join('docs', 'source', 'auto_examples')
 EXAMPLES = os.path.join('src', 'microstructpy', 'examples')
 MANIFEST = 'microstructpy-example-cache.json'
 
+# Bumped when the contents of the archive change, so that an archive
+# packed by an older version of this script is never restored.
+FORMAT = 2
+
+# The figures plot_demos.py writes beside the example inputs rather than
+# in an output directory, by create_welcome() and seed_poly_tri(). Every
+# other file in that directory is an input. welcome.rst embeds both.
+TOP_LEVEL_FIGURES = ('joined.png', 'welcome_examples.png')
+
 
 def _gallery_members():
     """Every file of the Sphinx-Gallery output, relative to the root."""
@@ -65,19 +79,23 @@ def _gallery_members():
 def _figure_members():
     """Every PNG an example wrote, relative to the root.
 
-    Only the files in the output directories of the examples, so that an
-    input such as ``aluminum_micro.png`` is not carried in the archive.
+    The output directories hold nothing but figures, so they are taken
+    whole. The directory above them holds the inputs, and an input such
+    as ``aluminum_micro.png`` must not be carried in the archive, so the
+    two figures written there are taken by name.
     """
     members = []
     root = os.path.join(ROOT, EXAMPLES)
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames.sort()
-        if os.path.abspath(dirpath) == os.path.abspath(root):
-            continue  # the inputs live here, the figures are in subdirs
+        top = os.path.abspath(dirpath) == os.path.abspath(root)
         for name in sorted(filenames):
-            if name.endswith('.png'):
-                path = os.path.join(dirpath, name)
-                members.append(os.path.relpath(path, ROOT))
+            if not name.endswith('.png'):
+                continue
+            if top and name not in TOP_LEVEL_FIGURES:
+                continue
+            path = os.path.join(dirpath, name)
+            members.append(os.path.relpath(path, ROOT))
     return members
 
 
@@ -94,8 +112,19 @@ def pack(filename):
         print('No figures under %s to pack.' % EXAMPLES, file=sys.stderr)
         return 1
 
+    # A build that restores the archive does not run plot_demos.py, so a
+    # figure left out here is a figure the published documentation will
+    # never have. Refuse to publish an archive that is missing one.
+    missing = [n for n in TOP_LEVEL_FIGURES
+               if os.path.join(EXAMPLES, n) not in figures]
+    if missing:
+        print('Not packing, plot_demos.py did not leave %s in %s.'
+              % (', '.join(missing), EXAMPLES), file=sys.stderr)
+        return 1
+
     value = digest()
-    manifest = json.dumps({'digest': value,
+    manifest = json.dumps({'format': FORMAT,
+                           'digest': value,
                            'gallery': len(gallery),
                            'figures': len(figures)}, indent=2).encode()
 
@@ -127,6 +156,13 @@ def restore(filename):
                   % (filename, MANIFEST), file=sys.stderr)
             return 1
 
+        if manifest.get('format') != FORMAT:
+            print('%s was packed in format %s and this is format %d. '
+                  'Refusing to restore it, the examples will be run.'
+                  % (filename, manifest.get('format'), FORMAT),
+                  file=sys.stderr)
+            return 1
+
         current = digest()
         if manifest.get('digest') != current:
             print('The archive was built from %s and the examples digest '
@@ -135,6 +171,16 @@ def restore(filename):
             return 1
 
         members = [m for m in tar.getmembers() if m.name != MANIFEST]
+
+        names = set(m.name for m in members)
+        absent = [n for n in TOP_LEVEL_FIGURES
+                  if '/'.join(EXAMPLES.split(os.sep) + [n]) not in names]
+        if absent:
+            print('%s does not carry %s. Refusing to restore it, the '
+                  'examples will be run.' % (filename, ', '.join(absent)),
+                  file=sys.stderr)
+            return 1
+
         for m in members:
             if m.name.startswith('/') or '..' in m.name.split('/'):
                 print('Refusing a path outside the tree: %s' % m.name,
@@ -152,7 +198,7 @@ def restore(filename):
 
 def name():
     """Print the archive name for this working tree."""
-    print('microstructpy-examples-%s.tar.gz' % digest())
+    print('microstructpy-examples-v%d-%s.tar.gz' % (FORMAT, digest()))
     return 0
 
 

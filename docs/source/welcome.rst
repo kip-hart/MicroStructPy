@@ -12,6 +12,7 @@ MicroStructPy is a microstructure mesh generator written in Python.
 Features of MicroStructPy include:
 
 * 2D and 3D microstructures
+* Periodic microstructures
 * Grain size, shape, orientation, and position control
 * Polycrystals, amorphous phases, and voids
 * Mesh verification

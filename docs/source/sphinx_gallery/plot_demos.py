@@ -33,7 +33,7 @@ welcome_fnames = ['intro_2_quality/trimesh.png',
                   'basalt_circle/trimesh.png',
                   'foam/trimesh.png',
                   'two_phase_3D/trimesh.png',
-                  'colormap/trimesh.png']
+                  'periodic_tiling/tiled_2D.png']
 
 def main():
     # Copy Supporting Files
