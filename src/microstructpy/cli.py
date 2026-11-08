@@ -112,7 +112,7 @@ def main():
                     shutil.copy(basename, filename)
 
             if ext == 'py':
-                subprocess.call(['python', local_filename])
+                subprocess.call([sys.executable, local_filename])
             elif ext == 'xml':
                 run_file(local_filename)
             else:
